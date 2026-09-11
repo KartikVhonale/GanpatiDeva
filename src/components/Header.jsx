@@ -1,0 +1,92 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+
+export default function Header({ 
+  mandalName = "श्री गणेश उत्सव मंडळ", 
+  location = "सिद्धिविनायक चौक, मुंबई", 
+  tagline = "वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ • निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा",
+  isConnected = false,
+}) {
+  return (
+    <header className="relative w-full overflow-hidden rounded-3xl border border-amber-500/25 bg-gradient-to-b from-orange-950/40 via-red-950/30 to-black/50 p-6 md:p-8 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(234,88,12,0.2)]">
+      {/* Decorative festive ambient glows */}
+      <div className="pointer-events-none absolute -top-16 -left-16 h-48 w-48 rounded-full bg-orange-600/25 blur-3xl" />
+      <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-rose-600/25 blur-3xl" />
+      
+      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Left: Mandir / Idol Emblem & Title */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex items-center gap-4 text-center md:text-left"
+        >
+          {/* Emblem with sacred Diya / Kalash iconography */}
+          <div className="relative flex h-16 w-16 md:h-20 md:w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-red-700 p-0.5 shadow-lg shadow-orange-600/40 ring-2 ring-amber-400/40">
+            <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-orange-950/90 to-red-950/90 backdrop-blur-sm">
+              <span className="text-3xl md:text-4xl filter drop-shadow-[0_2px_8px_rgba(251,146,60,0.8)]" role="img" aria-label="Om & Diya">
+                🪔
+              </span>
+            </div>
+            {/* Pulsing ring */}
+            <span className="absolute -inset-1 animate-ping rounded-2xl bg-orange-500/20 -z-10" />
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                उत्सव सेवा २०२६
+              </span>
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium backdrop-blur-md ${
+                isConnected ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-300" : "border-red-500/40 bg-red-500/10 text-rose-300"
+              }`}>
+                <span className={`inline-block h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400 animate-ping" : "bg-red-500 animate-ping"}`} />
+                {isConnected ? "Socket.io Live" : "Live Seva Tracker"}
+              </span>
+            </div>
+
+            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
+              <span className="bg-gradient-to-r from-amber-200 via-orange-300 to-rose-300 bg-clip-text text-transparent">
+                {mandalName}
+              </span>
+            </h1>
+
+            <p className="text-xs md:text-sm text-orange-200/80 mt-0.5 font-medium flex items-center justify-center md:justify-start gap-1">
+              <span>📍 {location}</span>
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Right: Auspicious Shloka & CTA */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="flex flex-col items-center md:items-end text-center md:text-right gap-3"
+        >
+          <div className="rounded-xl border border-amber-500/20 bg-orange-950/30 px-4 py-2 backdrop-blur-md shadow-inner max-w-md">
+            <p className="font-serif text-xs md:text-sm text-amber-200/90 italic tracking-wide">
+              {tagline}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-900/20 px-3.5 py-1.5 text-xs text-orange-200 backdrop-blur-md shadow-sm">
+              <span className="text-sm">🚩</span>
+              <span>बाप्पा मोरया!</span>
+            </div>
+            
+            <a 
+              href="#recent-donors"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 px-4 py-1.5 text-xs md:text-sm font-bold text-white shadow-lg shadow-orange-600/30 transition-all hover:scale-105 hover:shadow-orange-500/50 active:scale-95 ring-1 ring-amber-300/50"
+            >
+              <span>दान सेवा (Seva)</span>
+              <span>🙏</span>
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    </header>
+  );
+}
