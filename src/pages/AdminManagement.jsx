@@ -10,7 +10,6 @@ import {
   Power,
   RefreshCw,
   Phone,
-  KeyRound,
   CheckCircle2,
   AlertCircle,
   Database,
@@ -207,12 +206,17 @@ export default function AdminManagement() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <div className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-black/40 px-3 py-2 text-xs text-orange-200">
+              <span>👑</span>
+              <span>व्यवस्थापक: <strong className="text-amber-300">{user?.name}</strong></span>
+            </div>
+
             <Link
               to="/volunteer"
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-orange-600/30 hover:brightness-110 transition-all"
             >
               <UserCheck className="h-4 w-4" />
-              <span>स्वयंसेवक कक्ष उघडा</span>
+              <span>स्वयंसेवक कक्ष</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
 

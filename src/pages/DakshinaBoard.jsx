@@ -203,22 +203,31 @@ export default function DakshinaBoard() {
             </svg>
           </div>
 
-          {/* UPI ID Copy Box */}
-          <div className="w-full mt-2">
+          {/* UPI ID Copy Box & Direct Mobile App Pay */}
+          <div className="w-full mt-2 space-y-2">
             <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-black/60 px-3.5 py-2 text-xs">
-              <span className="font-mono font-bold text-amber-300">
+              <span className="font-mono font-bold text-amber-300 truncate">
                 {upiId}
               </span>
               <button
                 type="button"
                 onClick={handleCopyUPI}
-                className="flex items-center gap-1 text-[11px] text-orange-200 hover:text-white cursor-pointer"
+                className="flex items-center gap-1 text-[11px] text-orange-200 hover:text-white cursor-pointer shrink-0"
                 title="Copy UPI ID"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copied ? 'Copied!' : 'Copy'}</span>
               </button>
             </div>
+
+            {/* Direct 1-Tap Mobile Payment Button (for Phone users) */}
+            <a
+              href="upi://pay?pa=mandal.ganpati@upi&pn=Shree%20Ganesh%20Utsav%20Mandal&cu=INR"
+              className="sm:hidden w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 px-3 text-xs font-black text-black shadow-md active:scale-95 transition-all"
+            >
+              <span>📱 मोबाईलवर थेट UPI ॲप उघडा (GPay / PhonePe)</span>
+            </a>
+
             <p className="text-[11px] text-orange-200/60 mt-1.5 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3 w-3 text-emerald-400" />
               <span>सुरक्षित व अधिकृत मंडळ बँक खाते</span>

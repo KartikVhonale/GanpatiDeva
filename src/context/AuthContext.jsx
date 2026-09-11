@@ -8,7 +8,7 @@ const TOKEN_KEY = 'ganpati_auth_token';
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem(TOKEN_KEY)));
   const [error, setError] = useState(null);
 
   // Verify token on mount or when token changes
@@ -43,7 +43,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    verifyToken(token);
+    if (token) {
+      verifyToken(token);
+    }
   }, [token, verifyToken]);
 
   // Login function

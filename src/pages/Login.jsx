@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, KeyRound, Eye, EyeOff, Shield, ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Lock, User, KeyRound, Eye, EyeOff, ArrowLeft, Sparkles } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');

@@ -246,7 +246,7 @@ export default function Home() {
             </Link>
 
             <Link
-              to="/admin"
+              to="/volunteer"
               className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500/40 bg-orange-950/50 hover:bg-orange-900/60 px-6 py-3.5 text-sm sm:text-base font-black text-amber-200 hover:text-white shadow-lg backdrop-blur-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <UserCheck className="h-5 w-5 text-amber-400" />

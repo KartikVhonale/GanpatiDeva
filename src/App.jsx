@@ -1,16 +1,21 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import DakshinaBoard from './pages/DakshinaBoard';
-import Admin from './pages/Admin';
+import VolunteerDesk from './pages/VolunteerDesk';
+import AdminManagement from './pages/AdminManagement';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import BottomMobileNav from './components/BottomMobileNav';
+import { AuthProvider } from './context/AuthContext';
 import useDonations from './hooks/useDonations';
 
 function AppContent() {
   const { isConnected } = useDonations();
 
   return (
-    <div className="relative min-h-screen w-full bg-[#0d0705] text-amber-50 overflow-x-hidden selection:bg-orange-500 selection:text-white pb-14">
+    <div className="relative min-h-screen w-full bg-[#0d0705] text-amber-50 overflow-x-hidden selection:bg-orange-500 selection:text-white pb-24 md:pb-14">
       {/* Ambient Festive Radial Glow Orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
         <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-amber-600/20 via-orange-600/15 to-transparent blur-[120px] animate-pulse-slow" />
@@ -25,9 +30,37 @@ function AppContent() {
         {/* Page Routes */}
         <main className="min-h-[70vh]">
           <Routes>
+            {/* Devotional Home Page */}
             <Route path="/" element={<Home />} />
+
+            {/* Live TV Dakshina Board (Public display) */}
             <Route path="/dakshina" element={<DakshinaBoard />} />
-            <Route path="/admin" element={<Admin />} />
+
+            {/* Login for Volunteers & Admin */}
+            <Route path="/login" element={<Login />} />
+
+            {/* Volunteer Desk - Protected for logged-in users with access */}
+            <Route
+              path="/volunteer"
+              element={
+                <ProtectedRoute>
+                  <VolunteerDesk />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Management - Protected strictly for Admin role */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requireRole="admin">
+                  <AdminManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
 
@@ -45,6 +78,9 @@ function AppContent() {
             सार्वजनिक श्री गणेश उत्सव मंडळ ट्रस्ट • नोंदणी क्र. महा/२०२६/गणेश-१
           </div>
         </footer>
+
+        {/* Floating Bottom Nav for Mobile Phone Screens */}
+        <BottomMobileNav />
       </div>
     </div>
   );
@@ -53,7 +89,9 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
