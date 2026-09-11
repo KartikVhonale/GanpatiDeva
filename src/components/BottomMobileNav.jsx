@@ -2,36 +2,34 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, Tv, UserCheck, Shield, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BottomMobileNav() {
   const { isAuthenticated, isAdmin } = useAuth();
+  const { t } = useLanguage();
 
   const items = [
     {
       to: '/',
-      label: 'दर्शन',
-      sublabel: 'Home',
+      label: t('homeShort'),
       icon: Home,
     },
     {
       to: '/dakshina',
-      label: 'थेट फलक',
-      sublabel: 'Live Board',
+      label: t('liveBoardShort'),
       icon: Tv,
       highlight: true,
     },
     {
       to: '/volunteer',
-      label: 'स्वयंसेवक',
-      sublabel: 'Desk',
+      label: t('volunteerShort'),
       icon: UserCheck,
     },
     ...(isAdmin
       ? [
           {
             to: '/admin',
-            label: 'व्यवस्थापक',
-            sublabel: 'Admin',
+            label: t('adminShort'),
             icon: Shield,
           },
         ]
@@ -39,8 +37,7 @@ export default function BottomMobileNav() {
       ? [
           {
             to: '/login',
-            label: 'लॉगिन',
-            sublabel: 'Sign In',
+            label: t('login'),
             icon: LogIn,
           },
         ]

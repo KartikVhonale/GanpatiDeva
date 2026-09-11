@@ -4,8 +4,10 @@ import TotalCounter from '../components/TotalCounter';
 import RecentDonorsList from '../components/RecentDonorsList';
 import ScrollingTicker from '../components/ScrollingTicker';
 import useDonations from '../hooks/useDonations';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function DakshinaBoard() {
+  const { t, lang } = useLanguage();
   const {
     totalAmount,
     targetAmount,
@@ -71,7 +73,7 @@ export default function DakshinaBoard() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm sm:text-base font-black text-white">
-                थेट देणगी व पारदर्शकता फलक (Live Display Board)
+                {t('dakshinaTitle')}
               </h2>
               <span className="flex items-center gap-1 rounded-full bg-red-500/20 border border-red-500/40 px-2 py-0.2 text-[10px] font-bold text-red-300 animate-pulse">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -79,7 +81,7 @@ export default function DakshinaBoard() {
               </span>
             </div>
             <p className="text-[11px] text-orange-200/70">
-              पंडाल मुख्य स्क्रीन व टीव्ही डिस्प्लेसाठी थेट अद्यतन
+              {t('dakshinaSubtitle')}
             </p>
           </div>
         </div>
@@ -100,12 +102,12 @@ export default function DakshinaBoard() {
             {isFullscreen ? (
               <>
                 <Minimize2 className="h-3.5 w-3.5" />
-                <span>Exit Fullscreen</span>
+                <span>{t('exitFullscreen')}</span>
               </>
             ) : (
               <>
                 <Maximize2 className="h-3.5 w-3.5" />
-                <span>फुलस्क्रीन (TV Mode)</span>
+                <span>{t('enterFullscreen')}</span>
               </>
             )}
           </button>
@@ -133,13 +135,13 @@ export default function DakshinaBoard() {
           <div className="space-y-1 mb-3">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
               <QrCode className="h-3 w-3" />
-              <span>डिजिटल सेवा अर्पण</span>
+              <span>{lang === 'mr' ? 'डिजिटल सेवा अर्पण' : 'Digital Seva'}</span>
             </div>
             <h3 className="text-lg font-extrabold text-white">
-              Scan & Pay Dakshina
+              {t('scanPayTitle')}
             </h3>
             <p className="text-xs text-orange-200/75">
-              Google Pay, PhonePe, Paytm किंवा BHIM द्वारे सेवा अर्पण करा
+              {t('scanPaySubtitle')}
             </p>
           </div>
 
@@ -216,7 +218,7 @@ export default function DakshinaBoard() {
                 title="Copy UPI ID"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copied ? 'Copied!' : 'Copy'}</span>
+                <span>{copied ? t('copiedUpi') : t('copyUpi')}</span>
               </button>
             </div>
 
@@ -225,12 +227,12 @@ export default function DakshinaBoard() {
               href="upi://pay?pa=mandal.ganpati@upi&pn=Shree%20Ganesh%20Utsav%20Mandal&cu=INR"
               className="sm:hidden w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 px-3 text-xs font-black text-black shadow-md active:scale-95 transition-all"
             >
-              <span>📱 मोबाईलवर थेट UPI ॲप उघडा (GPay / PhonePe)</span>
+              <span>{t('openMobileUpi')}</span>
             </a>
 
             <p className="text-[11px] text-orange-200/60 mt-1.5 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3 w-3 text-emerald-400" />
-              <span>सुरक्षित व अधिकृत मंडळ बँक खाते</span>
+              <span>{t('safeAccountNotice')}</span>
             </p>
           </div>
         </div>

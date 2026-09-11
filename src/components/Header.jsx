@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export default function Header({ 
   mandalName = "श्री गणेश उत्सव मंडळ", 
-  location = "सिद्धिविनायक चौक, मुंबई", 
+  location = "Dhanora bk", 
   tagline = "वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ • निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा",
   isConnected = false,
 }) {
@@ -59,7 +59,7 @@ export default function Header({
         </motion.div>
 
         {/* Right: Auspicious Shloka & CTA */}
-        <motion.div 
+        {/* <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
@@ -85,7 +85,7 @@ export default function Header({
               <span>🙏</span>
             </a>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </header>
   );

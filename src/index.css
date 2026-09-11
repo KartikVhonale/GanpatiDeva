@@ -32,6 +32,22 @@
   animation: pulseSlow 4s ease-in-out infinite;
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 26s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Custom scrollbar for modern sleek glass feel */
 ::-webkit-scrollbar {
   width: 6px;

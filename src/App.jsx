@@ -9,10 +9,12 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import BottomMobileNav from './components/BottomMobileNav';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import useDonations from './hooks/useDonations';
 
 function AppContent() {
   const { isConnected } = useDonations();
+  const { t } = useLanguage();
 
   return (
     <div className="relative min-h-screen w-full bg-[#0d0705] text-amber-50 overflow-x-hidden selection:bg-orange-500 selection:text-white pb-24 md:pb-14">
@@ -24,7 +26,7 @@ function AppContent() {
       </div>
 
       <div className="mx-auto max-w-6xl px-3 sm:px-6 pt-3 space-y-6">
-        {/* Shared Festive Navbar */}
+        {/* Shared Festive Navbar with Language Switcher */}
         <Navbar isConnected={isConnected} />
 
         {/* Page Routes */}
@@ -69,13 +71,13 @@ function AppContent() {
           <div className="flex justify-center items-center gap-2 text-amber-300">
             <span className="text-xl">🪔</span>
             <p className="font-serif font-bold text-sm sm:text-base italic">
-              ॥ मोरया रे बाप्पा मोरया रे, गणपती बाप्पा मोरया, मंगलमूर्ती मोरया ॥
+              {t('footerShloka')}
             </p>
             <span className="text-xl">🪔</span>
           </div>
 
           <div className="text-xs text-orange-200/70 pt-1">
-            सार्वजनिक श्री गणेश उत्सव मंडळ ट्रस्ट • नोंदणी क्र. महा/२०२६/गणेश-१
+            {t('trustNotice')}
           </div>
         </footer>
 
@@ -89,9 +91,11 @@ function AppContent() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

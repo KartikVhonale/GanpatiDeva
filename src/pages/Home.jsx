@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import heroImg from '../assets/hero.png';
 import { playFlowerChime, playTempleBell } from '../utils/audio';
+import { useLanguage } from '../context/LanguageContext';
 import AshtavinayakSection from '../components/AshtavinayakSection';
 import SymbolismSection from '../components/SymbolismSection';
 import UtsavSchedule from '../components/UtsavSchedule';
@@ -54,6 +55,7 @@ const SOCIAL_INITIATIVES = [
 ];
 
 export default function Home() {
+  const { t } = useLanguage();
   const [floatingParticles, setFloatingParticles] = useState([]);
   const [diyaLit, setDiyaLit] = useState(false);
   const [ritualFeedback, setRitualFeedback] = useState('');
@@ -61,7 +63,7 @@ export default function Home() {
   // Trigger virtual flower shower
   const triggerFlowerShower = () => {
     playFlowerChime();
-    setRitualFeedback('पुष्पवृष्टी समर्पित झाली! बाप्पा मोरया! 🌸');
+    setRitualFeedback(t('flowerChimeMsg'));
 
     const newItems = Array.from({ length: 16 }).map((_, i) => ({
       id: `fl-${Date.now()}-${i}`,
@@ -82,7 +84,7 @@ export default function Home() {
   const triggerLightDiya = () => {
     playTempleBell();
     setDiyaLit(true);
-    setRitualFeedback('॥ शुभं करोति कल्याणम् आरोग्यं धनसंपदा ॥ दीप प्रज्वलित झाला! 🪔');
+    setRitualFeedback(t('diyaLitMsg'));
     setTimeout(() => {
       setRitualFeedback('');
     }, 4500);
@@ -159,12 +161,12 @@ export default function Home() {
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 px-4 py-1 text-xs sm:text-sm font-black text-amber-300 shadow-inner">
               <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>विघ्नहर्ता • सुखकर्ता • सर्वमंगलकारक</span>
+              <span>{t('heroBadge')}</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight drop-shadow-[0_4px_20px_rgba(251,191,36,0.6)]">
               <span className="bg-gradient-to-r from-amber-200 via-orange-300 to-amber-100 bg-clip-text text-transparent">
-                ॥ श्री गणेशाय नमः ॥
+                {t('heroTitle')}
               </span>
             </h1>
           </motion.div>
@@ -208,7 +210,7 @@ export default function Home() {
 
           {/* Devotional Description */}
           <p className="max-w-2xl text-xs sm:text-sm md:text-base text-orange-200/85 leading-relaxed font-medium">
-            सार्वजनिक श्री गणेश उत्सव मंडळामध्ये आपले सहर्ष स्वागत! बाप्पाच्या चरणी नतमस्तक होऊन सुख, शांती आणि समृद्धीचे शुभाशीर्वाद प्राप्त करा.
+            {t('heroSubtitle')}
           </p>
 
           {/* Dual Interactive Ritual Action Buttons */}
@@ -221,7 +223,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500/25 to-orange-500/25 border-2 border-amber-400/50 hover:bg-amber-500/35 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-black text-amber-200 shadow-lg shadow-orange-600/20 backdrop-blur-md transition-all cursor-pointer"
             >
               <Flower2 className="h-4 w-4 text-rose-400 animate-spin-slow" />
-              <span>🌸 पुष्पवृष्टी करा (Shower Flowers)</span>
+              <span>{t('showerFlowers')}</span>
             </motion.button>
 
             {/* 2. Virtual Diya Lighting */}
@@ -236,7 +238,7 @@ export default function Home() {
               }`}
             >
               <Flame className={`h-4 w-4 ${diyaLit ? 'text-orange-900 animate-bounce' : 'text-amber-400'}`} />
-              <span>{diyaLit ? '🪔 नंदादीप तेवत आहे' : '🪔 दीप प्रज्वलित करा'}</span>
+              <span>{diyaLit ? t('diyaLit') : t('lightDiya')}</span>
             </motion.button>
           </div>
 
@@ -261,8 +263,7 @@ export default function Home() {
               className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 px-6 py-3.5 text-sm sm:text-base font-black text-white shadow-xl shadow-orange-600/40 ring-2 ring-amber-300/50 hover:scale-105 hover:shadow-orange-500/60 active:scale-95 transition-all cursor-pointer"
             >
               <Tv className="h-5 w-5" />
-              <span>पहा थेट देणगी फलक (Live Board)</span>
-              <span>↗</span>
+              <span>{t('btnLiveBoard')}</span>
             </Link>
 
             <Link
@@ -270,8 +271,7 @@ export default function Home() {
               className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500/40 bg-orange-950/50 hover:bg-orange-900/60 px-6 py-3.5 text-sm sm:text-base font-black text-amber-200 hover:text-white shadow-lg backdrop-blur-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <UserCheck className="h-5 w-5 text-amber-400" />
-              <span>स्वयंसेवक कक्ष (Volunteer Desk)</span>
-              <span>→</span>
+              <span>{t('btnVolunteerDesk')}</span>
             </Link>
           </div>
         </div>

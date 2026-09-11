@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import CountUpRaw from 'react-countup';
+import { useLanguage } from '../context/LanguageContext';
 
 const CountUp = CountUpRaw?.default || CountUpRaw;
 
@@ -11,34 +12,35 @@ export default function TotalCounter({
   prasadCount = 1250,
   aartiSponsors = 36
 }) {
+  const { lang } = useLanguage();
   const percentage = Math.min(Math.round((totalAmount / targetAmount) * 100), 100);
 
   const stats = [
     {
-      title: "एकूण भाविक (Total Donors)",
+      title: lang === 'mr' ? "एकूण भाविक (Total Donors)" : "Devotees & Donors",
       value: donorCount,
       prefix: "",
       suffix: "+",
       icon: "👥",
-      badge: "सक्रिय सहभागी",
+      badge: lang === 'mr' ? "सक्रिय सहभागी" : "Active Donors",
       border: "border-amber-500/30",
     },
     {
-      title: "महाप्रसाद सेवा (Meals Served)",
+      title: lang === 'mr' ? "महाप्रसाद सेवा (Meals Served)" : "Maha-Prasad Served",
       value: prasadCount,
       prefix: "",
-      suffix: " थाळ्या",
+      suffix: lang === 'mr' ? " थाळ्या" : " Plates",
       icon: "🍲",
-      badge: "अन्नदान सेवा",
+      badge: lang === 'mr' ? "अन्नदान सेवा" : "Annadaan Seva",
       border: "border-orange-500/30",
     },
     {
-      title: "आरती प्रायोजक (Aarti Sevadars)",
+      title: lang === 'mr' ? "आरती प्रायोजक (Aarti Sevadars)" : "Aarti Sevadars",
       value: aartiSponsors,
       prefix: "",
-      suffix: " यजमान",
+      suffix: lang === 'mr' ? " यजमान" : " Hosts",
       icon: "🔔",
-      badge: "दैनिक आरती",
+      badge: lang === 'mr' ? "दैनिक आरती" : "Daily Aarti",
       border: "border-rose-500/30",
     },
   ];
@@ -61,7 +63,7 @@ export default function TotalCounter({
           <div className="text-center md:text-left space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3.5 py-1 text-xs font-semibold text-amber-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>🌺 एकूण जमा सेवा निधी (Live Seva Collection)</span>
+              <span>{lang === 'mr' ? '🌺 एकूण जमा सेवा निधी (Live Seva Collection)' : '🌺 Total Live Dakshina Collection'}</span>
             </div>
 
             <div className="flex items-baseline justify-center md:justify-start gap-1 font-extrabold tracking-tight">
@@ -83,7 +85,15 @@ export default function TotalCounter({
             </div>
 
             <p className="text-xs md:text-sm text-orange-200/75">
-              लक्ष्य (Target): <span className="font-semibold text-amber-300">₹{targetAmount.toLocaleString()}</span> • महाप्रसाद, मंडप सजावट व विसर्जन सोहळ्यासाठी
+              {lang === 'mr' ? (
+                <>
+                  लक्ष्य (Target): <span className="font-semibold text-amber-300">₹{targetAmount.toLocaleString()}</span> • महाप्रसाद, मंडप सजावट व विसर्जन सोहळ्यासाठी
+                </>
+              ) : (
+                <>
+                  Target Goal: <span className="font-semibold text-amber-300">₹{targetAmount.toLocaleString()}</span> • For Maha-Prasad, pandal decoration & grand visarjan
+                </>
+              )}
             </p>
           </div>
 
@@ -128,13 +138,13 @@ export default function TotalCounter({
 
               <div className="space-y-1 text-left">
                 <div className="text-xs font-semibold text-orange-300 uppercase tracking-wide">
-                  ध्येय प्रगती (Progress)
+                  {lang === 'mr' ? 'ध्येय प्रगती (Progress)' : 'Campaign Progress'}
                 </div>
                 <div className="text-sm text-white font-medium">
-                  ₹{Math.max(0, targetAmount - totalAmount).toLocaleString()} शिल्लक
+                  ₹{Math.max(0, targetAmount - totalAmount).toLocaleString()} {lang === 'mr' ? 'शिल्लक' : 'Remaining'}
                 </div>
                 <div className="text-[11px] text-orange-300/70">
-                  उद्दिष्ट पूर्ततेच्या जवळ!
+                  {lang === 'mr' ? 'उद्दिष्ट पूर्ततेच्या जवळ!' : 'Nearing Festival Goal!'}
                 </div>
               </div>
             </div>
@@ -144,8 +154,8 @@ export default function TotalCounter({
         {/* Linear progress bar */}
         <div className="relative mt-8">
           <div className="flex justify-between text-xs font-medium text-orange-200/80 mb-2">
-            <span>सद्यस्थिती: {percentage}% पूर्ण</span>
-            <span>अंतिम उद्दिष्ट: ₹{targetAmount.toLocaleString()}</span>
+            <span>{lang === 'mr' ? `सद्यस्थिती: ${percentage}% पूर्ण` : `Status: ${percentage}% Achieved`}</span>
+            <span>{lang === 'mr' ? `अंतिम उद्दिष्ट: ₹${targetAmount.toLocaleString()}` : `Goal: ₹${targetAmount.toLocaleString()}`}</span>
           </div>
           <div className="relative h-3 w-full overflow-hidden rounded-full bg-black/50 border border-amber-500/20 p-0.5">
             <motion.div
