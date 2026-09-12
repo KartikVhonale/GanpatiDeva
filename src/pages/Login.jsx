@@ -74,30 +74,21 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Quick Demo Autofill Bar */}
+          {/* Quick Admin Access Helper */}
           <div className="mb-6 rounded-2xl border border-amber-500/20 bg-black/40 p-3 text-xs space-y-2">
             <div className="flex items-center justify-between text-[11px] text-amber-300 font-semibold">
               <span className="flex items-center gap-1">
                 <Sparkles className="h-3 w-3 text-amber-400" />
-                त्वरित चाचणीसाठी डेमो खाती (Demo Fill):
+                मुख्य व्यवस्थापक प्रवेश (Admin Access):
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleFillDemo('admin', 'admin@ganpati2026')}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 font-bold text-amber-200 hover:bg-amber-500/25 transition-all text-[11px] cursor-pointer"
-              >
-                <span>👑 व्यवस्थापक (Admin)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo('volunteer1', 'volunteer@2026')}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 font-bold text-orange-200 hover:bg-orange-500/25 transition-all text-[11px] cursor-pointer"
-              >
-                <span>🙋‍♂️ स्वयंसेवक (Volunteer)</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => handleFillDemo('admin', 'admin@ganpati2026')}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 font-bold text-amber-200 hover:bg-amber-500/25 transition-all text-xs cursor-pointer"
+            >
+              <span>👑 व्यवस्थापक क्रेडेन्शियल्स भरा (Fill Admin Credentials)</span>
+            </button>
           </div>
 
           {/* Error Banner */}
