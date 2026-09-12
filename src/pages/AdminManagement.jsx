@@ -66,6 +66,13 @@ export default function AdminManagement() {
   const [processingId, setProcessingId] = useState(null);
   const [copiedUtr, setCopiedUtr] = useState(null);
 
+  // 4. Donations Management & Deletion State
+  const [adminDonations, setAdminDonations] = useState([]);
+  const [loadingDonations, setLoadingDonations] = useState(true);
+  const [donationSearch, setDonationSearch] = useState('');
+  const [donationFilter, setDonationFilter] = useState('all');
+  const [deletingDonationId, setDeletingDonationId] = useState(null);
+
   // General Feedback Toast
   const [feedback, setFeedback] = useState({ type: '', message: '' });
 
@@ -129,18 +136,72 @@ export default function AdminManagement() {
     }
   }, [token]);
 
+  // Fetch All Donations for Admin
+  const fetchAdminDonations = useCallback(async () => {
+    setLoadingDonations(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/donations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.donations)) {
+        setAdminDonations(data.donations);
+      }
+    } catch (err) {
+      console.error('Error fetching admin donations:', err);
+    } finally {
+      setLoadingDonations(false);
+    }
+  }, [token]);
+
   // Initial Load
   useEffect(() => {
     fetchUsers();
     fetchSettings();
     fetchPaymentRequests();
-  }, [fetchUsers, fetchSettings, fetchPaymentRequests]);
+    fetchAdminDonations();
+  }, [fetchUsers, fetchSettings, fetchPaymentRequests, fetchAdminDonations]);
 
   // Refresh All
   const refreshAll = () => {
     fetchUsers();
     fetchSettings();
     fetchPaymentRequests();
+    fetchAdminDonations();
+  };
+
+  // Delete a Donation (Admin only)
+  const handleDeleteDonation = async (id, donorName, amount) => {
+    if (
+      !window.confirm(
+        `⚠️ सावधान! खरोखर ${donorName} यांची ₹${Number(amount).toLocaleString()} ची देणगी कायमस्वरूपी हटवायची आहे का?\n\nही क्रिया पूर्ववत करता येणार नाही आणि थेट डॅशबोर्डवरील रक्कम कमी होईल.`
+      )
+    ) {
+      return;
+    }
+
+    setDeletingDonationId(id);
+    setFeedback({ type: '', message: '' });
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/donations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'देणगी हटवण्यात अयशस्वी');
+
+      setFeedback({
+        type: 'success',
+        message: data.message || `₹${Number(amount).toLocaleString()} ची देणगी यशस्वीपणे हटवली!`,
+      });
+
+      setAdminDonations((prev) => prev.filter((d) => (d._id || d.id) !== id));
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message });
+    } finally {
+      setDeletingDonationId(null);
+    }
   };
 
   // =========================================================================
@@ -451,6 +512,20 @@ export default function AdminManagement() {
           >
             <Users className="h-4 w-4" />
             <span>स्वयंसेवक कक्ष व्यवस्थापन ({usersList.length})</span>
+          </button>
+
+          {/* Tab 4: Donations Management & Deletion */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('donations')}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeTab === 'donations'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
+                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
+            }`}
+          >
+            <Trash2 className="h-4 w-4 text-red-400" />
+            <span>देणग्या व्यवस्थापन व हटवा ({adminDonations.length})</span>
           </button>
         </div>
       </div>
@@ -841,6 +916,32 @@ export default function AdminManagement() {
                 <span className="font-mono font-bold text-amber-200">{settings.upiId}</span>
               </div>
             </div>
+
+            {/* Quick Links to Home Editable Sections */}
+            <div className="w-full mt-3 rounded-2xl border border-amber-500/25 bg-black/60 p-4 text-xs space-y-2.5 text-left">
+              <span className="font-bold text-amber-300 block text-xs">
+                ✨ मुख्य पृष्ठावरील थेट संपादन (Quick Shortcuts):
+              </span>
+              <p className="text-[11px] text-orange-200/70">
+                तुम्ही Admin म्हणून लॉगिन असल्याने मुख्य पृष्ठावर (Home) थेट "संपादित करा" बटनांवर क्लिक करून बदल करू शकता:
+              </p>
+              <div className="flex flex-col gap-2 pt-1">
+                <a
+                  href="/#schedule"
+                  className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-orange-950/40 border border-amber-500/20 hover:border-amber-400 text-amber-200 text-xs font-medium transition"
+                >
+                  <span>⏰ दैनिक आरत्या व महाप्रसाद वेळापत्रक</span>
+                  <span className="text-[10px] text-amber-400 font-bold">मुख्य पृष्ठावर जा ↗</span>
+                </a>
+                <a
+                  href="/#initiatives"
+                  className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-orange-950/40 border border-amber-500/20 hover:border-amber-400 text-amber-200 text-xs font-medium transition"
+                >
+                  <span>🤝 मंडळाचे सामाजिक उपक्रम (Initiatives)</span>
+                  <span className="text-[10px] text-amber-400 font-bold">मुख्य पृष्ठावर जा ↗</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1082,6 +1183,230 @@ export default function AdminManagement() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: ALL DONATIONS MANAGEMENT & DELETION                                 */}
+      {/* ========================================================================= */}
+      {activeTab === 'donations' && (
+        <div className="space-y-6">
+          {/* Summary Stats Overview */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-4 text-center">
+              <span className="text-[11px] font-semibold text-orange-200/70 block uppercase tracking-wider">
+                एकूण देणग्या
+              </span>
+              <span className="text-xl sm:text-2xl font-black text-amber-300 mt-1 block">
+                {adminDonations.length}
+              </span>
+            </div>
+            <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-4 text-center">
+              <span className="text-[11px] font-semibold text-orange-200/70 block uppercase tracking-wider">
+                एकूण जमा रक्कम
+              </span>
+              <span className="text-xl sm:text-2xl font-black text-amber-400 mt-1 block">
+                ₹{adminDonations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="rounded-2xl border border-emerald-500/20 bg-black/40 p-4 text-center">
+              <span className="text-[11px] font-semibold text-emerald-200/70 block uppercase tracking-wider">
+                💵 रोख रक्कम (Cash)
+              </span>
+              <span className="text-xl sm:text-2xl font-black text-emerald-400 mt-1 block">
+                ₹{adminDonations
+                  .filter((d) => d.paymentMethod !== 'online')
+                  .reduce((sum, d) => sum + (Number(d.amount) || 0), 0)
+                  .toLocaleString()}
+              </span>
+            </div>
+            <div className="rounded-2xl border border-blue-500/20 bg-black/40 p-4 text-center">
+              <span className="text-[11px] font-semibold text-blue-200/70 block uppercase tracking-wider">
+                📱 ऑनलाइन (Online)
+              </span>
+              <span className="text-xl sm:text-2xl font-black text-blue-400 mt-1 block">
+                ₹{adminDonations
+                  .filter((d) => d.paymentMethod === 'online')
+                  .reduce((sum, d) => sum + (Number(d.amount) || 0), 0)
+                  .toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Search & Filter Controls */}
+          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/60 via-red-950/40 to-black/80 p-5 sm:p-6 backdrop-blur-xl shadow-xl space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <span>💰</span>
+                  <span>सर्व देणग्यांची यादी व थेट व्यवस्थापन (Live Donations List)</span>
+                </h2>
+                <p className="text-xs text-orange-200/70">
+                  चुकीची किंवा दुबार देणगी नोंद असल्यास केवळ मुख्य व्यवस्थापक (Admin) येथून कायमस्वरूपी हटवू शकतात.
+                </p>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full md:w-72">
+                <input
+                  type="text"
+                  placeholder="नाव, शहर, फोन किंवा पावती शोधा..."
+                  value={donationSearch}
+                  onChange={(e) => setDonationSearch(e.target.value)}
+                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2 pl-9 pr-3 text-xs sm:text-sm text-white placeholder-orange-200/40 outline-none focus:border-amber-400"
+                />
+                <Search className="h-4 w-4 text-orange-300/60 absolute left-3 top-2.5" />
+              </div>
+            </div>
+
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-500/15">
+              {[
+                { id: 'all', label: 'सर्व देणग्या' },
+                { id: 'cash', label: '💵 रोख (Cash)' },
+                { id: 'online', label: '📱 ऑनलाइन (Online)' },
+                { id: 'high', label: '🌟 विशेष (>₹५,०००)' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setDonationFilter(f.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    donationFilter === f.id
+                      ? 'bg-amber-500 text-black shadow-md'
+                      : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Donations Table */}
+            {loadingDonations ? (
+              <div className="py-12 text-center text-orange-200/60 text-sm">
+                देणग्या लोड होत आहेत...
+              </div>
+            ) : adminDonations.filter((d) => {
+                const q = donationSearch.toLowerCase().trim();
+                const matchesSearch =
+                  !q ||
+                  d.name?.toLowerCase().includes(q) ||
+                  d.city?.toLowerCase().includes(q) ||
+                  d.category?.toLowerCase().includes(q) ||
+                  d.recordedBy?.toLowerCase().includes(q) ||
+                  d.phone?.includes(q) ||
+                  d.utrNumber?.toLowerCase().includes(q) ||
+                  String(d.amount).includes(q) ||
+                  String(d._id || d.id).toLowerCase().includes(q);
+
+                if (!matchesSearch) return false;
+                if (donationFilter === 'cash') return d.paymentMethod !== 'online';
+                if (donationFilter === 'online') return d.paymentMethod === 'online';
+                if (donationFilter === 'high') return Number(d.amount) >= 5000;
+                return true;
+              }).length === 0 ? (
+              <div className="py-12 text-center rounded-2xl border border-dashed border-amber-500/20 bg-black/30">
+                <p className="text-orange-200/60 text-sm">कोणतीही देणगी नोंद आढळली नाही.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-amber-500/20">
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead className="bg-black/70 text-orange-200/80 uppercase text-[11px] font-bold tracking-wider border-b border-amber-500/20">
+                    <tr>
+                      <th className="py-3 px-3.5">भाविक (Donor)</th>
+                      <th className="py-3 px-3.5">रक्कम (Amount)</th>
+                      <th className="py-3 px-3.5">सेवा वर्ग (Category)</th>
+                      <th className="py-3 px-3.5">पद्धत (Method)</th>
+                      <th className="py-3 px-3.5">नोंदणीकर्ता</th>
+                      <th className="py-3 px-3.5">वेळ (Time)</th>
+                      <th className="py-3 px-3.5 text-center">क्रिया (Admin Action)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-500/10 bg-black/40">
+                    {adminDonations
+                      .filter((d) => {
+                        const q = donationSearch.toLowerCase().trim();
+                        const matchesSearch =
+                          !q ||
+                          d.name?.toLowerCase().includes(q) ||
+                          d.city?.toLowerCase().includes(q) ||
+                          d.category?.toLowerCase().includes(q) ||
+                          d.recordedBy?.toLowerCase().includes(q) ||
+                          d.phone?.includes(q) ||
+                          d.utrNumber?.toLowerCase().includes(q) ||
+                          String(d.amount).includes(q) ||
+                          String(d._id || d.id).toLowerCase().includes(q);
+
+                        if (!matchesSearch) return false;
+                        if (donationFilter === 'cash') return d.paymentMethod !== 'online';
+                        if (donationFilter === 'online') return d.paymentMethod === 'online';
+                        if (donationFilter === 'high') return Number(d.amount) >= 5000;
+                        return true;
+                      })
+                      .map((d) => {
+                        const donId = d._id || d.id;
+                        const isDeleting = deletingDonationId === donId;
+                        return (
+                          <tr key={donId} className="hover:bg-orange-950/30 transition-colors">
+                            <td className="py-3 px-3.5">
+                              <span className="font-bold text-white block">{d.name}</span>
+                              <span className="text-[11px] text-orange-200/60">
+                                📍 {d.city || 'स्थानिक भाविक'} {d.phone ? `• 📞 ${d.phone}` : ''}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3.5 font-black text-amber-300 text-sm sm:text-base">
+                              ₹{Number(d.amount || 0).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-3.5">
+                              <span className="inline-block rounded-full bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 text-[11px] font-semibold text-amber-200">
+                                {d.category || 'महाप्रसाद सेवा'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3.5">
+                              {d.paymentMethod === 'online' ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 text-[10px] font-bold">
+                                  📱 ऑनलाइन {d.utrNumber ? `(${d.utrNumber})` : ''}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold">
+                                  💵 रोख (Cash)
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3.5 text-xs text-orange-200/70">
+                              {d.recordedBy || 'स्वयंसेवक'}
+                            </td>
+                            <td className="py-3 px-3.5 text-xs text-orange-200/60 font-mono">
+                              {d.timestamp
+                                ? new Date(d.timestamp).toLocaleString('mr-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : 'आत्ताच'}
+                            </td>
+                            <td className="py-3 px-3.5 text-center">
+                              <button
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() => handleDeleteDonation(donId, d.name, d.amount)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                                title="ही देणगी कायमस्वरूपी हटवा"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                <span>{isDeleting ? 'हटवत आहे...' : 'हटवा'}</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

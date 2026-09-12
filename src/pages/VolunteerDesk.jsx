@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UserCheck, Receipt, Clock, CheckCircle2, DollarSign, Shield, ArrowRight, User } from 'lucide-react';
+import { UserCheck, Receipt, Clock, CheckCircle2, DollarSign, Shield, ArrowRight, User, Trash2 } from 'lucide-react';
 import AdminForm from '../components/AdminForm';
 import useDonations from '../hooks/useDonations';
 import { useAuth } from '../context/AuthContext';
 
 export default function VolunteerDesk() {
   const { user, token, isAdmin } = useAuth();
-  const { addManualDonation, donors, totalAmount, donorCount } = useDonations();
+  const { addManualDonation, deleteDonation, donors, totalAmount, donorCount } = useDonations();
 
   // Session history for volunteer tracking
   const [sessionEntries, setSessionEntries] = useState([]);
@@ -176,6 +176,7 @@ export default function VolunteerDesk() {
                     <th className="py-2.5 px-3">नोंदणीकर्ता</th>
                     <th className="py-2.5 px-3 text-right">रक्कम (₹)</th>
                     <th className="py-2.5 px-3 text-right">वेळ</th>
+                    {isAdmin && <th className="py-2.5 px-3 text-center">क्रिया</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-amber-500/15">
@@ -202,6 +203,27 @@ export default function VolunteerDesk() {
                       <td className="py-2.5 px-3 text-right text-orange-200/60 text-xs">
                         {entry.time}
                       </td>
+                      {isAdmin && (
+                        <td className="py-2.5 px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (window.confirm(`⚠️ प्रशासक क्रिया: खरोखर ${entry.name} यांची ₹${entry.amount.toLocaleString()} ची देणगी हटवायची आहे का?`)) {
+                                try {
+                                  await deleteDonation(entry.id, token);
+                                  setSessionEntries((prev) => prev.filter((s) => s.id !== entry.id));
+                                } catch (err) {
+                                  alert(err.message || 'त्रुटी आली');
+                                }
+                              }
+                            }}
+                            className="p-1 rounded-lg bg-red-950/60 hover:bg-red-700 text-red-300 hover:text-white border border-red-500/40 text-xs transition cursor-pointer"
+                            title="ही देणगी हटवा"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

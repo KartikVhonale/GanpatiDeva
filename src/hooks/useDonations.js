@@ -215,6 +215,20 @@ export function useDonations() {
           return [formatted, ...prev];
         });
       });
+
+      // Listen for deleted donation event from backend (admin deletion)
+      socket.on('donation_deleted', (data) => {
+        console.log('🗑️ Donation deleted via Socket.io:', data);
+        if (data.donationId) {
+          setDonors((prev) => prev.filter((d) => String(d.id) !== String(data.donationId) && String(d._id) !== String(data.donationId)));
+        }
+        if (data.totalVargani !== undefined) setTotalAmount(Number(data.totalVargani));
+        if (data.donorCount !== undefined) setDonorCount(Number(data.donorCount));
+        if (data.prasadCount !== undefined) setPrasadCount(Number(data.prasadCount));
+        if (data.aartiSponsors !== undefined) setAartiSponsors(Number(data.aartiSponsors));
+        if (data.cashTotal !== undefined) setCashTotal(Number(data.cashTotal));
+        if (data.onlineTotal !== undefined) setOnlineTotal(Number(data.onlineTotal));
+      });
     } catch (err) {
       console.error('Socket.io connection error:', err);
     }
@@ -286,6 +300,32 @@ export function useDonations() {
     return data;
   }, []);
 
+  // Admin only: Delete a donation
+  const deleteDonation = useCallback(async (donationId, authToken) => {
+    if (!authToken) throw new Error('प्रशासक लॉगिन आवश्यक आहे (Admin login required)');
+    const res = await fetch(`${BACKEND_URL}/api/admin/donations/${donationId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'देणगी हटवण्यात अयशस्वी');
+    }
+
+    setDonors((prev) => prev.filter((d) => String(d.id) !== String(donationId) && String(d._id) !== String(donationId)));
+    if (data.stats) {
+      if (data.stats.totalVargani !== undefined) setTotalAmount(Number(data.stats.totalVargani));
+      if (data.stats.donorCount !== undefined) setDonorCount(Number(data.stats.donorCount));
+      if (data.stats.prasadCount !== undefined) setPrasadCount(Number(data.stats.prasadCount));
+      if (data.stats.aartiSponsors !== undefined) setAartiSponsors(Number(data.stats.aartiSponsors));
+      if (data.stats.cashTotal !== undefined) setCashTotal(Number(data.stats.cashTotal));
+      if (data.stats.onlineTotal !== undefined) setOnlineTotal(Number(data.stats.onlineTotal));
+    }
+    return data;
+  }, []);
+
   return {
     totalAmount,
     targetAmount,
@@ -302,6 +342,7 @@ export function useDonations() {
     isLoading,
     addManualDonation,
     submitPaymentRequest,
+    deleteDonation,
     refetchDonations: fetchInitialDonations,
   };
 }

@@ -8,16 +8,43 @@ import {
   Droplet, 
   Utensils, 
   GraduationCap, 
-  Award,
-  Flame,
-  Flower2
+  Award, 
+  Flame, 
+  Flower2,
+  Edit3,
+  Plus,
+  Trash2,
+  X,
+  Check,
+  Save
 } from 'lucide-react';
 import { playFlowerChime, playTempleBell } from '../utils/audio';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import useDonations from '../hooks/useDonations';
 import AshtavinayakSection from '../components/AshtavinayakSection';
 import SymbolismSection from '../components/SymbolismSection';
 import UtsavSchedule from '../components/UtsavSchedule';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+const ICON_MAP = {
+  Droplet,
+  Utensils,
+  GraduationCap,
+  Award,
+  HeartHandshake,
+  Flame,
+};
+
+const COLOR_OPTIONS = [
+  { label: 'गुलाबी / Rose', value: 'border-rose-500/40 bg-rose-950/30 text-rose-300' },
+  { label: 'सोनेरी / Amber', value: 'border-amber-500/40 bg-amber-950/30 text-amber-300' },
+  { label: 'केशरी / Orange', value: 'border-orange-500/40 bg-orange-950/30 text-orange-300' },
+  { label: 'लाल / Red', value: 'border-red-500/40 bg-red-950/30 text-red-300' },
+  { label: 'हिरवा / Emerald', value: 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' },
+  { label: 'निळा / Blue', value: 'border-blue-500/40 bg-blue-950/30 text-blue-300' },
+];
 
 const DEFAULT_GANESHA_IMAGES = [
   'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/Gemini_Generated_Image_g93ok4g93ok4g93o',
@@ -29,36 +56,40 @@ const DEFAULT_GANESHA_IMAGES = [
   'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231032/Gemini_Generated_Image_a0g10oa0g10oa0g1_1.png',
 ];
 
-const SOCIAL_INITIATIVES = [
+const DEFAULT_SOCIAL_INITIATIVES = [
   {
+    id: 'init-1',
     title: 'भव्य रक्तदान शिबिर (Blood Donation Camp)',
     stats: '२५०+ बाटल्या रक्त संकलन',
     desc: 'दरवर्षी गणेशोत्सवाच्या ५ व्या दिवशी स्थानिक शासकीय रुग्णालयांच्या सहकार्याने आयोजित.',
-    icon: Droplet,
+    iconName: 'Droplet',
     tag: 'आरोग्य सेवा',
     color: 'border-rose-500/40 bg-rose-950/30 text-rose-300',
   },
   {
+    id: 'init-2',
     title: 'दैनिक महाप्रसाद वाटप (Maha Prasad)',
     stats: '१,५००+ दररोज थाळ्या',
     desc: 'मंडळात येणाऱ्या प्रत्येक भाविकासाठी शुद्ध, सात्विक आणि तृप्त करणारा महाप्रसाद विनामूल्य.',
-    icon: Utensils,
+    iconName: 'Utensils',
     tag: 'अन्नदान सेवा',
     color: 'border-amber-500/40 bg-amber-950/30 text-amber-300',
   },
   {
+    id: 'init-3',
     title: 'गुणवंत विद्यार्थी सत्कार व शैक्षणिक मदत',
     stats: '५० गरजू विद्यार्थ्यांना शिष्यवृत्ती',
     desc: 'परिसरातील होतकरू विद्यार्थ्यांना वह्या, पुस्तके व शालेय साहित्य वाटप उपक्रम.',
-    icon: GraduationCap,
+    iconName: 'GraduationCap',
     tag: 'शैक्षणिक सेवा',
     color: 'border-orange-500/40 bg-orange-950/30 text-orange-300',
   },
   {
+    id: 'init-4',
     title: 'बाल संस्कार व सांस्कृतिक स्पर्धा',
     stats: '४००+ बाल कलाकार सहभागी',
     desc: 'चित्रकला, वकृत्व, श्लोक पठण व पारंपरिक भजन स्पर्धांचे आयोजन करून कलागुणांना प्रोत्साहन.',
-    icon: Award,
+    iconName: 'Award',
     tag: 'संस्कृती संवर्धन',
     color: 'border-red-500/40 bg-red-950/30 text-red-300',
   },
@@ -67,6 +98,76 @@ const SOCIAL_INITIATIVES = [
 export default function Home() {
   const { t } = useLanguage();
   const { settings } = useDonations();
+  const { isAdmin, token } = useAuth();
+
+  // Active Social Initiatives
+  const activeInitiatives = settings?.socialInitiatives && settings.socialInitiatives.length > 0
+    ? settings.socialInitiatives
+    : DEFAULT_SOCIAL_INITIATIVES;
+
+  // State for Admin Initiatives Editing Modal
+  const [isEditingInitiatives, setIsEditingInitiatives] = useState(false);
+  const [editingInitiativesList, setEditingInitiativesList] = useState([]);
+  const [savingInitiatives, setSavingInitiatives] = useState(false);
+  const [initiativeFeedback, setInitiativeFeedback] = useState('');
+
+  const handleOpenEditInitiatives = () => {
+    setEditingInitiativesList(JSON.parse(JSON.stringify(activeInitiatives)));
+    setIsEditingInitiatives(true);
+    setInitiativeFeedback('');
+  };
+
+  const handleAddInitiative = () => {
+    const newItem = {
+      id: `init-${Date.now()}`,
+      title: 'नवीन सामाजिक उपक्रम',
+      stats: '१००+ लाभार्थी',
+      desc: 'या उपक्रमाचे संक्षिप्त वर्णन येथे लिहा.',
+      iconName: 'HeartHandshake',
+      tag: 'सेवा उपक्रम',
+      color: 'border-amber-500/40 bg-amber-950/30 text-amber-300',
+    };
+    setEditingInitiativesList((prev) => [...prev, newItem]);
+  };
+
+  const handleUpdateInitiativeItem = (index, field, value) => {
+    setEditingInitiativesList((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const handleDeleteInitiativeItem = (index) => {
+    setEditingInitiativesList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveInitiatives = async () => {
+    setSavingInitiatives(true);
+    setInitiativeFeedback('');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ socialInitiatives: editingInitiativesList }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'उपक्रम सेव्ह करताना त्रुटी आली');
+
+      setInitiativeFeedback('✅ सामाजिक उपक्रम यशस्वीरित्या सेव्ह झाले!');
+      setTimeout(() => {
+        setIsEditingInitiatives(false);
+        setInitiativeFeedback('');
+      }, 1000);
+    } catch (err) {
+      setInitiativeFeedback('❌ त्रुटी: ' + err.message);
+    } finally {
+      setSavingInitiatives(false);
+    }
+  };
 
   // Active Ganesha images from Cloudinary (or fallback high-quality sacred defaults)
   const activeImages = settings?.ganeshaImages && settings.ganeshaImages.length > 0
@@ -395,8 +496,9 @@ export default function Home() {
       {/* ========================================================================= */}
       {/* 6. MANDAL SOCIAL INITIATIVES & PUBLIC CHARITY                             */}
       {/* ========================================================================= */}
-      <section className="relative rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/60 via-red-950/40 to-black/80 p-5 sm:p-8 md:p-10 backdrop-blur-2xl shadow-xl space-y-6">
+      <section id="initiatives" className="relative rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/60 via-red-950/40 to-black/80 p-5 sm:p-8 md:p-10 backdrop-blur-2xl shadow-xl space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-amber-500/20 pb-4">
+
           <div>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-0.5 text-xs font-bold text-amber-300 mb-1">
               <HeartHandshake className="h-3.5 w-3.5" />
@@ -405,19 +507,30 @@ export default function Home() {
             <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
               मंडळाचे सामाजिक उपक्रम (Initiatives Funded by Seva)
             </h3>
+            <span className="text-xs text-orange-200/70 block mt-0.5">
+              आपल्या वर्गणी व देणगीतून साकारलेली लोकोपयोगी कार्ये
+            </span>
           </div>
-          <span className="text-xs text-orange-200/70">
-            आपल्या वर्गणी व देणगीतून साकारलेली लोकोपयोगी कार्ये
-          </span>
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleOpenEditInitiatives}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition shadow-sm cursor-pointer self-start md:self-auto"
+            >
+              <Edit3 className="h-3.5 w-3.5" />
+              <span>उपक्रम संपादित करा (Admin)</span>
+            </button>
+          )}
         </div>
 
         {/* Grid of Social Initiatives */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {SOCIAL_INITIATIVES.map((item, idx) => {
-            const Icon = item.icon;
+          {activeInitiatives.map((item, idx) => {
+            const Icon = ICON_MAP[item.iconName] || item.icon || HeartHandshake;
             return (
               <motion.div
-                key={item.title}
+                key={item.id || item.title}
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -433,7 +546,7 @@ export default function Home() {
                     <h4 className="font-bold text-sm sm:text-base text-white">
                       {item.title}
                     </h4>
-                    <span className={`inline-block rounded-full border px-2 py-0.2 text-[10px] font-bold ${item.color}`}>
+                    <span className={`inline-block rounded-full border px-2 py-0.2 text-[10px] font-bold ${item.color || 'border-amber-500/40 bg-amber-950/30 text-amber-300'}`}>
                       {item.tag}
                     </span>
                   </div>
@@ -452,6 +565,190 @@ export default function Home() {
           })}
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* ADMIN INITIATIVES EDIT MODAL                                               */}
+      {/* ========================================================================= */}
+      {isAdmin && isEditingInitiatives && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-3xl w-full rounded-3xl border border-amber-500/40 bg-gradient-to-b from-orange-950/95 via-zinc-950 to-black p-5 sm:p-7 shadow-2xl max-h-[85vh] overflow-y-auto space-y-5"
+          >
+            <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <span>✏️</span>
+                  <span>सामाजिक उपक्रम संपादन (Admin Only)</span>
+                </h3>
+                <p className="text-xs text-orange-200/70">
+                  येथे केलेले बदल मुख्य पृष्ठावर त्वरित थेट लागू होतील.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingInitiatives(false)}
+                className="rounded-full p-1.5 text-orange-200/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {initiativeFeedback && (
+              <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-400/40 text-xs sm:text-sm font-semibold text-amber-200">
+                {initiativeFeedback}
+              </div>
+            )}
+
+            {/* List of items to edit */}
+            <div className="space-y-4">
+              {editingInitiativesList.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="rounded-2xl border border-amber-500/25 bg-black/50 p-4 space-y-3 relative group"
+                >
+                  <div className="flex items-center justify-between border-b border-amber-500/15 pb-2">
+                    <span className="text-xs font-bold text-amber-300">
+                      उपक्रम #{idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteInitiativeItem(idx)}
+                      className="p-1 rounded-lg text-red-400 hover:bg-red-950/60 transition cursor-pointer"
+                      title="काढून टाका"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
+                        उपक्रमाचे नाव / शीर्षक
+                      </label>
+                      <input
+                        type="text"
+                        value={item.title}
+                        onChange={(e) => handleUpdateInitiativeItem(idx, 'title', e.target.value)}
+                        className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
+                        placeholder="उदा. भव्य रक्तदान शिबिर"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
+                        आकडेवारी / प्रभाव (Stats)
+                      </label>
+                      <input
+                        type="text"
+                        value={item.stats}
+                        onChange={(e) => handleUpdateInitiativeItem(idx, 'stats', e.target.value)}
+                        className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
+                        placeholder="उदा. २५०+ बाटल्या रक्त संकलन"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
+                        टॅग (Tag / Category)
+                      </label>
+                      <input
+                        type="text"
+                        value={item.tag}
+                        onChange={(e) => handleUpdateInitiativeItem(idx, 'tag', e.target.value)}
+                        className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
+                        placeholder="उदा. आरोग्य सेवा"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
+                        चिन्ह (Icon)
+                      </label>
+                      <select
+                        value={item.iconName || 'HeartHandshake'}
+                        onChange={(e) => handleUpdateInitiativeItem(idx, 'iconName', e.target.value)}
+                        className="w-full rounded-xl border border-amber-500/30 bg-black/80 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
+                      >
+                        <option value="Droplet">🩸 Droplet (रक्तदान / आरोग्य)</option>
+                        <option value="Utensils">🍲 Utensils (महाप्रसाद / अन्नदान)</option>
+                        <option value="GraduationCap">🎓 GraduationCap (शिक्षण)</option>
+                        <option value="Award">🏆 Award (संस्कृती / स्पर्धा)</option>
+                        <option value="HeartHandshake">🤝 HeartHandshake (सेवा)</option>
+                        <option value="Flame">🔥 Flame (आरती / यज्ञ)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
+                        रंग शैली (Color Theme)
+                      </label>
+                      <select
+                        value={item.color || COLOR_OPTIONS[0].value}
+                        onChange={(e) => handleUpdateInitiativeItem(idx, 'color', e.target.value)}
+                        className="w-full rounded-xl border border-amber-500/30 bg-black/80 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
+                      >
+                        {COLOR_OPTIONS.map((c) => (
+                          <option key={c.label} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
+                      सविस्तर माहिती (Description)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={item.desc}
+                      onChange={(e) => handleUpdateInitiativeItem(idx, 'desc', e.target.value)}
+                      className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
+                      placeholder="उपक्रमाबद्दल थोडक्यात माहिती..."
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-amber-500/20">
+              <button
+                type="button"
+                onClick={handleAddInitiative}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-dashed border-amber-400/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ नवीन उपक्रम जोडा (Add New)</span>
+              </button>
+
+              <div className="w-full sm:w-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingInitiatives(false)}
+                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition cursor-pointer"
+                >
+                  रद्द करा
+                </button>
+                <button
+                  type="button"
+                  disabled={savingInitiatives}
+                  onClick={handleSaveInitiatives}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-lg shadow-orange-600/30 hover:brightness-110 active:scale-95 disabled:opacity-50 transition cursor-pointer"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{savingInitiatives ? 'सेव्ह होत आहे...' : 'बदल सेव्ह करा'}</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Footer Auspicious Blessing Quote */}
       <div className="text-center py-4">

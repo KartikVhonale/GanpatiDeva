@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Trash2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import useDonations from '../hooks/useDonations';
 
 export default function RecentDonorsList({ donors = [] }) {
   const { lang } = useLanguage();
+  const { isAdmin, token } = useAuth();
+  const { deleteDonation } = useDonations();
+  const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -152,6 +158,30 @@ export default function RecentDonorsList({ donors = [] }) {
                       <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide backdrop-blur-md ${donor.badgeColor || "border-amber-400/40 bg-amber-500/20 text-amber-200"}`}>
                         {donor.category}
                       </span>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          disabled={deletingId === donor.id}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`⚠️ प्रशासक क्रिया: खरोखर ${donor.name} यांची ₹${donor.amount.toLocaleString()} ची देणगी कायमस्वरूपी हटवायची आहे का?\n\nही क्रिया पूर्ववत करता येणार नाही.`)) {
+                              try {
+                                setDeletingId(donor.id);
+                                await deleteDonation(donor.id, token);
+                              } catch (err) {
+                                alert(err.message || 'त्रुटी आली');
+                              } finally {
+                                setDeletingId(null);
+                              }
+                            }
+                          }}
+                          className="mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-0.5 bg-red-950/60 hover:bg-red-700/80 text-red-300 hover:text-white border border-red-500/40 text-[10px] font-bold transition cursor-pointer shadow-sm disabled:opacity-50"
+                          title="व्यवस्थापक: ही देणगी हटवा (Delete Donation)"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span>{deletingId === donor.id ? 'हटवत आहे...' : 'हटवा'}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
