@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, KeyRound, Eye, EyeOff, ArrowLeft, Sparkles } from 'lucide-react';
+import { Lock, User, KeyRound, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -43,12 +43,6 @@ export default function Login() {
     }
   };
 
-  const handleFillDemo = (demoUser, demoPass) => {
-    setUsername(demoUser);
-    setPassword(demoPass);
-    setErrorMsg('');
-  };
-
   return (
     <div className="min-h-[75vh] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-6">
@@ -72,23 +66,6 @@ export default function Login() {
             <p className="text-xs text-orange-200/75">
               स्वयंसेवक व व्यवस्थापकांसाठी अधिकृत प्रवेशद्वार
             </p>
-          </div>
-
-          {/* Quick Admin Access Helper */}
-          <div className="mb-6 rounded-2xl border border-amber-500/20 bg-black/40 p-3 text-xs space-y-2">
-            <div className="flex items-center justify-between text-[11px] text-amber-300 font-semibold">
-              <span className="flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-amber-400" />
-                मुख्य व्यवस्थापक प्रवेश (Admin Access):
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleFillDemo('admin', 'admin@ganpati2026')}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 font-bold text-amber-200 hover:bg-amber-500/25 transition-all text-xs cursor-pointer"
-            >
-              <span>👑 व्यवस्थापक क्रेडेन्शियल्स भरा (Fill Admin Credentials)</span>
-            </button>
           </div>
 
           {/* Error Banner */}
