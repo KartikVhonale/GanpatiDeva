@@ -6,11 +6,11 @@ import { useLanguage } from '../context/LanguageContext';
 const CountUp = CountUpRaw?.default || CountUpRaw;
 
 export default function TotalCounter({
-  totalAmount = 384500,
+  totalAmount = 0,
   targetAmount = 500000,
-  donorCount = 428,
-  prasadCount = 1250,
-  aartiSponsors = 36
+  donorCount = 0,
+  prasadCount = 0,
+  aartiSponsors = 0
 }) {
   const { lang } = useLanguage();
   const percentage = Math.min(Math.round((totalAmount / targetAmount) * 100), 100);

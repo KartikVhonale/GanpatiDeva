@@ -7,14 +7,14 @@ import { useAuth } from '../context/AuthContext';
 
 export default function VolunteerDesk() {
   const { user, token, isAdmin } = useAuth();
-  const { addManualDonation } = useDonations();
+  const { addManualDonation, donors, totalAmount, donorCount } = useDonations();
 
   // Session history for volunteer tracking
   const [sessionEntries, setSessionEntries] = useState([]);
 
-  const handleAdminDonation = (donationData) => {
+  const handleAdminDonation = async (donationData) => {
     // Record in global hook / backend API with current volunteer attribution & auth token
-    addManualDonation(
+    const result = await addManualDonation(
       {
         ...donationData,
         recordedBy: user?.name || 'मंडळ स्वयंसेवक',
@@ -24,7 +24,7 @@ export default function VolunteerDesk() {
 
     // Also record in volunteer's local session history table
     const newEntry = {
-      id: `SES-${Date.now().toString().slice(-5)}`,
+      id: result?.donation?._id || `SES-${Date.now().toString().slice(-5)}`,
       name: donationData.name,
       amount: donationData.amount,
       category: donationData.category,
@@ -36,7 +36,9 @@ export default function VolunteerDesk() {
     setSessionEntries((prev) => [newEntry, ...prev]);
   };
 
-  const sessionTotal = sessionEntries.reduce((sum, e) => sum + e.amount, 0);
+  const displayList = sessionEntries.length > 0
+    ? [...sessionEntries, ...donors.filter(d => !sessionEntries.some(s => s.id === d.id))]
+    : donors;
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8 pb-12">
@@ -86,20 +88,20 @@ export default function VolunteerDesk() {
           <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-3.5">
             <div className="flex items-center gap-2 text-xs text-orange-200/70 mb-1">
               <Receipt className="h-3.5 w-3.5 text-amber-400" />
-              <span>सत्रातील नोंदी</span>
+              <span>नोंदणीकृत पावत्या (Receipts)</span>
             </div>
             <div className="text-xl sm:text-2xl font-black text-amber-300">
-              {sessionEntries.length} पावती
+              {displayList.length} पावती
             </div>
           </div>
 
           <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-3.5">
             <div className="flex items-center gap-2 text-xs text-orange-200/70 mb-1">
               <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
-              <span>जमा रोख रक्कम</span>
+              <span>एकूण जमा सेवा निधी (Live)</span>
             </div>
             <div className="text-xl sm:text-2xl font-black text-emerald-300">
-              ₹{sessionTotal.toLocaleString()}
+              ₹{totalAmount.toLocaleString()}
             </div>
           </div>
 
@@ -124,19 +126,19 @@ export default function VolunteerDesk() {
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-400" />
             <h3 className="font-bold text-base sm:text-lg text-white">
-              सध्याच्या सत्रातील नोंदणी इतिहास (Session History)
+              नोंदणीकृत देणगी इतिहास (Live Donation Records)
             </h3>
           </div>
           <span className="text-xs text-orange-300/70">
-            {sessionEntries.length} नोंदी
+            {displayList.length} नोंदी
           </span>
         </div>
 
-        {sessionEntries.length > 0 ? (
+        {displayList.length > 0 ? (
           <>
             {/* Mobile Card List (Phones) */}
             <div className="sm:hidden space-y-2.5">
-              {sessionEntries.map((entry) => (
+              {displayList.map((entry) => (
                 <div key={entry.id} className="rounded-2xl border border-amber-500/20 bg-black/50 p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] font-bold text-amber-300/90 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-400/20">
@@ -177,7 +179,7 @@ export default function VolunteerDesk() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-amber-500/15">
-                  {sessionEntries.map((entry) => (
+                  {displayList.map((entry) => (
                     <tr key={entry.id} className="hover:bg-orange-900/20 transition-colors">
                       <td className="py-2.5 px-3 font-mono font-bold text-amber-300/90">
                         {entry.id}

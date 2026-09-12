@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function RecentDonorsList({ donors = [] }) {
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
-    { id: "all", label: "सर्व देणगीदार (All)" },
-    { id: "prasad", label: "महाप्रसाद सेवा" },
-    { id: "aarti", label: "आरती / दीप सेवा" },
-    { id: "vip", label: "विशेष सेवा (>₹१०,०००)" }
+    { id: "all", label: lang === 'mr' ? "सर्व देणगीदार (All)" : "All Donors" },
+    { id: "prasad", label: lang === 'mr' ? "महाप्रसाद सेवा" : "Maha-Prasad Seva" },
+    { id: "aarti", label: lang === 'mr' ? "आरती / दीप सेवा" : "Aarti / Deep Seva" },
+    { id: "vip", label: lang === 'mr' ? "विशेष सेवा (>₹१०,०००)" : "VIP Seva (>₹10k)" }
   ];
 
   const filteredDonors = donors.filter(donor => {
     // Search filter
-    const matchesSearch = donor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          donor.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          donor.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (donor.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (donor.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (donor.category || '').toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
 
     // Tab filter
     if (activeTab === "all") return true;
-    if (activeTab === "prasad") return donor.category.includes("महाप्रसाद");
-    if (activeTab === "aarti") return donor.category.includes("आरती") || donor.category.includes("दीप");
+    if (activeTab === "prasad") return donor.category?.includes("महाप्रसाद") || donor.category?.includes("मोदक");
+    if (activeTab === "aarti") return donor.category?.includes("आरती") || donor.category?.includes("दीप") || donor.category?.includes("छत्र");
     if (activeTab === "vip") return donor.amount >= 10000;
     return true;
   });
@@ -35,11 +37,14 @@ export default function RecentDonorsList({ donors = [] }) {
           <div className="flex items-center gap-2">
             <span className="text-xl">🌸</span>
             <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-              थेट देणगीदार व सेवा यादी (Live Recent Donors)
+              {lang === 'mr' ? 'थेट देणगीदार व सेवा यादी (Live Donors List)' : 'Live Devotees & Dakshina List'}
             </h2>
+            <span className="rounded-full bg-amber-500/20 border border-amber-400/40 px-2.5 py-0.5 text-xs font-bold text-amber-300">
+              {donors.length} {lang === 'mr' ? 'भाविक' : 'Devotees'}
+            </span>
           </div>
           <p className="text-xs md:text-sm text-orange-200/70 mt-1">
-            गणपती बाप्पाच्या चरणी अर्पण केलेल्या सेवांचे थेट अद्यतन (Real-time Live Updates)
+            {lang === 'mr' ? 'गणपती बाप्पाच्या चरणी अर्पण केलेल्या सेवांचे थेट अद्यतन (Real-time Live Updates)' : 'Live real-time contributions offered at Lord Ganesha\'s lotus feet'}
           </p>
         </div>
 
@@ -47,7 +52,7 @@ export default function RecentDonorsList({ donors = [] }) {
         <div className="relative w-full md:w-64">
           <input
             type="text"
-            placeholder="नाव किंवा शहर शोधा..."
+            placeholder={lang === 'mr' ? "नाव किंवा शहर शोधा..." : "Search name or city..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-full border border-amber-500/30 bg-orange-950/40 px-4 py-2 text-xs md:text-sm text-white placeholder-orange-300/40 backdrop-blur-md outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30"
