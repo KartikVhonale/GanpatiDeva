@@ -1,10 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Maximize2, Minimize2, QrCode, Copy, Check, Tv, ShieldCheck } from 'lucide-react';
+import {
+  Maximize2,
+  Minimize2,
+  QrCode,
+  Copy,
+  Check,
+  Tv,
+  ShieldCheck,
+  Send,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
+} from 'lucide-react';
 import TotalCounter from '../components/TotalCounter';
 import RecentDonorsList from '../components/RecentDonorsList';
 import ScrollingTicker from '../components/ScrollingTicker';
 import useDonations from '../hooks/useDonations';
 import { useLanguage } from '../context/LanguageContext';
+
+const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100];
+const SEVA_CATEGORIES = [
+  'महाप्रसाद सेवा',
+  'दैनिक महाआरती',
+  'मोदक नैवेद्य अर्पण',
+  'अखंड दीप & धूप सेवा',
+  'पुष्पवृष्टी व सजावट',
+];
 
 export default function DakshinaBoard() {
   const { t, lang } = useLanguage();
@@ -16,18 +38,46 @@ export default function DakshinaBoard() {
     aartiSponsors,
     donors,
     latestDonation,
+    settings,
+    submitPaymentRequest,
   } = useDonations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const [currentTime, setCurrentTime] = useState(
+    new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  );
 
-  const upiId = 'mandal.ganpati@upi';
+  // Verification Request Modal State
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [verifyForm, setVerifyForm] = useState({
+    name: '',
+    amount: '',
+    phone: '',
+    city: '',
+    category: 'महाप्रसाद सेवा',
+    utrNumber: '',
+  });
+  const [submittingVerify, setSubmittingVerify] = useState(false);
+  const [verifySuccess, setVerifySuccess] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+
+  // Dynamic Settings from Admin (fallback to defaults)
+  const upiId = settings?.upiId || 'mandal.ganpati@upi';
+  const upiName = settings?.upiName || 'सार्वजनिक श्री गणेश उत्सव मंडळ';
+  const qrCodeUrl = settings?.qrCodeUrl || '';
+  const qrCodeNote = settings?.qrCodeNote || 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा';
+
+  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&cu=INR`;
+  const autoQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayUrl)}`;
+  const displayQrImage = qrCodeUrl || autoQrUrl;
 
   // Keep live time updated for TV display
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setCurrentTime(
+        new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      );
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -57,6 +107,53 @@ export default function DakshinaBoard() {
     navigator.clipboard.writeText(upiId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  // Submit payment verification request
+  const handleSubmitVerification = async (e) => {
+    e.preventDefault();
+    setVerifyError('');
+    setVerifySuccess('');
+
+    const numericAmount = Number(verifyForm.amount);
+    if (!verifyForm.name.trim()) {
+      setVerifyError('कृपया आपले नाव प्रविष्ट करा.');
+      return;
+    }
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      setVerifyError('कृपया वैध देणगी रक्कम प्रविष्ट करा.');
+      return;
+    }
+    if (!verifyForm.utrNumber.trim()) {
+      setVerifyError('कृपया UPI Transaction ID / 12 अंकी UTR नंबर प्रविष्ट करा.');
+      return;
+    }
+
+    setSubmittingVerify(true);
+    try {
+      const res = await submitPaymentRequest({
+        name: verifyForm.name.trim(),
+        amount: numericAmount,
+        phone: verifyForm.phone.trim(),
+        city: verifyForm.city.trim() || 'ऑनलाइन भाविक',
+        category: verifyForm.category,
+        utrNumber: verifyForm.utrNumber.trim(),
+      });
+
+      setVerifySuccess(res.message || 'पडताळणी विनंती यशस्वीपणे पाठवली!');
+      setVerifyForm({
+        name: '',
+        amount: '',
+        phone: '',
+        city: '',
+        category: 'महाप्रसाद सेवा',
+        utrNumber: '',
+      });
+    } catch (err) {
+      setVerifyError(err.message || 'विनंती पाठवताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+    } finally {
+      setSubmittingVerify(false);
+    }
   };
 
   return (
@@ -127,12 +224,12 @@ export default function DakshinaBoard() {
           />
         </div>
 
-        {/* Dedicated UPI QR Code Card */}
-        <div className="relative overflow-hidden rounded-3xl border border-amber-500/35 bg-gradient-to-br from-orange-950/50 via-red-950/40 to-black/75 p-6 backdrop-blur-2xl shadow-[0_12px_40px_rgba(234,88,12,0.22)] text-center flex flex-col items-center justify-between">
+        {/* Dedicated UPI QR Code Card (Configured by Admin) */}
+        <div className="relative overflow-hidden rounded-3xl border border-amber-500/35 bg-gradient-to-br from-orange-950/50 via-red-950/40 to-black/75 p-5 sm:p-6 backdrop-blur-2xl shadow-[0_12px_40px_rgba(234,88,12,0.22)] text-center flex flex-col items-center justify-between">
           <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-amber-500/15 blur-2xl" />
 
           {/* Header */}
-          <div className="space-y-1 mb-3">
+          <div className="space-y-1 mb-2.5">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
               <QrCode className="h-3 w-3" />
               <span>{lang === 'mr' ? 'डिजिटल सेवा अर्पण' : 'Digital Seva'}</span>
@@ -140,73 +237,31 @@ export default function DakshinaBoard() {
             <h3 className="text-lg font-extrabold text-white">
               {t('scanPayTitle')}
             </h3>
-            <p className="text-xs text-orange-200/75">
-              {t('scanPaySubtitle')}
+            <p className="text-[11px] text-orange-200/75 max-w-xs">
+              {qrCodeNote}
             </p>
           </div>
 
-          {/* High-Contrast Crisp QR Code Container */}
-          <div className="relative my-2 p-3 bg-white rounded-2xl shadow-xl ring-2 ring-amber-400/50">
-            {/* SVG Crisp QR Code with Auspicious Center Emblem */}
-            <svg
-              className="w-44 h-44 sm:w-48 sm:h-48"
-              viewBox="0 0 160 160"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect width="160" height="160" fill="white" />
-              {/* Corner Position Detection Patterns */}
-              {/* Top Left */}
-              <rect x="10" y="10" width="40" height="40" fill="#0f0705" rx="4" />
-              <rect x="16" y="16" width="28" height="28" fill="white" rx="2" />
-              <rect x="22" y="22" width="16" height="16" fill="#c2410c" rx="2" />
-
-              {/* Top Right */}
-              <rect x="110" y="10" width="40" height="40" fill="#0f0705" rx="4" />
-              <rect x="116" y="16" width="28" height="28" fill="white" rx="2" />
-              <rect x="122" y="22" width="16" height="16" fill="#c2410c" rx="2" />
-
-              {/* Bottom Left */}
-              <rect x="10" y="110" width="40" height="40" fill="#0f0705" rx="4" />
-              <rect x="16" y="116" width="28" height="28" fill="white" rx="2" />
-              <rect x="22" y="122" width="16" height="16" fill="#c2410c" rx="2" />
-
-              {/* Data Modules (Decorative authentic QR structure) */}
-              <rect x="60" y="15" width="8" height="8" fill="#1c1917" />
-              <rect x="75" y="15" width="12" height="8" fill="#1c1917" />
-              <rect x="92" y="15" width="8" height="8" fill="#1c1917" />
-
-              <rect x="60" y="30" width="10" height="10" fill="#1c1917" />
-              <rect x="80" y="30" width="8" height="12" fill="#1c1917" />
-              <rect x="95" y="28" width="6" height="8" fill="#1c1917" />
-
-              <rect x="15" y="60" width="12" height="8" fill="#1c1917" />
-              <rect x="35" y="62" width="8" height="12" fill="#1c1917" />
-              <rect x="110" y="60" width="10" height="8" fill="#1c1917" />
-              <rect x="130" y="62" width="8" height="14" fill="#1c1917" />
-
-              <rect x="15" y="80" width="8" height="10" fill="#1c1917" />
-              <rect x="30" y="85" width="12" height="6" fill="#1c1917" />
-              <rect x="115" y="80" width="12" height="8" fill="#1c1917" />
-              <rect x="135" y="85" width="8" height="10" fill="#1c1917" />
-
-              <rect x="60" y="115" width="12" height="8" fill="#1c1917" />
-              <rect x="80" y="110" width="8" height="12" fill="#1c1917" />
-              <rect x="95" y="118" width="10" height="8" fill="#1c1917" />
-
-              <rect x="60" y="135" width="10" height="10" fill="#1c1917" />
-              <rect x="78" y="132" width="14" height="8" fill="#1c1917" />
-              <rect x="115" y="135" width="8" height="8" fill="#1c1917" />
-              <rect x="130" y="130" width="12" height="14" fill="#1c1917" />
-
-              {/* Center Holy Kalash / Ganesha Badge */}
-              <rect x="60" y="60" width="40" height="40" fill="white" rx="6" stroke="#ea580c" strokeWidth="2" />
-              <text x="80" y="85" textAnchor="middle" fontSize="20" fill="#ea580c">🪔</text>
-            </svg>
+          {/* High-Contrast Dynamic QR Code Container */}
+          <div className="relative my-2 p-2.5 bg-white rounded-2xl shadow-xl ring-2 ring-amber-400/50 transition-all hover:scale-105">
+            <img
+              src={displayQrImage}
+              alt="Mandal Official QR Code"
+              className="w-44 h-44 sm:w-48 sm:h-48 object-contain rounded-xl"
+              onError={(e) => {
+                // Fallback to auto-generated QR code if custom link fails
+                if (e.target.src !== autoQrUrl) {
+                  e.target.src = autoQrUrl;
+                }
+              }}
+            />
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
+              {upiName}
+            </div>
           </div>
 
           {/* UPI ID Copy Box & Direct Mobile App Pay */}
-          <div className="w-full mt-2 space-y-2">
+          <div className="w-full mt-3 space-y-2.5">
             <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-black/60 px-3.5 py-2 text-xs">
               <span className="font-mono font-bold text-amber-300 truncate">
                 {upiId}
@@ -224,13 +279,26 @@ export default function DakshinaBoard() {
 
             {/* Direct 1-Tap Mobile Payment Button (for Phone users) */}
             <a
-              href="upi://pay?pa=mandal.ganpati@upi&pn=Shree%20Ganesh%20Utsav%20Mandal&cu=INR"
+              href={upiPayUrl}
               className="sm:hidden w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 px-3 text-xs font-black text-black shadow-md active:scale-95 transition-all"
             >
               <span>{t('openMobileUpi')}</span>
             </a>
 
-            <p className="text-[11px] text-orange-200/60 mt-1.5 flex items-center justify-center gap-1">
+            {/* Button to Raise Verification Request */}
+            <button
+              type="button"
+              onClick={() => {
+                setVerifySuccess('');
+                setVerifyError('');
+                setIsVerifyModalOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-2.5 px-3 text-xs font-black text-white shadow-lg shadow-orange-600/30 ring-1 ring-amber-300/50 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            >
+              <span>🔔 मी ऑनलाइन पैसे भरले आहेत (पावती विनंती करा)</span>
+            </button>
+
+            <p className="text-[11px] text-orange-200/60 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3 w-3 text-emerald-400" />
               <span>{t('safeAccountNotice')}</span>
             </p>
@@ -240,6 +308,195 @@ export default function DakshinaBoard() {
 
       {/* 2. Recent Donors List (Live Socket.io Feed) */}
       <RecentDonorsList donors={donors} />
+
+      {/* Devotee Payment Verification Modal */}
+      {isVerifyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-lg rounded-3xl border border-amber-500/40 bg-gradient-to-b from-orange-950/90 via-red-950/80 to-black/95 p-6 shadow-2xl text-white">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsVerifyModalOpen(false)}
+              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-orange-200 flex items-center justify-center text-sm cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="text-center space-y-1 mb-4">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/20 px-3 py-0.5 text-xs font-bold text-amber-300">
+                <span>🪔</span>
+                <span>ऑनलाइन देणगी पडताळणी</span>
+              </div>
+              <h3 className="text-xl font-black text-white">
+                पेमेंट पडताळणी विनंती (Verify Payment)
+              </h3>
+              <p className="text-xs text-orange-200/75">
+                आपण केलेल्या UPI पेमेंटचा तपशील पाठवा. व्यवस्थापकांच्या पडताळणीनंतर पावती तयार होईल.
+              </p>
+            </div>
+
+            {/* Success Alert */}
+            {verifySuccess ? (
+              <div className="space-y-4 py-4 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 text-3xl">
+                  ✓
+                </div>
+                <div className="text-emerald-300 font-bold text-sm">
+                  {verifySuccess}
+                </div>
+                <p className="text-xs text-orange-200/70">
+                  आपली सेवा बाप्पाच्या चरणी लवकरच डॅशबोर्ड व स्क्रीनवर जोडली जाईल!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsVerifyModalOpen(false)}
+                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-xs font-bold text-white shadow cursor-pointer"
+                >
+                  पूर्ण झाले (Close)
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitVerification} className="space-y-3.5">
+                {/* Error Banner */}
+                {verifyError && (
+                  <div className="rounded-xl border border-red-500/40 bg-red-950/60 p-2.5 text-xs text-red-200 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                    <span>{verifyError}</span>
+                  </div>
+                )}
+
+                {/* Donor Name */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                    भाविकांचे नाव (Donor Name) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="उदा. श्री. सचिन रमेश पाटील"
+                    value={verifyForm.name}
+                    onChange={(e) => setVerifyForm({ ...verifyForm, name: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                {/* Amount & Quick Chips */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                    दिलेली रक्कम (Amount Paid in ₹) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    placeholder="उदा. 1100"
+                    value={verifyForm.amount}
+                    onChange={(e) => setVerifyForm({ ...verifyForm, amount: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-sm font-bold text-amber-300 placeholder-orange-300/40 outline-none focus:border-amber-400 mb-1.5"
+                  />
+                  <div className="grid grid-cols-6 gap-1">
+                    {QUICK_AMOUNTS.map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setVerifyForm({ ...verifyForm, amount: amt.toString() })}
+                        className={`text-[10px] py-1 rounded-lg border font-bold transition cursor-pointer ${
+                          verifyForm.amount === amt.toString()
+                            ? 'bg-amber-400 text-black border-amber-300'
+                            : 'border-amber-500/20 bg-orange-950/40 text-orange-200 hover:bg-orange-900/40'
+                        }`}
+                      >
+                        ₹{amt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* UTR / Transaction ID */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                    UPI ट्रॅन्झॅक्शन / UTR नंबर <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="उदा. 12 अंकी UTR किंवा Bank Ref. No."
+                    value={verifyForm.utrNumber}
+                    onChange={(e) => setVerifyForm({ ...verifyForm, utrNumber: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-xs font-mono text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                  />
+                  <span className="text-[10px] text-orange-200/60 mt-0.5 block">
+                    आपल्या GPay / PhonePe / Paytm वरील पेमेंट पावतीतील UTR नंबर टाका.
+                  </span>
+                </div>
+
+                {/* Phone & City */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                      मोबाईल नंबर
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="१० अंकी नंबर"
+                      value={verifyForm.phone}
+                      onChange={(e) => setVerifyForm({ ...verifyForm, phone: e.target.value })}
+                      className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                      गाव / शहर
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="उदा. मुंबई, पुणे"
+                      value={verifyForm.city}
+                      onChange={(e) => setVerifyForm({ ...verifyForm, city: e.target.value })}
+                      className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Seva Category */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                    सेवा प्रकार
+                  </label>
+                  <select
+                    value={verifyForm.category}
+                    onChange={(e) => setVerifyForm({ ...verifyForm, category: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/30 bg-black/70 px-3 py-2 text-xs text-orange-100 outline-none focus:border-amber-400"
+                  >
+                    {SEVA_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat} className="bg-orange-950 text-white">
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={submittingVerify}
+                  className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-orange-600/40 hover:brightness-110 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
+                >
+                  {submittingVerify ? (
+                    <span>पडताळणी विनंती पाठवत आहे...</span>
+                  ) : (
+                    <>
+                      <Send className="h-3.5 w-3.5" />
+                      <span>पडताळणीसाठी पाठवा (Submit Verification)</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

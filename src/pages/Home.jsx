@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -12,12 +12,22 @@ import {
   Flame,
   Flower2
 } from 'lucide-react';
-import heroImg from '../assets/hero.png';
 import { playFlowerChime, playTempleBell } from '../utils/audio';
 import { useLanguage } from '../context/LanguageContext';
+import useDonations from '../hooks/useDonations';
 import AshtavinayakSection from '../components/AshtavinayakSection';
 import SymbolismSection from '../components/SymbolismSection';
 import UtsavSchedule from '../components/UtsavSchedule';
+
+const DEFAULT_GANESHA_IMAGES = [
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/Gemini_Generated_Image_g93ok4g93ok4g93o',
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231045/Gemini_Generated_Image_3bfuu3bfuu3bfuu3.png',
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231044/Gemini_Generated_Image_aknpsbaknpsbaknp.png',
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231040/Gemini_Generated_Image_xl6eqaxl6eqaxl6e.png',
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231039/Gemini_Generated_Image_b2b8lyb2b8lyb2b8.png',
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231037/Gemini_Generated_Image_yrtxveyrtxveyrtx.png',
+  'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231032/Gemini_Generated_Image_a0g10oa0g10oa0g1_1.png',
+];
 
 const SOCIAL_INITIATIVES = [
   {
@@ -56,6 +66,27 @@ const SOCIAL_INITIATIVES = [
 
 export default function Home() {
   const { t } = useLanguage();
+  const { settings } = useDonations();
+
+  // Active Ganesha images from Cloudinary (or fallback high-quality sacred defaults)
+  const activeImages = settings?.ganeshaImages && settings.ganeshaImages.length > 0
+    ? settings.ganeshaImages
+    : DEFAULT_GANESHA_IMAGES;
+
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Auto-change image every 5 seconds (5000ms) with smooth transitions
+  useEffect(() => {
+    if (activeImages.length <= 1 || isPaused) return;
+
+    const timer = setInterval(() => {
+      setCurrentImgIndex((prev) => (prev + 1) % activeImages.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [activeImages.length, isPaused]);
+
   const [floatingParticles, setFloatingParticles] = useState([]);
   const [diyaLit, setDiyaLit] = useState(false);
   const [ritualFeedback, setRitualFeedback] = useState('');
@@ -176,35 +207,104 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="relative my-2"
+            className="relative my-4 flex items-center justify-center"
           >
-            {/* Glowing Pulsing Aura Rings */}
+            {/* Glowing Pulsing Divine Aura */}
             <motion.div
               animate={{ 
-                scale: [1, 1.1, 1],
-                opacity: [0.6, 0.95, 0.6] 
+                scale: [1, 1.12, 1],
+                opacity: [0.65, 0.95, 0.65] 
               }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="absolute -inset-5 rounded-full bg-gradient-to-tr from-amber-400/50 via-orange-500/40 to-red-600/35 blur-2xl -z-10"
+              className="absolute -inset-6 sm:-inset-8 rounded-full bg-gradient-to-tr from-amber-400/50 via-orange-500/40 to-red-600/35 blur-3xl -z-10"
             />
 
-            {/* Floating Lord Ganesha Frame */}
+            {/* Concentric Decorative Sacred Temple Halo Rings (Prabhavali / प्रभावळ) */}
+            {/* 1. Outermost Glowing Circular Ring */}
+            <div className="pointer-events-none absolute -inset-7 sm:-inset-9 rounded-full border border-amber-400/30 blur-[0.5px]" />
+            
+            {/* 2. Rotating Ornate Dashed Sacred Halo Ring */}
+            <div className="pointer-events-none absolute -inset-3.5 sm:-inset-4.5 rounded-full border-2 border-dashed border-amber-400/60 animate-spin-slow" />
+            
+            {/* 3. Reverse Counter-rotating Dotted Inner Halo Ring */}
+            <div className="pointer-events-none absolute -inset-1.5 sm:-inset-2 rounded-full border border-dotted border-orange-400/70 animate-spin-slow-reverse" />
+
+            {/* 5-Second Auto-Rotating Ganesha Frame - Perfect Circular Divine Frame */}
             <motion.div
-              animate={{ y: [-5, 6, -5] }}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={() => setIsPaused(true)}
+              onTouchEnd={() => setIsPaused(false)}
+              animate={{ y: [-4, 5, -4] }}
               transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-              className="relative flex h-56 w-56 sm:h-68 sm:w-68 md:h-76 md:w-76 items-center justify-center rounded-full p-1.5 bg-gradient-to-br from-amber-300 via-orange-500 to-red-700 shadow-2xl shadow-orange-600/60 ring-4 ring-amber-400/50"
+              className="relative flex h-64 w-64 sm:h-80 sm:w-80 md:h-88 md:w-88 aspect-square items-center justify-center rounded-full p-2.5 sm:p-3 bg-gradient-to-tr from-amber-300 via-amber-500 via-orange-500 to-yellow-300 shadow-[0_0_50px_rgba(245,158,11,0.55)] ring-4 ring-amber-400/80 ring-offset-2 ring-offset-orange-950"
             >
-              <div className="h-full w-full overflow-hidden rounded-full border-4 border-amber-400/80 bg-gradient-to-b from-orange-950/90 to-black/95 flex items-center justify-center p-3">
-                <img
-                  src={heroImg}
-                  alt="भगवान श्री गणेश"
-                  className="h-full w-full object-contain filter drop-shadow-[0_4px_20px_rgba(245,158,11,0.7)] hover:scale-105 transition-transform duration-300"
-                />
+              {/* Inner Circular Frame holding the Images */}
+              <div className="relative h-full w-full overflow-hidden rounded-full border-4 border-amber-300/90 bg-gradient-to-b from-orange-950/95 to-black/95 flex items-center justify-center shadow-inner">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={currentImgIndex}
+                    src={activeImages[currentImgIndex]}
+                    alt={`भगवान श्री गणेश रूप ${currentImgIndex + 1}`}
+                    initial={{ opacity: 0, scale: 1.08 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    className="h-full w-full object-cover object-center rounded-full filter drop-shadow-[0_4px_25px_rgba(245,158,11,0.6)] select-none"
+                  />
+                </AnimatePresence>
+
+                {/* Left & Right quick browse arrows */}
+                {activeImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImgIndex((prev) => (prev - 1 + activeImages.length) % activeImages.length);
+                      }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-amber-300 flex items-center justify-center text-sm font-black backdrop-blur-md cursor-pointer transition opacity-80 hover:opacity-100 z-20 border border-amber-400/40 shadow-md"
+                      title="मागील दर्शन"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImgIndex((prev) => (prev + 1) % activeImages.length);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-amber-300 flex items-center justify-center text-sm font-black backdrop-blur-md cursor-pointer transition opacity-80 hover:opacity-100 z-20 border border-amber-400/40 shadow-md"
+                      title="पुढील दर्शन"
+                    >
+                      ›
+                    </button>
+                  </>
+                )}
+
+                {/* 5-second Progress Dots Indicator */}
+                {activeImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/70 px-3 py-1 rounded-full backdrop-blur-md border border-amber-500/40 z-20 shadow-lg">
+                    {activeImages.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setCurrentImgIndex(idx)}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                          currentImgIndex === idx
+                            ? 'w-5 bg-amber-400'
+                            : 'w-1.5 bg-white/40 hover:bg-white/70'
+                        }`}
+                        title={`दर्शन ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Decorative Corner Holy Diya & Flower */}
-              <span className="absolute -top-1 -right-1 text-2xl filter drop-shadow">🪔</span>
-              <span className="absolute -bottom-1 -left-1 text-2xl filter drop-shadow">🌺</span>
+              {/* Decorative Perimeter Holy Diya & Flower */}
+              <span className="absolute -top-1 -right-1 text-2xl sm:text-3xl filter drop-shadow z-20">🪔</span>
+              <span className="absolute -bottom-1 -left-1 text-2xl sm:text-3xl filter drop-shadow z-20">🌺</span>
             </motion.div>
           </motion.div>
 

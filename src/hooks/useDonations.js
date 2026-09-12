@@ -15,6 +15,14 @@ const CATEGORIES = [
 export function useDonations() {
   const [totalAmount, setTotalAmount] = useState(0);
   const [targetAmount, setTargetAmount] = useState(500000);
+  const [settings, setSettings] = useState({
+    targetAmount: 500000,
+    upiId: 'mandal.ganpati@upi',
+    upiName: 'सार्वजनिक श्री गणेश उत्सव मंडळ',
+    qrCodeUrl: '',
+    qrCodeNote: 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा',
+  });
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [donorCount, setDonorCount] = useState(0);
   const [prasadCount, setPrasadCount] = useState(0);
   const [aartiSponsors, setAartiSponsors] = useState(0);
@@ -75,6 +83,16 @@ export function useDonations() {
         setOnlineTotal(Number(data.onlineTotal) || 0);
       }
 
+      if (data.settings) {
+        setSettings(data.settings);
+        if (data.settings.targetAmount) {
+          setTargetAmount(Number(data.settings.targetAmount));
+        }
+      }
+      if (data.pendingRequestsCount !== undefined) {
+        setPendingRequestsCount(Number(data.pendingRequestsCount));
+      }
+
       // Extract all donors list from backend
       const donorList = Array.isArray(data.donors) && data.donors.length > 0
         ? data.donors
@@ -120,6 +138,28 @@ export function useDonations() {
         setIsConnected(false);
       });
 
+      // Listen for festival settings update
+      socket.on('settings_updated', (updatedSettings) => {
+        console.log('⚙️ Received live settings update:', updatedSettings);
+        setSettings(updatedSettings);
+        if (updatedSettings.targetAmount) {
+          setTargetAmount(Number(updatedSettings.targetAmount));
+        }
+      });
+
+      // Listen for stats updates (recalculations)
+      socket.on('stats_updated', (stats) => {
+        if (stats.targetAmount) setTargetAmount(Number(stats.targetAmount));
+        if (stats.totalVargani !== undefined) setTotalAmount(stats.totalVargani);
+        if (stats.pendingRequestsCount !== undefined) setPendingRequestsCount(stats.pendingRequestsCount);
+      });
+
+      // Listen for devotee online payment request creation
+      socket.on('payment_request_created', (data) => {
+        console.log('🔔 New payment verification request:', data);
+        setPendingRequestsCount((prev) => prev + 1);
+      });
+
       // 3. Listen for new_donation broadcast from backend
       socket.on('new_donation', (data) => {
         console.log(' Live donation received via Socket.io:', data);
@@ -131,6 +171,14 @@ export function useDonations() {
           setTotalAmount(data.totalVargani);
         } else {
           setTotalAmount(prev => prev + formatted.amount);
+        }
+
+        if (data.targetAmount !== undefined) {
+          setTargetAmount(Number(data.targetAmount));
+        }
+
+        if (data.pendingRequestsCount !== undefined) {
+          setPendingRequestsCount(Number(data.pendingRequestsCount));
         }
 
         if (data.donorCount !== undefined) {
@@ -224,9 +272,25 @@ export function useDonations() {
     }
   }, []);
 
+  // Devotee submits online payment verification request
+  const submitPaymentRequest = useCallback(async (payload) => {
+    const res = await fetch(`${BACKEND_URL}/api/donations/verify-request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'पडताळणी विनंती पाठवण्यात त्रुटी आली');
+    }
+    return data;
+  }, []);
+
   return {
     totalAmount,
     targetAmount,
+    settings,
+    pendingRequestsCount,
     donorCount,
     prasadCount,
     aartiSponsors,
@@ -237,6 +301,7 @@ export function useDonations() {
     isConnected,
     isLoading,
     addManualDonation,
+    submitPaymentRequest,
     refetchDonations: fetchInitialDonations,
   };
 }
