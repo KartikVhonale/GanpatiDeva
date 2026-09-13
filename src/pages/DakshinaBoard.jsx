@@ -16,6 +16,7 @@ import RecentDonorsList from '../components/RecentDonorsList';
 import ScrollingTicker from '../components/ScrollingTicker';
 import useDonations from '../hooks/useDonations';
 import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
+import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
 
 const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100];
 
@@ -52,6 +53,7 @@ export default function DakshinaBoard() {
   const [submittingVerify, setSubmittingVerify] = useState(false);
   const [verifySuccess, setVerifySuccess] = useState('');
   const [verifyError, setVerifyError] = useState('');
+  const [localQrDataUrl, setLocalQrDataUrl] = useState('');
 
   // Dynamic Settings from Admin (fallback to 8484844728@slc)
   const upiId = (settings?.upiId && settings.upiId !== 'mandal.ganpati@upi') ? settings.upiId : '8484844728@slc';
@@ -59,10 +61,26 @@ export default function DakshinaBoard() {
   const qrCodeUrl = settings?.qrCodeUrl || '';
   const qrCodeNote = settings?.qrCodeNote || (lang === 'mr' ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan & offer your humble devotion at Lord Ganesha\'s feet');
 
-  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&cu=INR`;
-  const autoQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiPayUrl)}`;
-  // Priority: Main QR code from database (qrCodeUrl) if present, otherwise auto-generated QR for 8484844728@slc
-  const displayQrImage = qrCodeUrl || autoQrUrl;
+  // Strict NPCI-compliant deep link (pure ASCII payee name prevents bank limit errors)
+  const officialUpiPayUrl = buildOfficialUpiUrl(upiId, { name: settings?.upiName || 'Shree Ganesh Utsav', note: 'Ganesh Seva' }, 'upi');
+
+  // Generate offline local QR code compliant with NPCI specification
+  useEffect(() => {
+    let isCurrent = true;
+    generateUpiQrDataUrl(officialUpiPayUrl).then((url) => {
+      if (isCurrent && url) {
+        setLocalQrDataUrl(url);
+      }
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [officialUpiPayUrl]);
+
+  // Fallback if local generation is rendering
+  const fallbackExternalQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(officialUpiPayUrl)}`;
+  // Priority: Main QR code from database (qrCodeUrl) if present, otherwise offline generated official QR
+  const displayQrImage = qrCodeUrl || localQrDataUrl || fallbackExternalQr;
 
   // Keep live time updated for TV display
   useEffect(() => {
@@ -241,8 +259,8 @@ export default function DakshinaBoard() {
               alt="Mandal Official QR Code"
               className="w-44 h-44 sm:w-48 sm:h-48 object-contain rounded-xl"
               onError={(e) => {
-                if (e.target.src !== autoQrUrl) {
-                  e.target.src = autoQrUrl;
+                if (e.target.src !== fallbackExternalQr) {
+                  e.target.src = fallbackExternalQr;
                 }
               }}
             />
@@ -268,13 +286,18 @@ export default function DakshinaBoard() {
               </button>
             </div>
 
-            {/* Direct 1-Tap Mobile Payment Button (for Phone users) */}
+            {/* Direct 1-Tap Mobile Payment Button (for Mobile users) */}
             <a
-              href={upiPayUrl}
+              href={officialUpiPayUrl}
               className="sm:hidden w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 px-3 text-xs font-black text-black shadow-md active:scale-95 transition-all"
             >
               <span>{t('openMobileUpi')}</span>
             </a>
+
+            {/* Tip regarding Bank Limit issues */}
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-[10px] text-orange-200/90 leading-relaxed text-center">
+              {t('upiLimitNote')}
+            </div>
 
             {/* Button to Raise Verification Request */}
             <button
