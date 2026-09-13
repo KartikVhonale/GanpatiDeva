@@ -53,14 +53,15 @@ export default function DakshinaBoard() {
   const [verifySuccess, setVerifySuccess] = useState('');
   const [verifyError, setVerifyError] = useState('');
 
-  // Dynamic Settings from Admin (fallback to defaults)
-  const upiId = settings?.upiId || 'mandal.ganpati@upi';
+  // Dynamic Settings from Admin (fallback to 8484844728@slc)
+  const upiId = (settings?.upiId && settings.upiId !== 'mandal.ganpati@upi') ? settings.upiId : '8484844728@slc';
   const upiName = settings?.upiName || (lang === 'mr' ? 'सार्वजनिक श्री गणेश उत्सव मंडळ' : 'Shree Ganesh Utsav Mandal');
   const qrCodeUrl = settings?.qrCodeUrl || '';
   const qrCodeNote = settings?.qrCodeNote || (lang === 'mr' ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan & offer your humble devotion at Lord Ganesha\'s feet');
 
   const upiPayUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&cu=INR`;
-  const autoQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayUrl)}`;
+  const autoQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiPayUrl)}`;
+  // Priority: Main QR code from database (qrCodeUrl) if present, otherwise auto-generated QR for 8484844728@slc
   const displayQrImage = qrCodeUrl || autoQrUrl;
 
   // Keep live time updated for TV display

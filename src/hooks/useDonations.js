@@ -16,9 +16,9 @@ export function useDonations() {
   const [totalAmount, setTotalAmount] = useState(0);
   const [targetAmount, setTargetAmount] = useState(500000);
   const [settings, setSettings] = useState({
-    targetAmount: 500000,
-    upiId: 'mandal.ganpati@upi',
-    upiName: 'सार्वजनिक श्री गणेश उत्सव मंडळ',
+    targetAmount: 100000,
+    upiId: '8484844728@slc',
+    upiName: 'सार्वजनिक श्री गणेश उत्सव मंडळ Dhanora Bk',
     qrCodeUrl: '',
     qrCodeNote: 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा',
   });

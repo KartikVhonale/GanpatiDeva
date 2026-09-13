@@ -61,7 +61,14 @@ export function AuthProvider({ children }) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'लॉगिन अयशस्वी झाले (Login failed)');
+        const error = new Error(data.error || 'लॉगिन अयशस्वी झाले (Login failed)');
+        error.status = res.status;
+        error.blocked = Boolean(data.blocked || res.status === 429);
+        error.retryAfterMinutes = data.retryAfterMinutes;
+        error.retryAfterSeconds = data.retryAfterSeconds;
+        error.blockedUntil = data.blockedUntil;
+        error.remainingAttempts = data.remainingAttempts;
+        throw error;
       }
 
       localStorage.setItem(TOKEN_KEY, data.token);
