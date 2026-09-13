@@ -33,17 +33,23 @@ export function useDonations() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Format incoming MongoDB / Backend document to match UI card schema
+  // Format incoming MongoDB / Backend document to match UI card and receipt schema
   const formatBackendDonor = useCallback((doc) => {
     const matchedCategory = CATEGORIES.find(c => c.category === doc.category) || CATEGORIES[0];
+    const docId = String(doc._id || doc.id || `donor-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`);
+    const cleanReceiptNum = docId.length > 6 ? docId.slice(-6).toUpperCase() : docId;
     return {
-      id: doc._id || doc.id || `donor-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: docId,
+      receiptNo: doc.receiptNo || `REC-${cleanReceiptNum}`,
       name: doc.name || 'Anonymous',
       city: doc.city || 'स्थानिक भाविक',
+      phone: doc.phone || '',
       amount: Number(doc.amount) || 0,
       category: doc.category || 'महाप्रसाद सेवा',
       recordedBy: doc.recordedBy || 'मंडळ स्वयंसेवक',
       paymentMethod: doc.paymentMethod || 'cash',
+      utrNumber: doc.utrNumber || '',
+      timestamp: doc.timestamp || new Date().toISOString(),
       time: doc.timestamp 
         ? new Date(doc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
         : 'आत्ताच (Just now)',
@@ -243,17 +249,19 @@ export function useDonations() {
   }, [fetchInitialDonations, formatBackendDonor]);
 
   // Manual donation handler (calls backend POST)
-  const addManualDonation = useCallback(async ({ name, city, amount, category, recordedBy, paymentMethod }, authToken) => {
+  const addManualDonation = useCallback(async ({ name, city, phone, amount, category, recordedBy, paymentMethod, utrNumber }, authToken) => {
     const matchedCategory = CATEGORIES.find(c => c.category === category) || CATEGORIES[0];
     const numericAmount = parseInt(amount, 10);
     const donorPayload = {
       name: name?.trim() || "Anonymous",
       city: city?.trim() || "स्थानिक भाविक",
+      phone: phone ? String(phone).trim() : '',
       amount: numericAmount,
       category: matchedCategory.category,
       blessing: "गणेश कृपेने सर्व मनोरथ पूर्ण होवोत",
       recordedBy: recordedBy || 'मंडळ स्वयंसेवक',
       paymentMethod: paymentMethod || 'cash',
+      utrNumber: utrNumber ? String(utrNumber).trim() : '',
     };
 
     try {
@@ -276,8 +284,10 @@ export function useDonations() {
       console.warn('Backend POST failed, applying optimistic update:', err.message);
       const fallbackDonation = {
         id: `donor-${Date.now()}`,
+        receiptNo: `REC-${Date.now().toString().slice(-6)}`,
         ...donorPayload,
         time: 'आत्ताच (Just now)',
+        timestamp: new Date().toISOString(),
         badgeColor: matchedCategory.badgeColor,
         icon: matchedCategory.icon,
       };

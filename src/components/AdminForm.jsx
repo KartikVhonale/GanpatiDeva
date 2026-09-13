@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, AlertCircle, Share2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Share2, Receipt, Printer } from 'lucide-react';
 import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
+import ReceiptModal from './ReceiptModal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100, 11000];
 
 export default function AdminForm({ onSubmitDonation }) {
-  const { t, lang } = useLanguage();
+  const { t, lang, isMarathi } = useLanguage();
   const [donorName, setDonorName] = useState('');
   const [amount, setAmount] = useState('');
   const [city, setCity] = useState('');
@@ -16,6 +17,7 @@ export default function AdminForm({ onSubmitDonation }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('prasad');
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash' | 'online'
   const [recentReceipt, setRecentReceipt] = useState(null);
+  const [showFullReceipt, setShowFullReceipt] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successBanner, setSuccessBanner] = useState('');
@@ -119,11 +121,21 @@ export default function AdminForm({ onSubmitDonation }) {
   const getWhatsAppShareUrl = (receipt) => {
     const isMr = lang === 'mr';
     const text = isMr
-      ? `॥ श्री गणेशाय नमः ॥\n\nसार्वजनिक श्री गणेश उत्सव मंडळ २०२६\n\nपावती क्र: ${receipt.receiptNo}\nनाव: ${receipt.name}\nरक्कम: ₹${receipt.amount.toLocaleString('mr-IN')}\nसेवा: ${receipt.category}\nपेमेंट: ${receipt.paymentMode}\nवेळ: ${receipt.timestamp}\n\nबाप्पाच्या चरणी आपली सेवा रुजू झाली आहे! श्री गणेश कृपेने आपल्या सर्व मनोकामना पूर्ण होवोत. ॥ गणपती बाप्पा मोरया ॥`
-      : `|| Shree Ganeshaya Namah ||\n\nShree Ganesh Utsav Mandal 2026\n\nReceipt No: ${receipt.receiptNo}\nDevotee: ${receipt.name}\nAmount: ₹${receipt.amount.toLocaleString('en-IN')}\nSeva: ${receipt.category}\nPayment: ${receipt.paymentMode}\nTime: ${receipt.timestamp}\n\nYour devotional offering has been received at Bappa's sacred feet! May Lord Ganesha bless you with health, peace and prosperity.\n|| Ganpati Bappa Morya ||`;
+      ? `॥ श्री गणेशाय नमः ॥\n\n🚩 *सार्वजनिक श्री गणेश उत्सव मंडळ २०२६*\n\n📜 *अधिकृत देणगी पावती (Official Receipt)*\n━━━━━━━━━━━━━━━━━━━━\n• *पावती क्र:* ${receipt.receiptNo}\n• *नाव:* ${receipt.name}\n${receipt.phone ? `• *मोबाईल:* ${receipt.phone}\n` : ''}• *रक्कम:* ₹${receipt.amount.toLocaleString('mr-IN')}/-\n• *सेवा प्रकार:* ${receipt.category}\n• *पेमेंट माध्यम:* ${receipt.paymentMode}\n• *वेळ:* ${receipt.timestamp}\n━━━━━━━━━━━━━━━━━━━━\nबाप्पाच्या चरणी आपली सेवा रुजू झाली आहे! श्री गणेश कृपेने आपल्या सर्व मनोकामना पूर्ण होवोत.\n\n॥ गणपती बाप्पा मोरया, मंगलमूर्ती मोरया ॥`
+      : `|| Shree Ganeshaya Namah ||\n\n🚩 *Shree Ganesh Utsav Mandal 2026*\n\n📜 *Official Donation Receipt*\n━━━━━━━━━━━━━━━━━━━━\n• *Receipt No:* ${receipt.receiptNo}\n• *Devotee:* ${receipt.name}\n${receipt.phone ? `• *Mobile:* ${receipt.phone}\n` : ''}• *Amount:* ₹${receipt.amount.toLocaleString('en-IN')}/-\n• *Seva Offering:* ${receipt.category}\n• *Payment Mode:* ${receipt.paymentMode}\n• *Time:* ${receipt.timestamp}\n━━━━━━━━━━━━━━━━━━━━\nYour devotional offering has been gratefully accepted at Lord Ganesha's sacred feet! May Lord Ganesha bless you with health, peace and prosperity.\n\n|| Ganpati Bappa Morya ||`;
 
-    const cleanPhone = receipt.phone ? receipt.phone.replace(/\D/g, '') : '';
-    const phoneParam = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const cleanPhone = receipt.phone ? String(receipt.phone).replace(/\D/g, '') : '';
+    let phoneParam = '';
+    if (cleanPhone.length === 10) {
+      phoneParam = `91${cleanPhone}`;
+    } else if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
+      phoneParam = `91${cleanPhone.slice(1)}`;
+    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
+      phoneParam = cleanPhone;
+    } else if (cleanPhone.length >= 10) {
+      phoneParam = cleanPhone;
+    }
+
     return phoneParam
       ? `https://api.whatsapp.com/send?phone=${phoneParam}&text=${encodeURIComponent(text)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
@@ -220,17 +232,28 @@ export default function AdminForm({ onSubmitDonation }) {
                 </div>
               </div>
 
-              {/* Action Buttons: WhatsApp Share & Dismiss */}
+              {/* Action Buttons: View Receipt, WhatsApp Share & Dismiss */}
               <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <a
-                  href={getWhatsAppShareUrl(recentReceipt)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3.5 py-2 text-black font-black shadow-md transition-all active:scale-95 cursor-pointer"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                  <span>{t('whatsappShareBtn')}</span>
-                </a>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowFullReceipt(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 px-3 py-1.5 text-black font-black shadow-md transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Receipt className="h-3.5 w-3.5" />
+                    <span>{isMarathi ? 'पावती पहा व प्रिंट करा' : 'View / Print Receipt'}</span>
+                  </button>
+
+                  <a
+                    href={getWhatsAppShareUrl(recentReceipt)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-1.5 text-black font-black shadow-md transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    <span>{t('whatsappShareBtn')}</span>
+                  </a>
+                </div>
 
                 <button
                   type="button"
@@ -431,6 +454,13 @@ export default function AdminForm({ onSubmitDonation }) {
           </div>
         </form>
       </motion.div>
+
+      {/* Official Printable Receipt Modal */}
+      <ReceiptModal
+        isOpen={showFullReceipt}
+        onClose={() => setShowFullReceipt(false)}
+        donation={recentReceipt}
+      />
     </div>
   );
 }

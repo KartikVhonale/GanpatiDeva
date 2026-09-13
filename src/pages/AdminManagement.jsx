@@ -26,8 +26,10 @@ import {
   ShieldAlert,
   Clock,
   Lock,
+  Receipt,
 } from 'lucide-react';
 import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
+import ReceiptModal from '../components/ReceiptModal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -76,6 +78,8 @@ export default function AdminManagement() {
   const [donationSearch, setDonationSearch] = useState('');
   const [donationFilter, setDonationFilter] = useState('all');
   const [deletingDonationId, setDeletingDonationId] = useState(null);
+  const [selectedAdminReceipt, setSelectedAdminReceipt] = useState(null);
+  const [isAdminReceiptOpen, setIsAdminReceiptOpen] = useState(false);
 
   // 5. Security & Blocked IPs State
   const [blockedIps, setBlockedIps] = useState([]);
@@ -1532,16 +1536,31 @@ export default function AdminManagement() {
                                   : t('justNow')}
                               </td>
                               <td className="py-3 px-3.5 text-center">
-                                <button
-                                  type="button"
-                                  disabled={isDeleting}
-                                  onClick={() => handleDeleteDonation(donId, d.name, d.amount)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
-                                  title={isMarathi ? 'ही देणगी कायमस्वरूपी हटवा' : 'Permanently delete this donation'}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                                  <span>{isDeleting ? t('deleting') : t('delete')}</span>
-                                </button>
+                                <div className="inline-flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedAdminReceipt(d);
+                                      setIsAdminReceiptOpen(true);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-black text-xs font-bold shadow-sm transition-all cursor-pointer"
+                                    title={isMarathi ? 'अधिकृत पावती पहा, प्रिंट करा किंवा व्हॉट्सॲपवर पाठवा' : 'View, Print or WhatsApp Receipt'}
+                                  >
+                                    <Receipt className="h-3.5 w-3.5" />
+                                    <span>{isMarathi ? 'पावती' : 'Receipt'}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    disabled={isDeleting}
+                                    onClick={() => handleDeleteDonation(donId, d.name, d.amount)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                                    title={isMarathi ? 'ही देणगी कायमस्वरूपी हटवा' : 'Permanently delete this donation'}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                    <span>{isDeleting ? t('deleting') : t('delete')}</span>
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -1672,6 +1691,13 @@ export default function AdminManagement() {
           </div>
         </div>
       )}
+
+      {/* Official Printable Receipt Modal for Admin */}
+      <ReceiptModal
+        isOpen={isAdminReceiptOpen}
+        onClose={() => setIsAdminReceiptOpen(false)}
+        donation={selectedAdminReceipt}
+      />
     </div>
   );
 }
