@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import websiteIcon from '../assets/svg.png';
 
 export default function Header({ 
   mandalName, 
@@ -29,12 +30,14 @@ export default function Header({
           transition={{ duration: 0.6 }}
           className="flex items-center gap-4 text-center md:text-left"
         >
-          {/* Emblem with sacred Diya / Kalash iconography */}
-          <div className="relative flex h-16 w-16 md:h-20 md:w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-red-700 p-0.5 shadow-lg shadow-orange-600/40 ring-2 ring-amber-400/40">
-            <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-orange-950/90 to-red-950/90 backdrop-blur-sm">
-              <span className="text-3xl md:text-4xl filter drop-shadow-[0_2px_8px_rgba(251,146,60,0.8)]" role="img" aria-label="Om & Diya">
-                🪔
-              </span>
+          {/* Emblem with sacred Ganesha Icon */}
+          <div className="relative flex h-16 w-16 md:h-20 md:w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-red-700 p-0.5 shadow-lg shadow-orange-600/40 ring-2 ring-amber-400/40 overflow-hidden">
+            <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-orange-950/90 to-red-950/90 backdrop-blur-sm overflow-hidden">
+              <img
+                src={websiteIcon}
+                alt="Shree Ganesh Emblem"
+                className="h-full w-full object-cover rounded-[14px]"
+              />
             </div>
             {/* Pulsing ring */}
             <span className="absolute -inset-1 animate-ping rounded-2xl bg-orange-500/20 -z-10" />

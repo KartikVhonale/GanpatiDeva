@@ -308,9 +308,6 @@ export const TRANSLATIONS = {
     // Login Page
     loginHeaderTitle: 'मंडळ कक्ष प्रवेश',
     loginHeaderSub: 'स्वयंसेवक व व्यवस्थापकांसाठी अधिकृत प्रवेशद्वार',
-    demoAccountsTitle: 'त्वरित चाचणीसाठी डेमो खाती (Demo Fill):',
-    demoAdminBtn: '👑 व्यवस्थापक (Admin)',
-    demoVolBtn: '🙋‍♂️ स्वयंसेवक (Volunteer)',
     loginBtn: 'प्रवेश करा (Sign In)',
     verifyingLogin: 'पडताळणी सुरू आहे...',
     backToHome: 'मुख्य पृष्ठावर परत जा',

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Lock, User, KeyRound, Eye, EyeOff, ArrowLeft, ShieldAlert, Clock } from 'lucide-react';
+import websiteIcon from '../assets/svg.png';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -44,17 +45,6 @@ export default function Login() {
     const mins = Math.floor(totalSecs / 60);
     const secs = totalSecs % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
-
-  const handleDemoFill = (role) => {
-    if (isBlocked) return;
-    if (role === 'admin') {
-      setUsername('admin');
-      setPassword('admin123');
-    } else {
-      setUsername('volunteer1');
-      setPassword('vol123');
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -108,9 +98,13 @@ export default function Login() {
               <span>{t('sacredMantra')}</span>
             </div>
 
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-0.5 shadow-lg shadow-orange-600/40">
-              <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-orange-950 text-2xl">
-                🪔
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-0.5 shadow-lg shadow-orange-600/40 overflow-hidden">
+              <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-orange-950 overflow-hidden">
+                <img
+                  src={websiteIcon}
+                  alt="Shree Ganesh Emblem"
+                  className="h-full w-full object-cover rounded-[14px]"
+                />
               </div>
             </div>
 
@@ -165,31 +159,6 @@ export default function Login() {
                 </div>
               )}
             </>
-          )}
-
-          {/* Quick Demo Fill Buttons (Hidden when blocked) */}
-          {!isBlocked && (
-            <div className="mb-5 rounded-2xl border border-amber-500/20 bg-black/40 p-3 text-xs">
-              <span className="text-orange-200/70 font-semibold block mb-2">
-                {t('demoAccountsTitle')}
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDemoFill('admin')}
-                  className="py-1.5 px-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 font-bold transition text-center cursor-pointer"
-                >
-                  {t('demoAdminBtn')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDemoFill('volunteer')}
-                  className="py-1.5 px-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 font-bold transition text-center cursor-pointer"
-                >
-                  {t('demoVolBtn')}
-                </button>
-              </div>
-            </div>
           )}
 
           {/* Login Form */}

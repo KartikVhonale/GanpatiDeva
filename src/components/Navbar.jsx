@@ -16,6 +16,7 @@ import {
 import { playTempleBell } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import websiteIcon from '../assets/svg.png';
 export default function Navbar({ isConnected }) {
   const [bellRung, setBellRung] = useState(false);
   const [bellCount, setBellCount] = useState(0);
@@ -79,11 +80,13 @@ export default function Navbar({ isConnected }) {
             to="/"
             className="flex items-center gap-1.5 sm:gap-2.5 group cursor-pointer select-none min-w-0"
           >
-            {/* Ornate Diya Icon */}
-            <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-0.5 shadow-md shadow-orange-600/40 group-hover:scale-105 transition-all">
-              <div className="flex h-full w-full items-center justify-center rounded-[9px] sm:rounded-[10px] bg-orange-950 text-sm sm:text-base">
-                🪔
-              </div>
+            {/* Official Website Ganesha Icon */}
+            <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-0.5 shadow-md shadow-orange-600/40 group-hover:scale-105 transition-all overflow-hidden">
+              <img
+                src={websiteIcon}
+                alt="Shree Ganesh Logo"
+                className="h-full w-full object-cover rounded-[9px] sm:rounded-[10px]"
+              />
               <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-full w-full bg-amber-500" />
