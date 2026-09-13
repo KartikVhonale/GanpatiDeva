@@ -495,7 +495,7 @@ export default function AdminManagement() {
   const [previewLocalQr, setPreviewLocalQr] = useState('');
 
   const effectiveUpiId = (settings?.upiId && settings.upiId !== 'mandal.ganpati@upi') ? settings.upiId : '8484844728@slc';
-  const previewUpiPayUrl = buildOfficialUpiUrl(effectiveUpiId, { name: settings?.upiName || 'Shree Ganesh Utsav', note: 'Ganesh Seva' }, 'upi');
+  const previewUpiPayUrl = buildOfficialUpiUrl(effectiveUpiId, { payeeName: 'kartik', amount: 501, note: 'ganesh seva' });
   const fallbackPreviewQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(previewUpiPayUrl)}`;
 
   useEffect(() => {

@@ -15,59 +15,50 @@ import QRCode from 'qrcode';
  */
 
 // Sanitizes payee name to strictly compliant ASCII characters
-export function sanitizePayeeName(name) {
-  if (!name || typeof name !== 'string') return 'Shree Ganesh Utsav';
-  // Strip all non-ASCII characters (e.g. Devanagari script, emojis, special symbols)
+export function sanitizePayeeName(name, vpa = '') {
+  const cleanVpa = String(vpa || '').toLowerCase().trim();
+  // If the VPA is the primary admin VPA, default to registered KYC bank name 'kartik'
+  if (cleanVpa === '8484844728@slc' || !name || typeof name !== 'string') {
+    return 'kartik';
+  }
   const asciiClean = name.replace(/[^\x20-\x7E]/g, '').trim();
-  if (asciiClean.length >= 2) {
+  if (asciiClean.length >= 2 && !asciiClean.toLowerCase().includes('mandal')) {
     return asciiClean.slice(0, 50);
   }
-  return 'Shree Ganesh Utsav';
+  return 'kartik';
 }
 
 /**
- * Builds an official NPCI-compliant UPI payment URL
+ * Builds an official NPCI-compliant UPI payment URL matching:
+ * upi://pay?cu=INR&pa=8484844728@slc&pn=kartik&tn=&am=501.00
+ * 
  * @param {string} upiId - Payee VPA (e.g. '8484844728@slc')
- * @param {object} options - { name, note, amount }
- * @param {string} scheme - 'upi' | 'gpay' | 'phonepe' | 'paytm' | 'bhim'
+ * @param {object} options - { name, note, amount, payeeName }
+ * @param {string} scheme - 'upi'
  * @returns {string} - NPCI standard URI
  */
 export function buildOfficialUpiUrl(upiId, options = {}, scheme = 'upi') {
   const cleanVpa = String(upiId || '8484844728@slc').toLowerCase().trim();
-  const cleanName = sanitizePayeeName(options.name);
-  const rawNote = options.note ? options.note.replace(/[^\x20-\x7E]/g, '').trim() : '';
-  const cleanNote = (rawNote.length >= 2 ? rawNote : 'Ganesh Seva').slice(0, 50);
+  const payeeName = options.payeeName || (cleanVpa === '8484844728@slc' ? 'kartik' : sanitizePayeeName(options.name, cleanVpa));
+  const rawNote = options.note !== undefined 
+    ? options.note.replace(/[^\x20-\x7E]/g, '').trim() 
+    : 'ganesh seva';
 
-  // Build standard query string with %20 for spaces (strictly compliant with NPCI & RFC 3986)
+  // Order strictly matching user verified format: cu=INR&pa=8484844728@slc&pn=kartik&tn=&am=501.00
   const queryParts = [
-    `pa=${encodeURIComponent(cleanVpa)}`,
-    `pn=${encodeURIComponent(cleanName)}`,
-    `cu=INR`,
+    'cu=INR',
+    `pa=${cleanVpa}`,
+    `pn=${encodeURIComponent(payeeName)}`,
+    `tn=${encodeURIComponent(rawNote)}`,
   ];
 
-  if (cleanNote) {
-    queryParts.push(`tn=${encodeURIComponent(cleanNote)}`);
-  }
-
-  // Optional amount (strictly decimal formatted)
+  // Optional amount (strictly decimal formatted, e.g. 501.00)
   if (options.amount && !isNaN(Number(options.amount)) && Number(options.amount) > 0) {
     queryParts.push(`am=${Number(options.amount).toFixed(2)}`);
   }
 
   const query = queryParts.join('&');
-
-  switch (scheme) {
-    case 'gpay':
-      return `tez://upi/pay?${query}`;
-    case 'phonepe':
-      return `phonepe://pay?${query}`;
-    case 'paytm':
-      return `paytmmp://pay?${query}`;
-    case 'bhim':
-      return `bhim://pay?${query}`;
-    default:
-      return `upi://pay?${query}`;
-  }
+  return `upi://pay?${query}`;
 }
 
 /**

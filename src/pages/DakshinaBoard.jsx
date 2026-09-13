@@ -54,6 +54,7 @@ export default function DakshinaBoard() {
   const [verifySuccess, setVerifySuccess] = useState('');
   const [verifyError, setVerifyError] = useState('');
   const [localQrDataUrl, setLocalQrDataUrl] = useState('');
+  const [selectedAmount, setSelectedAmount] = useState(101);
 
   // Dynamic Settings from Admin (fallback to 8484844728@slc)
   const upiId = (settings?.upiId && settings.upiId !== 'mandal.ganpati@upi') ? settings.upiId : '8484844728@slc';
@@ -61,8 +62,12 @@ export default function DakshinaBoard() {
   const qrCodeUrl = settings?.qrCodeUrl || '';
   const qrCodeNote = settings?.qrCodeNote || (lang === 'mr' ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan & offer your humble devotion at Lord Ganesha\'s feet');
 
-  // Strict NPCI-compliant deep link (pure ASCII payee name prevents bank limit errors)
-  const officialUpiPayUrl = buildOfficialUpiUrl(upiId, { name: settings?.upiName || 'Shree Ganesh Utsav', note: 'Ganesh Seva' }, 'upi');
+  // Strict NPCI-compliant deep link: upi://pay?cu=INR&pa=8484844728@slc&pn=kartik&tn=ganesh%20seva&am=501.00
+  const officialUpiPayUrl = buildOfficialUpiUrl(upiId, {
+    payeeName: 'kartik',
+    amount: selectedAmount,
+    note: 'ganesh seva',
+  });
 
   // Generate offline local QR code compliant with NPCI specification
   useEffect(() => {
@@ -266,6 +271,43 @@ export default function DakshinaBoard() {
             />
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
               {upiName}
+            </div>
+          </div>
+
+          {/* Quick Amount Selector (Defaults to ₹501 matching user verified UPI link) */}
+          <div className="w-full mt-2">
+            <div className="flex items-center justify-between text-[11px] text-orange-200/80 mb-1 px-1">
+              <span>{lang === 'mr' ? 'रक्कम निवडा (Select Amount):' : 'Select Amount:'}</span>
+              <span className="font-mono font-bold text-amber-300">
+                {selectedAmount ? `₹${selectedAmount}` : (lang === 'mr' ? 'कोणतीही रक्कम' : 'Any Amount')}
+              </span>
+            </div>
+            <div className="grid grid-cols-6 gap-1 w-full">
+              {[101, 251, 501, 1100, 2100].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setSelectedAmount(amt)}
+                  className={`py-1.5 px-0.5 rounded-xl text-xs font-black transition-all cursor-pointer text-center ${
+                    selectedAmount === amt
+                      ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-md shadow-orange-500/30 scale-105 ring-1 ring-amber-300'
+                      : 'bg-black/50 text-orange-200 hover:bg-black/70 border border-amber-500/25'
+                  }`}
+                >
+                  ₹{amt}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedAmount(null)}
+                className={`py-1.5 px-0.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
+                  !selectedAmount
+                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-md scale-105 ring-1 ring-amber-300'
+                    : 'bg-black/50 text-orange-200/70 hover:bg-black/70 border border-amber-500/25'
+                }`}
+              >
+                {lang === 'mr' ? 'इतर' : 'Any'}
+              </button>
             </div>
           </div>
 
