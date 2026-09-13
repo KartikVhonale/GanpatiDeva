@@ -1,33 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit3, Plus, Trash2, X, Check, Save, Clock, Sparkles } from 'lucide-react';
+import { Edit3, Plus, Trash2, X, Save } from 'lucide-react';
 import { useDonations } from '../hooks/useDonations';
 import { useAuth } from '../context/AuthContext';
+import {
+  useLanguage,
+  DEFAULT_DAILY_SCHEDULE,
+  SPECIAL_FESTIVAL_EVENTS,
+} from '../context/LanguageContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-const DEFAULT_DAILY_SCHEDULE = [
-  { id: 'sch-1', time: 'सकाळी ०६:००', title: 'काकड आरती व भूपाळी', icon: '🌅', desc: 'बाप्पाची मंगल प्रभात व सुमधूर भूपाळी गायन.' },
-  { id: 'sch-2', time: 'सकाळी ०८:३०', title: 'अभिषेक, पंचामृत स्नान व नित्य पूजा', icon: '🪔', desc: 'वेदमंत्रांच्या जयघोषात मुख्य मूर्तीचा पवित्र अभिषेक.' },
-  { id: 'sch-3', time: 'दुपारी १२:१५', title: 'दुपारची नैवेद्य महाआरती', icon: '🔔', desc: '२१ मोदक व पंचपक्वान्न नैवेद्य अर्पण.' },
-  { id: 'sch-4', time: 'दुपारी १२:३० ते ०३:००', title: 'सार्वजनिक महाप्रसाद (अन्नदान)', icon: '🍲', desc: 'सर्व भाविकांसाठी महाप्रसाद भोजन व्यवस्था.' },
-  { id: 'sch-5', time: 'सायंकाळी ०७:३०', title: 'मुख्य संध्या महाआरती व धूपारती', icon: '🕯️', desc: 'दिव्यांच्या लखलखाटात आणि ढोल-ताशांच्या गजरात महाआरती.' },
-  { id: 'sch-6', time: 'रात्री ०८:३० ते १०:३०', title: 'रात्रीचा महाप्रसाद वाटप', icon: '🍛', desc: 'सायंकाळच्या दर्शनार्थी भाविकांसाठी प्रसाद वितरण.' },
-  { id: 'sch-7', time: 'रात्री १०:००', title: 'शेजारती व मूक दर्शन', icon: '🌙', desc: 'दिवसाच्या सांगतेची शांत आणि भावपूर्ण शेजारती.' },
-];
-
 const DEVOTIONAL_EMOJIS = ['🌅', '🪔', '🔔', '🍲', '🕯️', '🍛', '🌙', '🚩', '🌺', '🍬', '🕉️', '🥁', '🙏', '✨', '💐'];
 
-const SPECIAL_EVENTS = [
-  { day: 'दिवस १ (गणेश चतुर्थी)', title: 'श्रींची प्राणप्रतिष्ठापना व आगमन सोहळा', desc: 'पारंपरिक वाद्यांच्या गजरात बाप्पाचे वाजत-गाजत आगमन.' },
-  { day: 'दिवस ३', title: 'महिला हळदी-कुंकू व अथर्वशीर्ष पठण', desc: 'सामूहिक १०८ वेळा श्री गणपती अथर्वशीर्ष आवर्तन.' },
-  { day: 'दिवस ५', title: 'गौरी आगमन व पूजन', desc: 'माता गौरीचे सवाद्य आगमन, सजावट व पारंपरिक गाणी.' },
-  { day: 'दिवस ७', title: 'भव्य भजन संध्या व कीर्तन महोत्सव', desc: 'प्रसिद्ध वारकरी बुवांचे संगीतमय कीर्तन व भजन.' },
-  { day: 'दिवस ९', title: 'सत्यविनायक महापूजा व ५६ भोग', desc: 'अखंड ५६ प्रकारच्या मिष्ठांनांचा छप्पन भोग नैवेद्य.' },
-  { day: 'दिवस १० (अनंत चतुर्दशी)', title: 'महाविसर्जन मिरवणूक व निरोप', desc: 'गुलाल, फुले आणि टाळ-मृदुंगाच्या गजरात भावपूर्ण विसर्जन सोहळा.' },
-];
-
 export default function UtsavSchedule() {
+  const { t, pick, lang } = useLanguage();
   const { settings } = useDonations();
   const { isAdmin, token } = useAuth();
 
@@ -43,7 +30,15 @@ export default function UtsavSchedule() {
   const [scheduleFeedback, setScheduleFeedback] = useState('');
 
   const handleOpenEditSchedule = () => {
-    setEditingScheduleList(JSON.parse(JSON.stringify(activeSchedule)));
+    // Deep clone and normalize
+    const normalized = activeSchedule.map((item, idx) => ({
+      id: item.id || `sch-${idx}`,
+      time: typeof item.time === 'string' ? item.time : pick(item.time),
+      title: typeof item.title === 'string' ? item.title : pick(item.title),
+      icon: item.icon || '🪔',
+      desc: typeof item.desc === 'string' ? item.desc : pick(item.desc),
+    }));
+    setEditingScheduleList(normalized);
     setIsEditingSchedule(true);
     setScheduleFeedback('');
   };
@@ -51,10 +46,10 @@ export default function UtsavSchedule() {
   const handleAddScheduleItem = () => {
     const newItem = {
       id: `sch-${Date.now()}`,
-      time: 'सायंकाळी ०६:००',
-      title: 'नवीन आरती / सोहळा',
+      time: lang === 'mr' ? 'सायंकाळी ०६:००' : '06:00 PM',
+      title: lang === 'mr' ? 'नवीन आरती / सोहळा' : 'New Prayer Session',
       icon: '🪔',
-      desc: 'आरती व कार्यक्रमाची माहिती येथे लिहा.',
+      desc: lang === 'mr' ? 'आरती व कार्यक्रमाची माहिती येथे लिहा.' : 'Details of prayer and ceremony.',
     };
     setEditingScheduleList((prev) => [...prev, newItem]);
   };
@@ -84,15 +79,15 @@ export default function UtsavSchedule() {
         body: JSON.stringify({ dailySchedule: editingScheduleList }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'वेळापत्रक सेव्ह करताना त्रुटी आली');
+      if (!res.ok) throw new Error(data.error || t('error'));
 
-      setScheduleFeedback('✅ दैनिक आरत्या व महाप्रसाद वेळापत्रक यशस्वीरित्या सेव्ह झाले!');
+      setScheduleFeedback(t('scheduleSavedMsg'));
       setTimeout(() => {
         setIsEditingSchedule(false);
         setScheduleFeedback('');
       }, 1000);
     } catch (err) {
-      setScheduleFeedback('❌ त्रुटी: ' + err.message);
+      setScheduleFeedback('❌ ' + err.message);
     } finally {
       setIsSavingSchedule(false);
     }
@@ -104,13 +99,13 @@ export default function UtsavSchedule() {
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-300">
           <span>🔔</span>
-          <span>उत्सव दिनदर्शिका</span>
+          <span>{t('scheduleBadge')}</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          दैनिक आरत्या व १० दिवसीय कार्यक्रम वेळापत्रक
+          {t('scheduleTitle')}
         </h2>
         <p className="text-xs sm:text-sm text-orange-200/75 max-w-2xl mx-auto">
-          श्री गणेशोत्सव काळातील दररोजच्या आरत्या, महाप्रसाद आणि विशेष सांस्कृतिक कार्यक्रमांचे संपूर्ण वेळापत्रक.
+          {t('scheduleSubtitle')}
         </p>
       </div>
 
@@ -120,7 +115,7 @@ export default function UtsavSchedule() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">⏰</span>
             <h3 className="text-lg sm:text-xl font-bold text-amber-200">
-              दैनिक नित्य आरत्या व महाप्रसाद वेळा
+              {t('dailyScheduleTitle')}
             </h3>
           </div>
 
@@ -131,7 +126,7 @@ export default function UtsavSchedule() {
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition shadow-sm cursor-pointer self-start sm:self-auto"
             >
               <Edit3 className="h-3.5 w-3.5" />
-              <span>वेळापत्रक संपादित करा (Admin)</span>
+              <span>{t('editScheduleBtn')}</span>
             </button>
           )}
         </div>
@@ -139,7 +134,7 @@ export default function UtsavSchedule() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
           {activeSchedule.map((item, idx) => (
             <motion.div
-              key={item.id || item.title || idx}
+              key={item.id || idx}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -151,13 +146,13 @@ export default function UtsavSchedule() {
               </div>
               <div className="flex-1 min-w-0">
                 <span className="inline-block font-mono text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded">
-                  {item.time}
+                  {pick(item.time)}
                 </span>
                 <h4 className="font-bold text-sm text-white mt-1">
-                  {item.title}
+                  {pick(item.title)}
                 </h4>
                 <p className="text-xs text-orange-200/75 mt-0.5 leading-relaxed">
-                  {item.desc}
+                  {pick(item.desc)}
                 </p>
               </div>
             </motion.div>
@@ -170,14 +165,14 @@ export default function UtsavSchedule() {
         <div className="flex items-center gap-2 border-b border-amber-500/20 pb-3">
           <span className="text-2xl">🚩</span>
           <h3 className="text-lg sm:text-xl font-bold text-amber-200">
-            १० दिवसांचे विशेष उत्सव व सांस्कृतिक सोहळे
+            {t('specialEventsTitle')}
           </h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
-          {SPECIAL_EVENTS.map((event, idx) => (
+          {SPECIAL_FESTIVAL_EVENTS.map((event, idx) => (
             <motion.div
-              key={event.day}
+              key={idx}
               initial={{ opacity: 0, scale: 0.96 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -185,13 +180,13 @@ export default function UtsavSchedule() {
               className="rounded-2xl border border-orange-500/20 bg-black/40 p-4 space-y-1.5 hover:border-amber-400/50 transition-all"
             >
               <span className="text-xs font-bold text-amber-400">
-                {event.day}
+                {pick(event.day)}
               </span>
               <h4 className="font-bold text-sm text-white">
-                {event.title}
+                {pick(event.title)}
               </h4>
               <p className="text-xs text-orange-200/75 leading-relaxed">
-                {event.desc}
+                {pick(event.desc)}
               </p>
             </motion.div>
           ))}
@@ -202,25 +197,25 @@ export default function UtsavSchedule() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-5 backdrop-blur-xl space-y-2">
           <span className="text-3xl">🍬</span>
-          <h4 className="font-bold text-sm text-white">२१ मोदकांचा प्रसाद</h4>
+          <h4 className="font-bold text-sm text-white">{t('modakTitle')}</h4>
           <p className="text-xs text-orange-200/75">
-            उकडीचे किंवा तळलेले २१ मोदक बाप्पाला अत्यंत प्रिय आहेत. यामुळे तृप्ती आणि मनाची एकाग्रता वाढते.
+            {t('modakDesc')}
           </p>
         </div>
 
         <div className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-5 backdrop-blur-xl space-y-2">
           <span className="text-3xl">🌿</span>
-          <h4 className="font-bold text-sm text-white">२१ दुर्वांची जोडी</h4>
+          <h4 className="font-bold text-sm text-white">{t('durvaTitle')}</h4>
           <p className="text-xs text-orange-200/75">
-            अनलासुर राक्षसाचा दाह शांत करण्यासाठी दुर्वा अर्पण केल्या जातात. दुर्वा ही शरीरातील उष्णता शांत करण्याचे प्रतीक आहे.
+            {t('durvaDesc')}
           </p>
         </div>
 
         <div className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-5 backdrop-blur-xl space-y-2">
           <span className="text-3xl">🌺</span>
-          <h4 className="font-bold text-sm text-white">लाल जास्वंदीचे फूल</h4>
+          <h4 className="font-bold text-sm text-white">{t('jaswandTitle')}</h4>
           <p className="text-xs text-orange-200/75">
-            लाल रंग हा तेज, ऊर्जा आणि चैतन्याचा कारक आहे. गणपती बाप्पाच्या मस्तकावर लाल जास्वंद अर्पण करणे अत्यंत शुभ मानले जाते.
+            {t('jaswandDesc')}
           </p>
         </div>
       </div>
@@ -242,10 +237,10 @@ export default function UtsavSchedule() {
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <span>⏰</span>
-                    <span>दैनिक आरत्या व महाप्रसाद वेळापत्रक संपादन (Admin Only)</span>
+                    <span>{t('adminScheduleModalTitle')}</span>
                   </h3>
                   <p className="text-xs text-orange-200/70 mt-0.5">
-                    येथे केलेले बदल थेट मुख्य पृष्ठावर सर्व भाविकांना दिसतील.
+                    {t('adminScheduleModalSub')}
                   </p>
                 </div>
                 <button
@@ -272,13 +267,13 @@ export default function UtsavSchedule() {
                   >
                     <div className="flex items-center justify-between border-b border-amber-500/15 pb-2">
                       <span className="text-xs font-bold text-amber-300">
-                        आरती / सत्र #{idx + 1}
+                        {lang === 'mr' ? `आरती / सत्र #${idx + 1}` : `Session #${idx + 1}`}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleDeleteScheduleItem(idx)}
                         className="p-1 rounded-lg text-red-400 hover:bg-red-950/60 transition cursor-pointer"
-                        title="काढून टाका"
+                        title={t('delete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -287,34 +282,34 @@ export default function UtsavSchedule() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                          वेळ (Time)
+                          {lang === 'mr' ? 'वेळ (Time)' : 'Time'}
                         </label>
                         <input
                           type="text"
                           value={item.time}
                           onChange={(e) => handleUpdateScheduleItem(idx, 'time', e.target.value)}
                           className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                          placeholder="उदा. सकाळी ०६:०० किंवा दुपारी १२:३०"
+                          placeholder={lang === 'mr' ? 'उदा. सकाळी ०६:०० किंवा दुपारी १२:३०' : 'e.g. 06:00 AM or 12:30 PM'}
                         />
                       </div>
 
                       <div>
                         <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                          आरती / कार्यक्रमाचे नाव (Title)
+                          {lang === 'mr' ? 'आरती / कार्यक्रमाचे नाव (Title)' : 'Session Title'}
                         </label>
                         <input
                           type="text"
                           value={item.title}
                           onChange={(e) => handleUpdateScheduleItem(idx, 'title', e.target.value)}
                           className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                          placeholder="उदा. काकड आरती व भूपाळी"
+                          placeholder={lang === 'mr' ? 'उदा. काकड आरती व भूपाळी' : 'e.g. Morning Kakad Aarti'}
                         />
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        चिन्ह / इमोजी (Emoji Icon)
+                        {lang === 'mr' ? 'चिन्ह / इमोजी (Emoji Icon)' : 'Emoji Icon'}
                       </label>
                       <div className="flex flex-wrap items-center gap-1.5 mb-2">
                         {DEVOTIONAL_EMOJIS.map((emoji) => (
@@ -337,20 +332,20 @@ export default function UtsavSchedule() {
                         value={item.icon}
                         onChange={(e) => handleUpdateScheduleItem(idx, 'icon', e.target.value)}
                         className="w-24 rounded-xl border border-amber-500/30 bg-black/60 py-1.5 px-3 text-sm text-center text-white outline-none focus:border-amber-400"
-                        placeholder="किंवा इमोजी टाईप करा"
+                        placeholder="Emoji"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        सविस्तर माहिती / महत्त्व (Description)
+                        {lang === 'mr' ? 'सविस्तर माहिती / महत्त्व (Description)' : 'Description'}
                       </label>
                       <textarea
                         rows={2}
                         value={item.desc}
                         onChange={(e) => handleUpdateScheduleItem(idx, 'desc', e.target.value)}
                         className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                        placeholder="आरती किंवा महाप्रसादाबद्दल थोडक्यात माहिती..."
+                        placeholder={lang === 'mr' ? 'आरती किंवा महाप्रसादाबद्दल थोडक्यात माहिती...' : 'Brief summary about this prayer/event...'}
                       />
                     </div>
                   </div>
@@ -365,7 +360,7 @@ export default function UtsavSchedule() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-dashed border-amber-400/60 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>नवीन आरती / वेळ जोडा</span>
+                  <span>{t('addAartiBtn')}</span>
                 </button>
 
                 <div className="w-full sm:w-auto flex items-center justify-end gap-2.5">
@@ -374,7 +369,7 @@ export default function UtsavSchedule() {
                     onClick={() => setIsEditingSchedule(false)}
                     className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-orange-200 text-xs font-semibold transition cursor-pointer"
                   >
-                    रद्द करा
+                    {t('cancel')}
                   </button>
 
                   <button
@@ -384,11 +379,11 @@ export default function UtsavSchedule() {
                     className="inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:brightness-110 active:scale-95 text-white text-xs font-bold shadow-lg shadow-orange-600/30 disabled:opacity-50 transition cursor-pointer"
                   >
                     {isSavingSchedule ? (
-                      <span>सेव्ह होत आहे...</span>
+                      <span>{t('saving')}</span>
                     ) : (
                       <>
                         <Save className="h-3.5 w-3.5" />
-                        <span>बदल सेव्ह करा व Live करा</span>
+                        <span>{t('saveScheduleBtn')}</span>
                       </>
                     )}
                   </button>
@@ -401,4 +396,3 @@ export default function UtsavSchedule() {
     </section>
   );
 }
-

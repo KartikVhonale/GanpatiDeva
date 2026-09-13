@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playTempleBell, playFlowerChime } from '../utils/audio';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function GaneshaHero({ onNavigate }) {
+  const { isMarathi } = useLanguage();
   const [poojaCount, setPoojaCount] = useState(() => {
     return parseInt(localStorage.getItem('ganesha_pooja_count') || '108', 10);
   });
@@ -21,7 +23,7 @@ export default function GaneshaHero({ onNavigate }) {
   // Virtual Flower Shower
   const handleOfferFlowers = () => {
     playFlowerChime();
-    incrementPooja('पुष्पवृष्टी समर्पित केली 🌸');
+    incrementPooja(isMarathi ? 'पुष्पवृष्टी समर्पित केली 🌸' : 'Flowers Offered 🌸');
 
     const newItems = Array.from({ length: 12 }).map((_, i) => ({
       id: `flower-${Date.now()}-${i}`,
@@ -41,14 +43,14 @@ export default function GaneshaHero({ onNavigate }) {
   const handleOfferAarti = () => {
     playTempleBell();
     setIsAartiActive(true);
-    incrementPooja('आरती ओवाळली 🪔 बाप्पा मोरया!');
+    incrementPooja(isMarathi ? 'आरती ओवाळली 🪔 बाप्पा मोरया!' : 'Aarti Offered 🪔 Bappa Morya!');
     setTimeout(() => setIsAartiActive(false), 4500);
   };
 
   // Virtual Modak
   const handleOfferModak = () => {
     playFlowerChime();
-    incrementPooja('२१ मोदकांचा नैवेद्य अर्पण केला 🍬');
+    incrementPooja(isMarathi ? '२१ मोदकांचा नैवेद्य अर्पण केला 🍬' : '21 Modaks Offered 🍬');
 
     const newItems = Array.from({ length: 8 }).map((_, i) => ({
       id: `modak-${Date.now()}-${i}`,
@@ -67,7 +69,7 @@ export default function GaneshaHero({ onNavigate }) {
   // Virtual Durva
   const handleOfferDurva = () => {
     playFlowerChime();
-    incrementPooja('२१ दुर्वांची जुडी अर्पण केली 🌿');
+    incrementPooja(isMarathi ? '२१ दुर्वांची जुडी अर्पण केली 🌿' : '21 Sacred Durva Offered 🌿');
 
     const newItems = Array.from({ length: 8 }).map((_, i) => ({
       id: `durva-${Date.now()}-${i}`,
@@ -144,7 +146,7 @@ export default function GaneshaHero({ onNavigate }) {
                   🐘
                 </span>
                 <div className="rounded-full bg-amber-500/20 border border-amber-400/40 px-3 py-0.5 text-xs font-bold text-amber-200">
-                  ॥ श्री सिद्धिविनायक ॥
+                  {isMarathi ? '॥ श्री सिद्धिविनायक ॥' : '|| Shri Siddhivinayak ||'}
                 </div>
                 <div className="text-[11px] text-orange-200/80 font-serif italic">
                   सुमुखश्च एकदन्तश्च कपिलो गजकर्णकः
@@ -183,7 +185,7 @@ export default function GaneshaHero({ onNavigate }) {
               className="flex items-center gap-1.5 rounded-full border border-rose-500/40 bg-rose-950/40 px-3.5 py-1.5 text-xs font-bold text-rose-200 hover:bg-rose-900/60 hover:text-white transition-all hover:scale-105 active:scale-95 shadow cursor-pointer"
             >
               <span>🌸</span>
-              <span>पुष्पवृष्टी</span>
+              <span>{isMarathi ? 'पुष्पवृष्टी' : 'Shower Flowers'}</span>
             </button>
 
             <button
@@ -192,7 +194,7 @@ export default function GaneshaHero({ onNavigate }) {
               className="flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-amber-950/40 px-3.5 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-900/60 hover:text-white transition-all hover:scale-105 active:scale-95 shadow cursor-pointer"
             >
               <span>🪔</span>
-              <span>आरती ओवाळा</span>
+              <span>{isMarathi ? 'आरती ओवाळा' : 'Offer Aarti'}</span>
             </button>
 
             <button
@@ -201,7 +203,7 @@ export default function GaneshaHero({ onNavigate }) {
               className="flex items-center gap-1.5 rounded-full border border-orange-500/40 bg-orange-950/40 px-3.5 py-1.5 text-xs font-bold text-orange-200 hover:bg-orange-900/60 hover:text-white transition-all hover:scale-105 active:scale-95 shadow cursor-pointer"
             >
               <span>🍬</span>
-              <span>मोदक नैवेद्य</span>
+              <span>{isMarathi ? 'मोदक नैवेद्य' : 'Modak Prasad'}</span>
             </button>
 
             <button
@@ -210,14 +212,14 @@ export default function GaneshaHero({ onNavigate }) {
               className="flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/40 px-3.5 py-1.5 text-xs font-bold text-emerald-200 hover:bg-emerald-900/60 hover:text-white transition-all hover:scale-105 active:scale-95 shadow cursor-pointer"
             >
               <span>🌿</span>
-              <span>२१ दुर्वा</span>
+              <span>{isMarathi ? '२१ दुर्वा' : '21 Durva'}</span>
             </button>
           </div>
 
           {/* Devotees Pooja Counter */}
           <div className="mt-3 text-[11px] text-amber-300/70 font-medium">
-            🚩 भाविकांनी आज अर्पण केलेली डिजिटल पूजा:{' '}
-            <span className="font-bold text-amber-300">{poojaCount.toLocaleString()}</span> वेळा
+            {isMarathi ? '🚩 भाविकांनी आज अर्पण केलेली डिजिटल पूजा: ' : '🚩 Digital offerings made by devotees today: '}
+            <span className="font-bold text-amber-300">{poojaCount.toLocaleString()}</span> {isMarathi ? 'वेळा' : 'times'}
           </div>
         </div>
 
@@ -226,17 +228,19 @@ export default function GaneshaHero({ onNavigate }) {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-3.5 py-1 text-xs font-bold text-amber-300 mb-3 shadow-inner">
               <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>विघ्नहर्ता • सुखकर्ता • बुद्धिदाता</span>
+              <span>{isMarathi ? 'विघ्नहर्ता • सुखकर्ता • बुद्धिदाता' : 'Remover of Obstacles • Giver of Joy • Bestower of Wisdom'}</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-lg">
               <span className="bg-gradient-to-r from-amber-200 via-orange-300 to-rose-300 bg-clip-text text-transparent">
-                गणपती बाप्पा मोरया
+                {isMarathi ? 'गणपती बाप्पा मोरया' : 'Ganpati Bappa Morya'}
               </span>
             </h1>
 
             <p className="mt-2 text-sm sm:text-base font-medium text-orange-200/90 leading-relaxed max-w-xl">
-              सर्व विघ्नांचे निवारण करणारे, चौसष्ट कलांचे अधिपती आणि रिद्धी-सिद्धीचे स्वामी भगवान श्री गणेश यांच्या चरणी कोटी कोटी प्रणाम.
+              {isMarathi
+                ? 'सर्व विघ्नांचे निवारण करणारे, चौसष्ट कलांचे अधिपती आणि रिद्धी-सिद्धीचे स्वामी भगवान श्री गणेश यांच्या चरणी कोटी कोटी प्रणाम.'
+                : 'Salutations to Lord Ganesha, the remover of all obstacles, master of sixty-four divine arts, and sovereign lord of spiritual success (Siddhi) and prosperity (Riddhi).'}
             </p>
           </div>
 
@@ -247,39 +251,44 @@ export default function GaneshaHero({ onNavigate }) {
               निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥
             </p>
             <p className="mt-2 text-xs text-orange-300/70 border-t border-amber-500/20 pt-2">
-              <strong>भावार्थ:</strong> हे वाकडी सोंड असलेल्या, विशाल शरीर आणि कोटी सूर्यांचे तेज धारण करणाऱ्या विघ्नहर्त्या देवा, माझ्या सर्व कार्यातील विघ्न कायम दूर करा.
+              <strong>{isMarathi ? 'भावार्थ:' : 'Meaning:'}</strong>{' '}
+              {isMarathi
+                ? 'हे वाकडी सोंड असलेल्या, विशाल शरीर आणि कोटी सूर्यांचे तेज धारण करणाऱ्या विघ्नहर्त्या देवा, माझ्या सर्व कार्यातील विघ्न कायम दूर करा.'
+                : 'O Lord with the curved trunk and immense radiant aura like ten million suns, please make all my endeavors free from obstacles at all times.'}
             </p>
           </div>
 
           {/* Gateway CTA Buttons to Other Sections */}
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => onNavigate('aarti')}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-1 ring-amber-300/50"
-            >
-              <span>📖</span>
-              <span>आरती संग्रह वाचा</span>
-            </button>
+          {onNavigate && (
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => onNavigate('aarti')}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-1 ring-amber-300/50"
+              >
+                <span>📖</span>
+                <span>{isMarathi ? 'आरती संग्रह वाचा' : 'Read Aarti Collection'}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => onNavigate('ashtavinayak')}
-              className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-orange-950/40 px-5 py-2.5 text-xs sm:text-sm font-bold text-amber-200 hover:bg-orange-900/50 hover:text-white transition-all cursor-pointer"
-            >
-              <span>🚩</span>
-              <span>अष्टविनायक दर्शन</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('ashtavinayak')}
+                className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-orange-950/40 px-5 py-2.5 text-xs sm:text-sm font-bold text-amber-200 hover:bg-orange-900/50 hover:text-white transition-all cursor-pointer"
+              >
+                <span>🚩</span>
+                <span>{isMarathi ? 'अष्टविनायक दर्शन' : 'Ashtavinayak Shrines'}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => onNavigate('dakshina')}
-              className="flex items-center gap-2 rounded-xl border border-orange-500/40 bg-red-950/30 px-5 py-2.5 text-xs sm:text-sm font-bold text-orange-200 hover:bg-red-900/40 hover:text-white transition-all cursor-pointer"
-            >
-              <span>🪙</span>
-              <span>दक्षिणा व महाप्रसाद सेवा</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('dakshina')}
+                className="flex items-center gap-2 rounded-xl border border-orange-500/40 bg-red-950/30 px-5 py-2.5 text-xs sm:text-sm font-bold text-orange-200 hover:bg-red-900/40 hover:text-white transition-all cursor-pointer"
+              >
+                <span>🪙</span>
+                <span>{isMarathi ? 'दक्षिणा व महाप्रसाद सेवा' : 'Dakshina & Seva Fund'}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

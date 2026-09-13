@@ -103,7 +103,9 @@ export function useDonations() {
         : [];
 
       if (donorList.length > 0) {
-        setDonors(donorList.map(formatBackendDonor));
+        const formatted = donorList.map(formatBackendDonor);
+        formatted.sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+        setDonors(formatted);
       }
     } catch (err) {
       console.warn('Backend REST API fetch error:', err.message);
@@ -208,11 +210,11 @@ export function useDonations() {
 
         setLatestDonation(formatted);
 
-        // Prepend new donor to the full donors list
+        // Insert new donor and sort by amount descending (highest money on top)
         setDonors(prev => {
           const exists = prev.some(d => d.id === formatted.id);
-          if (exists) return prev;
-          return [formatted, ...prev];
+          const list = exists ? prev : [formatted, ...prev];
+          return list.sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
         });
       });
 
@@ -282,7 +284,10 @@ export function useDonations() {
       setTotalAmount(prev => prev + numericAmount);
       setDonorCount(prev => prev + 1);
       setLatestDonation(fallbackDonation);
-      setDonors(prev => [fallbackDonation, ...prev]);
+      setDonors(prev => {
+        const list = [fallbackDonation, ...prev];
+        return list.sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+      });
     }
   }, []);
 

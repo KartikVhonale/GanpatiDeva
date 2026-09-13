@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ShieldCheck,
   UserPlus,
   Users,
-  UserCheck,
   Trash2,
   Power,
   RefreshCw,
-  Phone,
   CheckCircle2,
   AlertCircle,
   Database,
@@ -17,22 +16,22 @@ import {
   ExternalLink,
   QrCode,
   Target,
-  Clock,
   Check,
   X,
   Copy,
-  Share2,
-  Settings as SettingsIcon,
   Bell,
   MessageCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default function AdminManagement() {
   const { user, token } = useAuth();
+  const { t, isMarathi } = useLanguage();
 
-  // Navigation Tab State: 'verification' | 'settings' | 'users'
+  // Navigation Tab State: 'verification' | 'settings' | 'users' | 'donations'
   const [activeTab, setActiveTab] = useState('verification');
 
   // 1. Volunteer & User Management State
@@ -47,6 +46,7 @@ export default function AdminManagement() {
     role: 'volunteer',
   });
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // 2. Settings Management State (Target Amount, UPI ID, QR Code)
   const [settings, setSettings] = useState({
@@ -91,14 +91,14 @@ export default function AdminManagement() {
       if (res.ok && data.users) {
         setUsersList(data.users);
       } else {
-        throw new Error(data.error || 'वापरकर्ते आणण्यात अयशस्वी');
+        throw new Error(data.error || (isMarathi ? 'वापरकर्ते आणण्यात अयशस्वी' : 'Failed to fetch users'));
       }
     } catch (err) {
       console.error('Error fetching users:', err);
     } finally {
       setLoadingUsers(false);
     }
-  }, [token]);
+  }, [token, isMarathi]);
 
   // Fetch Settings
   const fetchSettings = useCallback(async () => {
@@ -172,11 +172,11 @@ export default function AdminManagement() {
 
   // Delete a Donation (Admin only)
   const handleDeleteDonation = async (id, donorName, amount) => {
-    if (
-      !window.confirm(
-        `⚠️ सावधान! खरोखर ${donorName} यांची ₹${Number(amount).toLocaleString()} ची देणगी कायमस्वरूपी हटवायची आहे का?\n\nही क्रिया पूर्ववत करता येणार नाही आणि थेट डॅशबोर्डवरील रक्कम कमी होईल.`
-      )
-    ) {
+    const confirmPrompt = isMarathi
+      ? `⚠️ सावधान! खरोखर ${donorName} यांची ₹${Number(amount).toLocaleString('mr-IN')} ची देणगी कायमस्वरूपी हटवायची आहे का?\n\nही क्रिया पूर्ववत करता येणार नाही आणि थेट डॅशबोर्डवरील रक्कम कमी होईल.`
+      : `⚠️ Warning! Are you sure you want to permanently delete the donation of ₹${Number(amount).toLocaleString('en-IN')} by ${donorName}?\n\nThis action cannot be undone and will deduct the amount from the live total counter.`;
+
+    if (!window.confirm(confirmPrompt)) {
       return;
     }
 
@@ -189,11 +189,15 @@ export default function AdminManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'देणगी हटवण्यात अयशस्वी');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'देणगी हटवण्यात अयशस्वी' : 'Failed to delete donation'));
 
       setFeedback({
         type: 'success',
-        message: data.message || `₹${Number(amount).toLocaleString()} ची देणगी यशस्वीपणे हटवली!`,
+        message:
+          data.message ||
+          (isMarathi
+            ? `₹${Number(amount).toLocaleString('mr-IN')} ची देणगी यशस्वीपणे हटवली!`
+            : `Donation of ₹${Number(amount).toLocaleString('en-IN')} successfully deleted!`),
       });
 
       setAdminDonations((prev) => prev.filter((d) => (d._id || d.id) !== id));
@@ -222,11 +226,13 @@ export default function AdminManagement() {
         body: JSON.stringify(settings),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'सेटिंग्ज सेव्ह करण्यात अयशस्वी');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'सेटिंग्ज सेव्ह करण्यात अयशस्वी' : 'Failed to save settings'));
 
       setFeedback({
         type: 'success',
-        message: 'उत्सव लक्ष्य रक्कम व QR कोड सेटिंग्ज यशस्वीपणे सेव्ह झाल्या आणि लाइव्ह अपडेट झाल्या!',
+        message: isMarathi
+          ? 'उत्सव लक्ष्य रक्कम व QR कोड सेटिंग्ज यशस्वीपणे सेव्ह झाल्या आणि लाइव्ह अपडेट झाल्या!'
+          : 'Festival goal amount & QR code settings successfully saved and updated live!',
       });
       setSettings(data.settings);
     } catch (err) {
@@ -249,11 +255,13 @@ export default function AdminManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'मंजूर करण्यात त्रुटी आली');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'मंजूर करण्यात त्रुटी आली' : 'Failed to approve payment'));
 
       setFeedback({
         type: 'success',
-        message: `₹${Number(amount).toLocaleString()} (${donorName}) ची देणगी यशस्वीपणे मंजूर केली व मुख्य डॅशबोर्डवर जोडली!`,
+        message: isMarathi
+          ? `₹${Number(amount).toLocaleString('mr-IN')} (${donorName}) ची देणगी यशस्वीपणे मंजूर केली व मुख्य डॅशबोर्डवर जोडली!`
+          : `Donation of ₹${Number(amount).toLocaleString('en-IN')} (${donorName}) successfully approved and added to live board!`,
       });
 
       // Remove from list
@@ -266,7 +274,11 @@ export default function AdminManagement() {
   };
 
   const handleRejectPayment = async (id, donorName) => {
-    const reason = window.prompt(`खरोखर ${donorName} यांची पेमेंट विनंती नाकारायची आहे का? (कारण प्रविष्ट करा):`, 'पडताळणी अयशस्वी');
+    const promptMsg = isMarathi
+      ? `खरोखर ${donorName} यांची पेमेंट विनंती नाकारायची आहे का? (कारण प्रविष्ट करा):`
+      : `Are you sure you want to reject payment request from ${donorName}? (Enter reason):`;
+    const defaultReason = isMarathi ? 'पडताळणी अयशस्वी' : 'Verification failed';
+    const reason = window.prompt(promptMsg, defaultReason);
     if (reason === null) return;
 
     setProcessingId(id);
@@ -282,11 +294,13 @@ export default function AdminManagement() {
         body: JSON.stringify({ reason }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'रद्द करण्यात त्रुटी आली');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'रद्द करण्यात त्रुटी आली' : 'Failed to reject payment'));
 
       setFeedback({
         type: 'success',
-        message: `${donorName} यांची पेमेंट विनंती रद्द करण्यात आली.`,
+        message: isMarathi
+          ? `${donorName} यांची पेमेंट विनंती रद्द करण्यात आली.`
+          : `Payment verification request from ${donorName} has been rejected.`,
       });
 
       setPaymentRequests((prev) => prev.filter((r) => r._id !== id));
@@ -307,7 +321,9 @@ export default function AdminManagement() {
   const getWhatsAppContactUrl = (request) => {
     const cleanPhone = request.phone ? request.phone.replace(/\D/g, '') : '';
     const phoneParam = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const text = `॥ श्री गणेशाय नमः ॥\nनमस्कार ${request.name} जी,\nसार्वजनिक श्री गणेश उत्सव मंडळ २०२६ कडून आपल्या ₹${request.amount} देणगी विनंती (UTR: ${request.utrNumber}) ची पडताळणी संदर्भात संपर्क करत आहोत.`;
+    const text = isMarathi
+      ? `॥ श्री गणेशाय नमः ॥\nनमस्कार ${request.name} जी,\nसार्वजनिक श्री गणेश उत्सव मंडळ २०२६ कडून आपल्या ₹${request.amount} देणगी विनंती (UTR: ${request.utrNumber}) ची पडताळणी संदर्भात संपर्क करत आहोत.`
+      : `|| Shree Ganeshaya Namah ||\nGreetings ${request.name} ji,\nWe are reaching out from Shree Ganesh Utsav Mandal 2026 regarding verification of your ₹${request.amount} contribution (UTR: ${request.utrNumber}).`;
     return phoneParam
       ? `https://api.whatsapp.com/send?phone=${phoneParam}&text=${encodeURIComponent(text)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
@@ -321,7 +337,10 @@ export default function AdminManagement() {
     setFeedback({ type: '', message: '' });
 
     if (!formData.name.trim() || !formData.username.trim() || !formData.password) {
-      setFeedback({ type: 'error', message: 'कृपया सर्व आवश्यक रकाने भरा.' });
+      setFeedback({
+        type: 'error',
+        message: isMarathi ? 'कृपया सर्व आवश्यक रकाने भरा.' : 'Please fill all required fields.',
+      });
       return;
     }
 
@@ -336,11 +355,13 @@ export default function AdminManagement() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'वापरकर्ता जोडण्यात त्रुटी आली');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'वापरकर्ता जोडण्यात त्रुटी आली' : 'Failed to create user'));
 
       setFeedback({
         type: 'success',
-        message: `नवीन ${formData.role === 'admin' ? 'व्यवस्थापक' : 'स्वयंसेवक'} (${formData.name}) यशस्वीपणे MongoDB मध्ये जोडला गेला!`,
+        message: isMarathi
+          ? `नवीन ${formData.role === 'admin' ? 'व्यवस्थापक' : 'स्वयंसेवक'} (${formData.name}) यशस्वीपणे MongoDB मध्ये जोडला गेला!`
+          : `New ${formData.role === 'admin' ? 'Admin' : 'Volunteer'} (${formData.name}) successfully registered in database!`,
       });
 
       setFormData({
@@ -350,6 +371,7 @@ export default function AdminManagement() {
         phone: '',
         role: 'volunteer',
       });
+      setShowPassword(false);
       fetchUsers();
     } catch (err) {
       setFeedback({ type: 'error', message: err.message });
@@ -365,11 +387,13 @@ export default function AdminManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'स्थिती बदलण्यात त्रुटी');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'स्थिती बदलण्यात त्रुटी' : 'Failed to update user status'));
 
       setFeedback({
         type: 'success',
-        message: `${userName} चे खाते ${!currentStatus ? 'सक्रिय' : 'निष्क्रिय'} करण्यात आले.`,
+        message: isMarathi
+          ? `${userName} चे खाते ${!currentStatus ? 'सक्रिय' : 'निष्क्रिय'} करण्यात आले.`
+          : `Account for ${userName} has been ${!currentStatus ? 'activated' : 'deactivated'}.`,
       });
       fetchUsers();
     } catch (err) {
@@ -378,7 +402,10 @@ export default function AdminManagement() {
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`खरोखर ${userName} या सदस्याचे खाते कायमस्वरूपी हटवायचे आहे का?`)) return;
+    const confirmPrompt = isMarathi
+      ? `खरोखर ${userName} या सदस्याचे खाते कायमस्वरूपी हटवायचे आहे का?`
+      : `Are you sure you want to permanently delete the account for ${userName}?`;
+    if (!window.confirm(confirmPrompt)) return;
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}`, {
@@ -386,11 +413,13 @@ export default function AdminManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'हटवण्यात त्रुटी आली');
+      if (!res.ok) throw new Error(data.error || (isMarathi ? 'हटवण्यात त्रुटी आली' : 'Failed to delete user'));
 
       setFeedback({
         type: 'success',
-        message: `${userName} चे खाते यशस्वीपणे हटवले.`,
+        message: isMarathi
+          ? `${userName} चे खाते यशस्वीपणे हटवले.`
+          : `Account for ${userName} deleted successfully.`,
       });
       fetchUsers();
     } catch (err) {
@@ -423,7 +452,7 @@ export default function AdminManagement() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-white">
-                  मुख्य व्यवस्थापक नियंत्रण कक्ष (Admin Panel)
+                  {t('adminTitle')}
                 </h1>
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold text-amber-300">
                   <Database className="h-3 w-3" />
@@ -431,7 +460,7 @@ export default function AdminManagement() {
                 </span>
               </div>
               <p className="text-xs text-orange-200/75 mt-0.5">
-                QR कोड संपादन, देणगी ध्येय मर्यादा, ऑनलाइन पेमेंट पडताळणी व स्वयंसेवक व्यवस्थापन
+                {t('adminSub')}
               </p>
             </div>
           </div>
@@ -439,14 +468,16 @@ export default function AdminManagement() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-black/40 px-3 py-2 text-xs text-orange-200">
               <span>👑</span>
-              <span>व्यवस्थापक: <strong className="text-amber-300">{user?.name}</strong></span>
+              <span>
+                {isMarathi ? 'व्यवस्थापक:' : 'Admin:'} <strong className="text-amber-300">{user?.name}</strong>
+              </span>
             </div>
 
             <Link
               to="/dakshina"
               className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-orange-950/50 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-orange-900/50 transition-all"
             >
-              <span>📺 Live TV स्क्रीन</span>
+              <span>{t('liveTvScreenBtn')}</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
 
@@ -455,8 +486,8 @@ export default function AdminManagement() {
               onClick={refreshAll}
               className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-orange-950/50 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-orange-900/50 transition-all cursor-pointer"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loadingUsers || loadingRequests ? 'animate-spin' : ''}`} />
-              <span>रिफ्रेश</span>
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingUsers || loadingRequests || loadingSettings ? 'animate-spin' : ''}`} />
+              <span>{t('refreshBtn')}</span>
             </button>
           </div>
         </div>
@@ -474,14 +505,14 @@ export default function AdminManagement() {
             }`}
           >
             <Bell className="h-4 w-4" />
-            <span>ऑनलाइन पेमेंट पडताळणी</span>
+            <span>{t('tabVerification')}</span>
             {paymentRequests.length > 0 ? (
               <span className="rounded-full bg-red-500 text-white px-2 py-0.5 text-[10px] font-black animate-pulse">
-                {paymentRequests.length} नवीन
+                {paymentRequests.length} {t('newRequestsBadge')}
               </span>
             ) : (
               <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 text-[10px]">
-                ० प्रलंबित
+                {t('zeroPendingBadge')}
               </span>
             )}
           </button>
@@ -497,7 +528,7 @@ export default function AdminManagement() {
             }`}
           >
             <QrCode className="h-4 w-4" />
-            <span>ध्येय रक्कम & QR कोड सेटिंग्ज</span>
+            <span>{t('tabSettings')}</span>
           </button>
 
           {/* Tab 3: Volunteer Management */}
@@ -511,7 +542,9 @@ export default function AdminManagement() {
             }`}
           >
             <Users className="h-4 w-4" />
-            <span>स्वयंसेवक कक्ष व्यवस्थापन ({usersList.length})</span>
+            <span>
+              {t('tabUsers')} ({usersList.length})
+            </span>
           </button>
 
           {/* Tab 4: Donations Management & Deletion */}
@@ -525,7 +558,9 @@ export default function AdminManagement() {
             }`}
           >
             <Trash2 className="h-4 w-4 text-red-400" />
-            <span>देणग्या व्यवस्थापन व हटवा ({adminDonations.length})</span>
+            <span>
+              {t('tabDonations')} ({adminDonations.length})
+            </span>
           </button>
         </div>
       </div>
@@ -566,21 +601,21 @@ export default function AdminManagement() {
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                 <span>🔔</span>
-                <span>ऑनलाइन देणगी पडताळणी विनंत्या</span>
+                <span>{t('verificationSectionTitle')}</span>
               </h2>
               <p className="text-xs text-orange-200/75">
-                भाविकांनी QR कोड स्कॅन करून पाठवलेल्या UTR नंबरची खात्री करून एका क्लिकवर पावती मंजूर करा.
+                {t('verificationSectionSub')}
               </p>
             </div>
             <span className="text-xs font-bold text-amber-300 bg-black/40 border border-amber-500/30 px-3 py-1.5 rounded-xl">
-              {paymentRequests.length} प्रलंबित विनंत्या
+              {paymentRequests.length} {t('pendingRequestsTitle')}
             </span>
           </div>
 
           {loadingRequests ? (
             <div className="p-12 text-center text-orange-200/60 rounded-3xl border border-amber-500/20 bg-black/40">
               <span className="inline-block h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mb-2" />
-              <p className="text-xs">विनंत्या लोड होत आहेत...</p>
+              <p className="text-xs">{t('loading')}</p>
             </div>
           ) : paymentRequests.length === 0 ? (
             <div className="p-10 text-center rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-black/60 backdrop-blur-xl">
@@ -588,10 +623,10 @@ export default function AdminManagement() {
                 ✓
               </div>
               <h3 className="text-base font-bold text-white mb-1">
-                सर्व ऑनलाइन पेमेंट तपासणी पूर्ण झाली आहे!
+                {t('allCheckedMsg')}
               </h3>
               <p className="text-xs text-emerald-200/70 max-w-md mx-auto">
-                सध्या कोणतीही नवीन ऑनलाइन देणगी पडताळणी प्रलंबित नाही. नवीन भाविकाने QR कोडवरून देणगी भरल्यास येथे त्वरित दिसेल.
+                {t('noPendingMsg')}
               </p>
             </div>
           ) : (
@@ -604,7 +639,7 @@ export default function AdminManagement() {
                   <div className="flex items-start justify-between gap-2 border-b border-amber-500/20 pb-2.5">
                     <div>
                       <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 mb-1">
-                        <span>📱 UPI ऑनलाइन</span>
+                        <span>{isMarathi ? '📱 UPI ऑनलाइन' : '📱 UPI Online'}</span>
                         <span>•</span>
                         <span>{req.category}</span>
                       </div>
@@ -612,14 +647,16 @@ export default function AdminManagement() {
                         {req.name}
                       </h3>
                       <span className="text-[11px] text-orange-200/70">
-                        {req.city || 'ऑनलाइन भाविक'}
+                        {req.city || (isMarathi ? 'ऑनलाइन भाविक' : 'Online Devotee')}
                       </span>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-[10px] uppercase text-orange-300/70 block">रक्कम</span>
+                      <span className="text-[10px] uppercase text-orange-300/70 block">
+                        {t('amount')}
+                      </span>
                       <span className="text-xl sm:text-2xl font-black text-amber-300">
-                        ₹{Number(req.amount).toLocaleString()}
+                        ₹{Number(req.amount).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
                       </span>
                     </div>
                   </div>
@@ -627,9 +664,11 @@ export default function AdminManagement() {
                   {/* UTR & Transaction Details */}
                   <div className="rounded-2xl border border-amber-500/20 bg-black/50 p-3 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-orange-200/70 text-[11px]">UTR / Ref. नंबर:</span>
+                      <span className="text-orange-200/70 text-[11px]">
+                        UTR / Ref. {isMarathi ? 'नंबर:' : 'No:'}
+                      </span>
                       <div className="flex items-center gap-1 font-mono font-bold text-amber-200 bg-amber-950/60 px-2 py-0.5 rounded-lg border border-amber-500/30">
-                        <span>{req.utrNumber || 'उपलब्ध नाही'}</span>
+                        <span>{req.utrNumber || (isMarathi ? 'उपलब्ध नाही' : 'N/A')}</span>
                         {req.utrNumber && (
                           <button
                             type="button"
@@ -645,7 +684,9 @@ export default function AdminManagement() {
 
                     {req.phone && (
                       <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                        <span className="text-orange-200/70 text-[11px]">मोबाईल क्र:</span>
+                        <span className="text-orange-200/70 text-[11px]">
+                          {t('phone')}:
+                        </span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-white">{req.phone}</span>
                           <a
@@ -662,14 +703,14 @@ export default function AdminManagement() {
                     )}
 
                     <div className="flex items-center justify-between text-[11px] text-orange-200/60 pt-1 border-t border-white/5">
-                      <span>वेळ:</span>
+                      <span>{t('time')}:</span>
                       <span>
                         {req.timestamp
-                          ? new Date(req.timestamp).toLocaleString('mr-IN', {
+                          ? new Date(req.timestamp).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN', {
                               dateStyle: 'medium',
                               timeStyle: 'short',
                             })
-                          : 'आत्ताच'}
+                          : t('justNow')}
                       </span>
                     </div>
                   </div>
@@ -683,11 +724,11 @@ export default function AdminManagement() {
                       className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 px-3 text-xs font-black text-black shadow-md hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {processingId === req._id ? (
-                        <span>तपासत आहे...</span>
+                        <span>{t('checkingBtn')}</span>
                       ) : (
                         <>
                           <Check className="h-4 w-4" />
-                          <span>✅ मंजूर करा (Approve)</span>
+                          <span>{t('approveBtn')}</span>
                         </>
                       )}
                     </button>
@@ -699,7 +740,7 @@ export default function AdminManagement() {
                       className="flex items-center justify-center gap-1.5 rounded-xl border border-red-500/40 bg-red-950/40 py-2.5 px-3 text-xs font-bold text-red-200 hover:bg-red-900/40 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       <X className="h-4 w-4" />
-                      <span>नाकार / रद्द करा</span>
+                      <span>{t('rejectBtn')}</span>
                     </button>
                   </div>
                 </div>
@@ -722,10 +763,10 @@ export default function AdminManagement() {
               </div>
               <div>
                 <h2 className="text-base font-black text-white">
-                  उत्सव ध्येय रक्कम व QR कोड संपादन
+                  {t('targetSettingsTitle')}
                 </h2>
                 <p className="text-[11px] text-orange-200/70">
-                  येथे बदल केलेल्या सेटिंग्ज थेट Live TV स्क्रीन व मोबाईल डॅशबोर्डवर तात्काळ दिसतील.
+                  {t('targetSettingsSub')}
                 </p>
               </div>
             </div>
@@ -734,7 +775,7 @@ export default function AdminManagement() {
               {/* 1. Target Collection Limit (Edit Amount Limit) */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-orange-200/90 mb-1">
-                  🎯 एकूण देणगी ध्येय मर्यादा (Target Collection Limit in ₹) <span className="text-red-400">*</span>
+                  {t('targetLimitLabel')}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-2.5 text-base font-black text-amber-400">₹</span>
@@ -745,26 +786,26 @@ export default function AdminManagement() {
                     required
                     value={settings.targetAmount}
                     onChange={(e) => setSettings({ ...settings, targetAmount: e.target.value })}
-                    placeholder="उदा. 500000 किंवा 1000000"
+                    placeholder="500000"
                     className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 pl-8 pr-3.5 text-sm font-black text-amber-300 placeholder-orange-200/30 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30"
                   />
                 </div>
                 <span className="text-[11px] text-orange-200/60 mt-0.5 block">
-                  डॅशबोर्ड प्रगती पट्टी (Progress Bar) व TV स्क्रीनवरील लक्ष्य रक्कम येथे बदलते.
+                  {t('targetLimitHint')}
                 </span>
               </div>
 
               {/* 2. Mandal UPI ID */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  📱 मंडळाचा अधिकृत UPI ID (Official UPI ID) <span className="text-red-400">*</span>
+                  {t('upiIdLabel')}
                 </label>
                 <input
                   type="text"
                   required
                   value={settings.upiId}
                   onChange={(e) => setSettings({ ...settings, upiId: e.target.value })}
-                  placeholder="उदा. mandal.ganpati@upi किंवा 9876543210@okaxis"
+                  placeholder="mandal.ganpati@upi"
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm font-mono text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
               </div>
@@ -772,13 +813,13 @@ export default function AdminManagement() {
               {/* 3. Mandal / Account Name */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  🏛️ मंडळाचे / बँक खात्याचे नाव (Mandal Name)
+                  {t('mandalNameLabel')}
                 </label>
                 <input
                   type="text"
                   value={settings.upiName}
                   onChange={(e) => setSettings({ ...settings, upiName: e.target.value })}
-                  placeholder="उदा. सार्वजनिक श्री गणेश उत्सव मंडळ"
+                  placeholder={isMarathi ? 'सार्वजनिक श्री गणेश उत्सव मंडळ' : 'Shree Ganesh Utsav Mandal'}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
               </div>
@@ -786,30 +827,30 @@ export default function AdminManagement() {
               {/* 4. Custom QR Code Image URL */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  🖼️ कस्टम QR कोड इमेज URL (Custom QR Image Link - Optional)
+                  {t('customQrLabel')}
                 </label>
                 <input
                   type="url"
                   value={settings.qrCodeUrl}
                   onChange={(e) => setSettings({ ...settings, qrCodeUrl: e.target.value })}
-                  placeholder="https://... (रिकामे ठेवल्यास सिस्टीम आपोआप वर दिलेल्या UPI ID चा QR कोड तयार करेल)"
+                  placeholder="https://..."
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
                 <span className="text-[11px] text-orange-200/60 mt-0.5 block">
-                  टीप: जर आपल्याकडे बँकेचा / PhonePe / Paytm चा मूळ QR फोटो असेल, तर त्याची लिंक येथे टाका. रिकामे ठेवल्यास सिस्टीम आपोआप हाय-स्पीड QR तयार करते!
+                  {t('customQrHint')}
                 </span>
               </div>
 
               {/* 5. QR Note / Banner Subtitle */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  📝 QR कोड सूचना / नोट (QR Note)
+                  {t('qrNoteLabel')}
                 </label>
                 <input
                   type="text"
                   value={settings.qrCodeNote}
                   onChange={(e) => setSettings({ ...settings, qrCodeNote: e.target.value })}
-                  placeholder="उदा. स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा"
+                  placeholder={isMarathi ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan to offer devotion'}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
               </div>
@@ -817,7 +858,7 @@ export default function AdminManagement() {
               {/* 6. Cloudinary Ganesha Photos Slider (Every 5s on Home) */}
               <div className="pt-2 border-t border-amber-500/20 space-y-2">
                 <label className="block text-xs font-semibold text-orange-200/90">
-                  🪔 मुख्य पृष्ठावरील गणेश छायाचित्रे (Cloudinary Image Links - Every 5s Slider)
+                  {t('ganeshaPhotosLabel')}
                 </label>
                 <textarea
                   rows={3}
@@ -826,11 +867,11 @@ export default function AdminManagement() {
                     const lines = e.target.value.split('\n').map((l) => l.trim()).filter(Boolean);
                     setSettings({ ...settings, ganeshaImages: lines });
                   }}
-                  placeholder="उदा. https://res.cloudinary.com/.../ganpati1.jpg&#10;https://res.cloudinary.com/.../ganpati2.jpg"
+                  placeholder="https://res.cloudinary.com/.../ganpati1.jpg&#10;https://res.cloudinary.com/.../ganpati2.jpg"
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2 px-3 text-xs font-mono text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
                 <span className="text-[11px] text-orange-200/70 block">
-                  Cloudinary वर अपलोड केलेल्या प्रत्येक फोटोची लिंक स्वतंत्र ओळीवर (New Line) टाका. मुख्य पृष्ठावर दर ५ सेकंदांनी फोटो आपोआप बदलतील!
+                  {t('ganeshaPhotosHint')}
                 </span>
 
                 {/* Thumbnails preview */}
@@ -846,7 +887,7 @@ export default function AdminManagement() {
                             setSettings({ ...settings, ganeshaImages: updated });
                           }}
                           className="absolute inset-0 bg-red-950/80 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-full"
-                          title="काढून टाका"
+                          title={t('delete')}
                         >
                           ✕
                         </button>
@@ -863,11 +904,11 @@ export default function AdminManagement() {
                 className="w-full mt-3 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-3 text-sm font-bold text-white shadow-lg shadow-orange-600/40 hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
               >
                 {savingSettings ? (
-                  <span>सेटिंग्ज सेव्ह होत आहेत...</span>
+                  <span>{t('saving')}</span>
                 ) : (
                   <>
                     <Check className="h-4 w-4" />
-                    <span>सेटिंग्ज सेव्ह करा व Live TV वर लागू करा (Save & Publish)</span>
+                    <span>{t('savePublishBtn')}</span>
                   </>
                 )}
               </button>
@@ -879,13 +920,13 @@ export default function AdminManagement() {
             <div className="space-y-1 mb-3">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
                 <span>👁️</span>
-                <span>थेट स्क्रीन प्रिव्ह्यू (Live Preview)</span>
+                <span>{isMarathi ? 'थेट स्क्रीन प्रिव्ह्यू (Live Preview)' : 'Live Screen Preview'}</span>
               </div>
               <h3 className="text-base font-bold text-white">
-                भाविकांना दिसणारा QR कोड
+                {t('previewTitle')}
               </h3>
               <p className="text-[11px] text-orange-200/70">
-                {settings.qrCodeNote || 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा'}
+                {settings.qrCodeNote || (isMarathi ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan to offer devotion')}
               </p>
             </div>
 
@@ -902,14 +943,18 @@ export default function AdminManagement() {
                 }}
               />
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
-                {settings.upiName || 'सार्वजनिक श्री गणेश उत्सव मंडळ'}
+                {settings.upiName || (isMarathi ? 'सार्वजनिक श्री गणेश उत्सव मंडळ' : 'Shree Ganesh Utsav Mandal')}
               </div>
             </div>
 
             <div className="w-full mt-3 rounded-xl border border-amber-500/30 bg-black/60 p-3 text-xs space-y-1.5 text-left">
               <div className="flex justify-between">
-                <span className="text-orange-200/70">लक्ष्य देणगी मर्यादा:</span>
-                <span className="font-bold text-amber-300">₹{Number(settings.targetAmount || 0).toLocaleString()}</span>
+                <span className="text-orange-200/70">
+                  {isMarathi ? 'लक्ष्य देणगी मर्यादा:' : 'Target Donation Limit:'}
+                </span>
+                <span className="font-bold text-amber-300">
+                  ₹{Number(settings.targetAmount || 0).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-orange-200/70">UPI ID:</span>
@@ -920,25 +965,25 @@ export default function AdminManagement() {
             {/* Quick Links to Home Editable Sections */}
             <div className="w-full mt-3 rounded-2xl border border-amber-500/25 bg-black/60 p-4 text-xs space-y-2.5 text-left">
               <span className="font-bold text-amber-300 block text-xs">
-                ✨ मुख्य पृष्ठावरील थेट संपादन (Quick Shortcuts):
+                {t('shortcutsTitle')}
               </span>
               <p className="text-[11px] text-orange-200/70">
-                तुम्ही Admin म्हणून लॉगिन असल्याने मुख्य पृष्ठावर (Home) थेट "संपादित करा" बटनांवर क्लिक करून बदल करू शकता:
+                {t('shortcutsSub')}
               </p>
               <div className="flex flex-col gap-2 pt-1">
                 <a
                   href="/#schedule"
                   className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-orange-950/40 border border-amber-500/20 hover:border-amber-400 text-amber-200 text-xs font-medium transition"
                 >
-                  <span>⏰ दैनिक आरत्या व महाप्रसाद वेळापत्रक</span>
-                  <span className="text-[10px] text-amber-400 font-bold">मुख्य पृष्ठावर जा ↗</span>
+                  <span>⏰ {t('dailyScheduleTitle')}</span>
+                  <span className="text-[10px] text-amber-400 font-bold">{t('goToHome')}</span>
                 </a>
                 <a
                   href="/#initiatives"
                   className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-orange-950/40 border border-amber-500/20 hover:border-amber-400 text-amber-200 text-xs font-medium transition"
                 >
-                  <span>🤝 मंडळाचे सामाजिक उपक्रम (Initiatives)</span>
-                  <span className="text-[10px] text-amber-400 font-bold">मुख्य पृष्ठावर जा ↗</span>
+                  <span>🤝 {t('initiativesTitle')}</span>
+                  <span className="text-[10px] text-amber-400 font-bold">{t('goToHome')}</span>
                 </a>
               </div>
             </div>
@@ -947,7 +992,7 @@ export default function AdminManagement() {
       )}
 
       {/* ===================================================================== */}
-      {/* TAB 3: VOLUNTEER & ADMIN MANAGEMENT (Existing Features)               */}
+      {/* TAB 3: VOLUNTEER & ADMIN MANAGEMENT                                   */}
       {/* ===================================================================== */}
       {activeTab === 'users' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -959,10 +1004,10 @@ export default function AdminManagement() {
               </div>
               <div>
                 <h2 className="text-base font-black text-white">
-                  नवीन सदस्य जोडा (Add Volunteer)
+                  {t('addUserTitle')}
                 </h2>
                 <p className="text-[11px] text-orange-200/70">
-                  स्वयंसेवक किंवा व्यवस्थापकाचे अधिकृत खाते तयार करा
+                  {t('addUserSub')}
                 </p>
               </div>
             </div>
@@ -971,14 +1016,14 @@ export default function AdminManagement() {
               {/* Full Name */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  पूर्ण नाव (Full Name) <span className="text-red-400">*</span>
+                  {t('fullNameLabel')}
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="उदा. राहुल सचिन मोरे"
+                  placeholder={t('fullNamePlaceholder')}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
               </div>
@@ -986,44 +1031,54 @@ export default function AdminManagement() {
               {/* Username */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  वापरकर्ता नाव (Username) <span className="text-red-400">*</span>
+                  {t('usernameLabel')}
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="उदा. rahul123 किंवा volunteer_dadar"
+                  placeholder={t('usernamePlaceholder')}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
               </div>
 
-              {/* Password */}
+              {/* Password with View / Hide Option */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  पासवर्ड (Password) <span className="text-red-400">*</span>
+                  {t('passwordLabel')}
                 </label>
-                <input
-                  type="password"
-                  required
-                  minLength={4}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="किमान ४ अक्षरे / आकडे"
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    minLength={4}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={t('passwordPlaceholder')}
+                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 pl-3.5 pr-10 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-orange-300/60 hover:text-orange-200 transition-colors cursor-pointer"
+                    title={showPassword ? (isMarathi ? 'पासवर्ड लपवा' : 'Hide password') : (isMarathi ? 'पासवर्ड पहा' : 'View password')}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               {/* Phone */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  मोबाईल नंबर (Phone Number)
+                  {t('phone')}
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="उदा. 9876543210"
+                  placeholder={t('phonePlaceholder')}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
                 />
               </div>
@@ -1031,7 +1086,7 @@ export default function AdminManagement() {
               {/* Role */}
               <div>
                 <label className="block text-xs font-semibold text-orange-200/90 mb-1">
-                  भूमिका (Role & Permissions)
+                  {t('roleLabel')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -1043,7 +1098,7 @@ export default function AdminManagement() {
                         : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40'
                     }`}
                   >
-                    🚩 स्वयंसेवक (Volunteer)
+                    {t('roleVolunteer')}
                   </button>
                   <button
                     type="button"
@@ -1054,7 +1109,7 @@ export default function AdminManagement() {
                         : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40'
                     }`}
                   >
-                    👑 व्यवस्थापक (Admin)
+                    {t('roleAdmin')}
                   </button>
                 </div>
               </div>
@@ -1065,11 +1120,11 @@ export default function AdminManagement() {
                 className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-orange-600/40 hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
               >
                 {formSubmitting ? (
-                  <span>जोडत आहे...</span>
+                  <span>{t('addingUserBtn')}</span>
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4" />
-                    <span>सदस्य खात्याची नोंद करा (Save)</span>
+                    <span>{t('addUserBtn')}</span>
                   </>
                 )}
               </button>
@@ -1081,10 +1136,10 @@ export default function AdminManagement() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-3.5">
               <div>
                 <h2 className="text-base font-black text-white">
-                  नोंदणीकृत सदस्य यादी (Authorized Team)
+                  {t('teamDirectoryTitle')}
                 </h2>
                 <p className="text-[11px] text-orange-200/70">
-                  सक्रिय / निष्क्रिय करा किंवा आवश्यकतेनुसार खाते हटवा
+                  {t('teamDirectorySub')}
                 </p>
               </div>
 
@@ -1093,7 +1148,7 @@ export default function AdminManagement() {
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-orange-300/50" />
                 <input
                   type="text"
-                  placeholder="नाव किंवा युझरनेम शोधा..."
+                  placeholder={t('searchUsersPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full sm:w-48 rounded-xl border border-amber-500/30 bg-black/50 py-1.5 pl-8 pr-3 text-xs text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
@@ -1104,11 +1159,11 @@ export default function AdminManagement() {
             {loadingUsers ? (
               <div className="p-8 text-center text-orange-200/60">
                 <span className="inline-block h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mb-2" />
-                <p className="text-xs">वापरकर्ते लोड होत आहेत...</p>
+                <p className="text-xs">{t('loading')}</p>
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="p-8 text-center text-orange-200/60 text-xs">
-                कोणताही वापरकर्ता आढळला नाही.
+                {t('noUsersFound')}
               </div>
             ) : (
               <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
@@ -1137,7 +1192,7 @@ export default function AdminManagement() {
                           </span>
                           {!u.isActive && (
                             <span className="rounded-full bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-0.2 text-[10px] font-bold">
-                              निष्क्रिय
+                              {t('inactive')}
                             </span>
                           )}
                         </div>
@@ -1158,17 +1213,19 @@ export default function AdminManagement() {
                                   ? 'border-amber-500/30 bg-orange-950/40 text-amber-300 hover:bg-orange-900/50'
                                   : 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50'
                               }`}
-                              title={u.isActive ? 'निष्क्रिय करा' : 'सक्रिय करा'}
+                              title={u.isActive ? t('statusInactiveBtn') : t('statusActiveBtn')}
                             >
                               <Power className="h-3.5 w-3.5" />
-                              <span className="hidden sm:inline">{u.isActive ? 'बंद' : 'सुरू'}</span>
+                              <span className="hidden sm:inline">
+                                {u.isActive ? t('statusInactiveBtn') : t('statusActiveBtn')}
+                              </span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(u._id, u.name)}
                               className="p-2 rounded-xl border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60 transition-all cursor-pointer"
-                              title="हटवा"
+                              title={t('delete')}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -1176,7 +1233,7 @@ export default function AdminManagement() {
                         )}
                         {isMainAdmin && (
                           <span className="text-[11px] text-amber-400/80 italic">
-                            (मुख्य व्यवस्थापक)
+                            {t('mainAdminNotice')}
                           </span>
                         )}
                       </div>
@@ -1198,7 +1255,7 @@ export default function AdminManagement() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-4 text-center">
               <span className="text-[11px] font-semibold text-orange-200/70 block uppercase tracking-wider">
-                एकूण देणग्या
+                {t('totalDonationsStat')}
               </span>
               <span className="text-xl sm:text-2xl font-black text-amber-300 mt-1 block">
                 {adminDonations.length}
@@ -1206,32 +1263,32 @@ export default function AdminManagement() {
             </div>
             <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-4 text-center">
               <span className="text-[11px] font-semibold text-orange-200/70 block uppercase tracking-wider">
-                एकूण जमा रक्कम
+                {t('totalCollectionStat')}
               </span>
               <span className="text-xl sm:text-2xl font-black text-amber-400 mt-1 block">
-                ₹{adminDonations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0).toLocaleString()}
+                ₹{adminDonations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
               </span>
             </div>
             <div className="rounded-2xl border border-emerald-500/20 bg-black/40 p-4 text-center">
               <span className="text-[11px] font-semibold text-emerald-200/70 block uppercase tracking-wider">
-                💵 रोख रक्कम (Cash)
+                {t('cashStat')}
               </span>
               <span className="text-xl sm:text-2xl font-black text-emerald-400 mt-1 block">
                 ₹{adminDonations
                   .filter((d) => d.paymentMethod !== 'online')
                   .reduce((sum, d) => sum + (Number(d.amount) || 0), 0)
-                  .toLocaleString()}
+                  .toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
               </span>
             </div>
             <div className="rounded-2xl border border-blue-500/20 bg-black/40 p-4 text-center">
               <span className="text-[11px] font-semibold text-blue-200/70 block uppercase tracking-wider">
-                📱 ऑनलाइन (Online)
+                {t('onlineStat')}
               </span>
               <span className="text-xl sm:text-2xl font-black text-blue-400 mt-1 block">
                 ₹{adminDonations
                   .filter((d) => d.paymentMethod === 'online')
                   .reduce((sum, d) => sum + (Number(d.amount) || 0), 0)
-                  .toLocaleString()}
+                  .toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
               </span>
             </div>
           </div>
@@ -1242,10 +1299,10 @@ export default function AdminManagement() {
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                   <span>💰</span>
-                  <span>सर्व देणग्यांची यादी व थेट व्यवस्थापन (Live Donations List)</span>
+                  <span>{t('donationsListTitle')}</span>
                 </h2>
                 <p className="text-xs text-orange-200/70">
-                  चुकीची किंवा दुबार देणगी नोंद असल्यास केवळ मुख्य व्यवस्थापक (Admin) येथून कायमस्वरूपी हटवू शकतात.
+                  {t('donationsListSub')}
                 </p>
               </div>
 
@@ -1253,7 +1310,7 @@ export default function AdminManagement() {
               <div className="relative w-full md:w-72">
                 <input
                   type="text"
-                  placeholder="नाव, शहर, फोन किंवा पावती शोधा..."
+                  placeholder={t('searchDonationsPlaceholder')}
                   value={donationSearch}
                   onChange={(e) => setDonationSearch(e.target.value)}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2 pl-9 pr-3 text-xs sm:text-sm text-white placeholder-orange-200/40 outline-none focus:border-amber-400"
@@ -1265,10 +1322,10 @@ export default function AdminManagement() {
             {/* Filter Buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-500/15">
               {[
-                { id: 'all', label: 'सर्व देणग्या' },
-                { id: 'cash', label: '💵 रोख (Cash)' },
-                { id: 'online', label: '📱 ऑनलाइन (Online)' },
-                { id: 'high', label: '🌟 विशेष (>₹५,०००)' },
+                { id: 'all', label: t('filterAll') },
+                { id: 'cash', label: t('filterCash') },
+                { id: 'online', label: t('filterOnline') },
+                { id: 'high', label: t('filterHigh') },
               ].map((f) => (
                 <button
                   key={f.id}
@@ -1288,127 +1345,118 @@ export default function AdminManagement() {
             {/* Donations Table */}
             {loadingDonations ? (
               <div className="py-12 text-center text-orange-200/60 text-sm">
-                देणग्या लोड होत आहेत...
+                {t('loading')}
               </div>
-            ) : adminDonations.filter((d) => {
-                const q = donationSearch.toLowerCase().trim();
-                const matchesSearch =
-                  !q ||
-                  d.name?.toLowerCase().includes(q) ||
-                  d.city?.toLowerCase().includes(q) ||
-                  d.category?.toLowerCase().includes(q) ||
-                  d.recordedBy?.toLowerCase().includes(q) ||
-                  d.phone?.includes(q) ||
-                  d.utrNumber?.toLowerCase().includes(q) ||
-                  String(d.amount).includes(q) ||
-                  String(d._id || d.id).toLowerCase().includes(q);
+            ) : (() => {
+                const sortedList = [...adminDonations].sort(
+                  (a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+                );
+                const filtered = sortedList.filter((d) => {
+                  const q = donationSearch.toLowerCase().trim();
+                  const matchesSearch =
+                    !q ||
+                    d.name?.toLowerCase().includes(q) ||
+                    d.city?.toLowerCase().includes(q) ||
+                    d.category?.toLowerCase().includes(q) ||
+                    d.recordedBy?.toLowerCase().includes(q) ||
+                    d.phone?.includes(q) ||
+                    d.utrNumber?.toLowerCase().includes(q) ||
+                    String(d.amount).includes(q) ||
+                    String(d._id || d.id).toLowerCase().includes(q);
 
-                if (!matchesSearch) return false;
-                if (donationFilter === 'cash') return d.paymentMethod !== 'online';
-                if (donationFilter === 'online') return d.paymentMethod === 'online';
-                if (donationFilter === 'high') return Number(d.amount) >= 5000;
-                return true;
-              }).length === 0 ? (
-              <div className="py-12 text-center rounded-2xl border border-dashed border-amber-500/20 bg-black/30">
-                <p className="text-orange-200/60 text-sm">कोणतीही देणगी नोंद आढळली नाही.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-2xl border border-amber-500/20">
-                <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-black/70 text-orange-200/80 uppercase text-[11px] font-bold tracking-wider border-b border-amber-500/20">
-                    <tr>
-                      <th className="py-3 px-3.5">भाविक (Donor)</th>
-                      <th className="py-3 px-3.5">रक्कम (Amount)</th>
-                      <th className="py-3 px-3.5">सेवा वर्ग (Category)</th>
-                      <th className="py-3 px-3.5">पद्धत (Method)</th>
-                      <th className="py-3 px-3.5">नोंदणीकर्ता</th>
-                      <th className="py-3 px-3.5">वेळ (Time)</th>
-                      <th className="py-3 px-3.5 text-center">क्रिया (Admin Action)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-amber-500/10 bg-black/40">
-                    {adminDonations
-                      .filter((d) => {
-                        const q = donationSearch.toLowerCase().trim();
-                        const matchesSearch =
-                          !q ||
-                          d.name?.toLowerCase().includes(q) ||
-                          d.city?.toLowerCase().includes(q) ||
-                          d.category?.toLowerCase().includes(q) ||
-                          d.recordedBy?.toLowerCase().includes(q) ||
-                          d.phone?.includes(q) ||
-                          d.utrNumber?.toLowerCase().includes(q) ||
-                          String(d.amount).includes(q) ||
-                          String(d._id || d.id).toLowerCase().includes(q);
+                  if (!matchesSearch) return false;
+                  if (donationFilter === 'cash') return d.paymentMethod !== 'online';
+                  if (donationFilter === 'online') return d.paymentMethod === 'online';
+                  if (donationFilter === 'high') return Number(d.amount) >= 5000;
+                  return true;
+                });
 
-                        if (!matchesSearch) return false;
-                        if (donationFilter === 'cash') return d.paymentMethod !== 'online';
-                        if (donationFilter === 'online') return d.paymentMethod === 'online';
-                        if (donationFilter === 'high') return Number(d.amount) >= 5000;
-                        return true;
-                      })
-                      .map((d) => {
-                        const donId = d._id || d.id;
-                        const isDeleting = deletingDonationId === donId;
-                        return (
-                          <tr key={donId} className="hover:bg-orange-950/30 transition-colors">
-                            <td className="py-3 px-3.5">
-                              <span className="font-bold text-white block">{d.name}</span>
-                              <span className="text-[11px] text-orange-200/60">
-                                📍 {d.city || 'स्थानिक भाविक'} {d.phone ? `• 📞 ${d.phone}` : ''}
-                              </span>
-                            </td>
-                            <td className="py-3 px-3.5 font-black text-amber-300 text-sm sm:text-base">
-                              ₹{Number(d.amount || 0).toLocaleString()}
-                            </td>
-                            <td className="py-3 px-3.5">
-                              <span className="inline-block rounded-full bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 text-[11px] font-semibold text-amber-200">
-                                {d.category || 'महाप्रसाद सेवा'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-3.5">
-                              {d.paymentMethod === 'online' ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 text-[10px] font-bold">
-                                  📱 ऑनलाइन {d.utrNumber ? `(${d.utrNumber})` : ''}
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-12 text-center rounded-2xl border border-dashed border-amber-500/20 bg-black/30">
+                      <p className="text-orange-200/60 text-sm">{t('noDonationsFound')}</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto rounded-2xl border border-amber-500/20">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead className="bg-black/70 text-orange-200/80 uppercase text-[11px] font-bold tracking-wider border-b border-amber-500/20">
+                        <tr>
+                          <th className="py-3 px-3.5">{t('colDonor')}</th>
+                          <th className="py-3 px-3.5">{t('colAmount')}</th>
+                          <th className="py-3 px-3.5">{t('colCategory')}</th>
+                          <th className="py-3 px-3.5">{t('colMethod')}</th>
+                          <th className="py-3 px-3.5">{t('colRecordedBy')}</th>
+                          <th className="py-3 px-3.5">{t('colTime')}</th>
+                          <th className="py-3 px-3.5 text-center">{t('colAction')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-amber-500/10 bg-black/40">
+                        {filtered.map((d) => {
+                          const donId = d._id || d.id;
+                          const isDeleting = deletingDonationId === donId;
+                          return (
+                            <tr key={donId} className="hover:bg-orange-950/30 transition-colors">
+                              <td className="py-3 px-3.5">
+                                <span className="font-bold text-white block">{d.name}</span>
+                                <span className="text-[11px] text-orange-200/60">
+                                  📍 {d.city || (isMarathi ? 'स्थानिक भाविक' : 'Local Devotee')} {d.phone ? `• 📞 ${d.phone}` : ''}
                                 </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold">
-                                  💵 रोख (Cash)
+                              </td>
+                              <td className="py-3 px-3.5 font-black text-amber-300 text-sm sm:text-base">
+                                ₹{Number(d.amount || 0).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
+                              </td>
+                              <td className="py-3 px-3.5">
+                                <span className="inline-block rounded-full bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 text-[11px] font-semibold text-amber-200">
+                                  {d.category || (isMarathi ? 'महाप्रसाद सेवा' : 'Maha-Prasad Seva')}
                                 </span>
-                              )}
-                            </td>
-                            <td className="py-3 px-3.5 text-xs text-orange-200/70">
-                              {d.recordedBy || 'स्वयंसेवक'}
-                            </td>
-                            <td className="py-3 px-3.5 text-xs text-orange-200/60 font-mono">
-                              {d.timestamp
-                                ? new Date(d.timestamp).toLocaleString('mr-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })
-                                : 'आत्ताच'}
-                            </td>
-                            <td className="py-3 px-3.5 text-center">
-                              <button
-                                type="button"
-                                disabled={isDeleting}
-                                onClick={() => handleDeleteDonation(donId, d.name, d.amount)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
-                                title="ही देणगी कायमस्वरूपी हटवा"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                                <span>{isDeleting ? 'हटवत आहे...' : 'हटवा'}</span>
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                              </td>
+                              <td className="py-3 px-3.5">
+                                {d.paymentMethod === 'online' ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 text-[10px] font-bold">
+                                    📱 {isMarathi ? 'ऑनलाइन' : 'Online'} {d.utrNumber ? `(${d.utrNumber})` : ''}
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold">
+                                    💵 {isMarathi ? 'रोख (Cash)' : 'Cash'}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-3.5 text-xs text-orange-200/70">
+                                {d.recordedBy || (isMarathi ? 'स्वयंसेवक' : 'Volunteer')}
+                              </td>
+                              <td className="py-3 px-3.5 text-xs text-orange-200/60 font-mono">
+                                {d.timestamp
+                                  ? new Date(d.timestamp).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN', {
+                                      day: '2-digit',
+                                      month: 'short',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })
+                                  : t('justNow')}
+                              </td>
+                              <td className="py-3 px-3.5 text-center">
+                                <button
+                                  type="button"
+                                  disabled={isDeleting}
+                                  onClick={() => handleDeleteDonation(donId, d.name, d.amount)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                                  title={isMarathi ? 'ही देणगी कायमस्वरूपी हटवा' : 'Permanently delete this donation'}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                  <span>{isDeleting ? t('deleting') : t('delete')}</span>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
           </div>
         </div>
       )}

@@ -4,10 +4,12 @@ import { UserCheck, Receipt, Clock, CheckCircle2, DollarSign, Shield, ArrowRight
 import AdminForm from '../components/AdminForm';
 import useDonations from '../hooks/useDonations';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function VolunteerDesk() {
   const { user, token, isAdmin } = useAuth();
-  const { addManualDonation, deleteDonation, donors, totalAmount, donorCount } = useDonations();
+  const { addManualDonation, deleteDonation, donors, totalAmount } = useDonations();
+  const { t, lang } = useLanguage();
 
   // Session history for volunteer tracking
   const [sessionEntries, setSessionEntries] = useState([]);
@@ -17,7 +19,7 @@ export default function VolunteerDesk() {
     const result = await addManualDonation(
       {
         ...donationData,
-        recordedBy: user?.name || 'मंडळ स्वयंसेवक',
+        recordedBy: user?.name || (lang === 'mr' ? 'मंडळ स्वयंसेवक' : 'Mandal Volunteer'),
       },
       token
     );
@@ -28,17 +30,21 @@ export default function VolunteerDesk() {
       name: donationData.name,
       amount: donationData.amount,
       category: donationData.category,
-      city: donationData.city || 'स्थानिक भाविक',
-      recordedBy: user?.name || 'स्वयंसेवक',
-      time: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' }),
+      city: donationData.city || (lang === 'mr' ? 'स्थानिक भाविक' : 'Local Devotee'),
+      recordedBy: user?.name || (lang === 'mr' ? 'स्वयंसेवक' : 'Volunteer'),
+      time: new Date().toLocaleTimeString(lang === 'mr' ? 'mr-IN' : 'en-IN', { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setSessionEntries((prev) => [newEntry, ...prev]);
+    setSessionEntries((prev) => [newEntry, ...prev].sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0)));
   };
 
-  const displayList = sessionEntries.length > 0
+  const rawList = sessionEntries.length > 0
     ? [...sessionEntries, ...donors.filter(d => !sessionEntries.some(s => s.id === d.id))]
     : donors;
+
+  const displayList = [...rawList].sort(
+    (a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+  );
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8 pb-12">
@@ -52,14 +58,14 @@ export default function VolunteerDesk() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-white">
-                  स्वयंसेवक कक्ष (Volunteer Desk)
+                  {t('volunteerDeskTitle')}
                 </h1>
                 <span className="rounded-full bg-emerald-500/15 border border-emerald-400/40 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
-                  अधिकृत प्रवेश 🟢
+                  {t('authorizedAccessBadge')}
                 </span>
               </div>
               <p className="text-xs text-orange-200/75">
-                कॅश व ऑनलाइन देणग्यांची थेट नोंदणी कक्ष
+                {t('volunteerDeskSub')}
               </p>
             </div>
           </div>
@@ -71,14 +77,14 @@ export default function VolunteerDesk() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition-all shadow-sm"
               >
                 <Shield className="h-3.5 w-3.5 text-amber-400" />
-                <span>व्यवस्थापक कक्ष</span>
+                <span>{t('adminDesk')}</span>
                 <ArrowRight className="h-3 w-3" />
               </Link>
             )}
 
             <div className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-orange-500/15 border border-orange-400/40 px-3 py-1 text-xs font-bold text-orange-200">
               <User className="h-3.5 w-3.5 text-amber-400" />
-              <span>कार्यरत: <strong className="text-white">{user?.name}</strong></span>
+              <span>{lang === 'mr' ? 'कार्यरत:' : 'On-Duty:'} <strong className="text-white">{user?.name}</strong></span>
             </div>
           </div>
         </div>
@@ -88,17 +94,17 @@ export default function VolunteerDesk() {
           <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-3.5">
             <div className="flex items-center gap-2 text-xs text-orange-200/70 mb-1">
               <Receipt className="h-3.5 w-3.5 text-amber-400" />
-              <span>नोंदणीकृत पावत्या (Receipts)</span>
+              <span>{t('sessionEntriesBadge')}</span>
             </div>
             <div className="text-xl sm:text-2xl font-black text-amber-300">
-              {displayList.length} पावती
+              {displayList.length} {lang === 'mr' ? 'पावती' : 'Receipts'}
             </div>
           </div>
 
           <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-3.5">
             <div className="flex items-center gap-2 text-xs text-orange-200/70 mb-1">
               <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
-              <span>एकूण जमा सेवा निधी (Live)</span>
+              <span>{t('sessionTotalBadge')}</span>
             </div>
             <div className="text-xl sm:text-2xl font-black text-emerald-300">
               ₹{totalAmount.toLocaleString()}
@@ -108,10 +114,10 @@ export default function VolunteerDesk() {
           <div className="col-span-2 sm:col-span-1 rounded-2xl border border-amber-500/20 bg-black/40 p-3.5">
             <div className="flex items-center gap-2 text-xs text-orange-200/70 mb-1">
               <Clock className="h-3.5 w-3.5 text-orange-400" />
-              <span>नोंदणीकर्ता</span>
+              <span>{t('recorderBadge')}</span>
             </div>
             <div className="text-xs sm:text-sm font-bold text-white truncate">
-              {user?.name} ({user?.role === 'admin' ? 'व्यवस्थापक' : 'स्वयंसेवक'})
+              {user?.name} ({user?.role === 'admin' ? t('roleAdmin') : t('roleVolunteer')})
             </div>
           </div>
         </div>
@@ -126,11 +132,11 @@ export default function VolunteerDesk() {
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-400" />
             <h3 className="font-bold text-base sm:text-lg text-white">
-              नोंदणीकृत देणगी इतिहास (Live Donation Records)
+              {t('sessionHistoryTitle')}
             </h3>
           </div>
           <span className="text-xs text-orange-300/70">
-            {displayList.length} नोंदी
+            {displayList.length} {lang === 'mr' ? 'नोंदी' : 'Entries'}
           </span>
         </div>
 
@@ -159,7 +165,7 @@ export default function VolunteerDesk() {
                     </div>
                   </div>
                   <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px] text-orange-200/60">
-                    <span>नोंदणी: {entry.recordedBy}</span>
+                    <span>{lang === 'mr' ? 'नोंदणी:' : 'Logged By:'} {entry.recordedBy}</span>
                   </div>
                 </div>
               ))}
@@ -170,13 +176,13 @@ export default function VolunteerDesk() {
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-amber-500/20 text-[11px] font-bold uppercase tracking-wider text-orange-200/70">
-                    <th className="py-2.5 px-3">पावती क्र.</th>
-                    <th className="py-2.5 px-3">भाविकांचे नाव</th>
-                    <th className="py-2.5 px-3">सेवा प्रकार</th>
-                    <th className="py-2.5 px-3">नोंदणीकर्ता</th>
-                    <th className="py-2.5 px-3 text-right">रक्कम (₹)</th>
-                    <th className="py-2.5 px-3 text-right">वेळ</th>
-                    {isAdmin && <th className="py-2.5 px-3 text-center">क्रिया</th>}
+                    <th className="py-2.5 px-3">{t('receiptCol')}</th>
+                    <th className="py-2.5 px-3">{t('donorCol')}</th>
+                    <th className="py-2.5 px-3">{t('sevaCol')}</th>
+                    <th className="py-2.5 px-3">{t('recorderCol')}</th>
+                    <th className="py-2.5 px-3 text-right">{t('amountCol')}</th>
+                    <th className="py-2.5 px-3 text-right">{t('timeCol')}</th>
+                    {isAdmin && <th className="py-2.5 px-3 text-center">{t('actionCol')}</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-amber-500/15">
@@ -208,17 +214,20 @@ export default function VolunteerDesk() {
                           <button
                             type="button"
                             onClick={async () => {
-                              if (window.confirm(`⚠️ प्रशासक क्रिया: खरोखर ${entry.name} यांची ₹${entry.amount.toLocaleString()} ची देणगी हटवायची आहे का?`)) {
+                              const confirmMsg = lang === 'mr'
+                                ? `⚠️ प्रशासक क्रिया: खरोखर ${entry.name} यांची ₹${entry.amount.toLocaleString()} ची देणगी हटवायची आहे का?`
+                                : `⚠️ Admin Action: Are you sure you want to delete ${entry.name}'s donation of ₹${entry.amount.toLocaleString()}?`;
+                              if (window.confirm(confirmMsg)) {
                                 try {
                                   await deleteDonation(entry.id, token);
                                   setSessionEntries((prev) => prev.filter((s) => s.id !== entry.id));
                                 } catch (err) {
-                                  alert(err.message || 'त्रुटी आली');
+                                  alert(err.message || t('error'));
                                 }
                               }
                             }}
                             className="p-1 rounded-lg bg-red-950/60 hover:bg-red-700 text-red-300 hover:text-white border border-red-500/40 text-xs transition cursor-pointer"
-                            title="ही देणगी हटवा"
+                            title={t('delete')}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -234,7 +243,7 @@ export default function VolunteerDesk() {
           <div className="py-8 text-center rounded-2xl border border-dashed border-amber-500/20 bg-black/30">
             <Receipt className="h-8 w-8 text-orange-400/40 mx-auto mb-2" />
             <p className="text-xs sm:text-sm text-orange-200/60 font-medium">
-              या सत्रात अद्याप कोणतीही देणगी नोंदवली गेलेली नाही. वरील फॉर्म वापरून पहिली देणगी नोंदवा.
+              {t('noDonationsYet')}
             </p>
           </div>
         )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Lock, User, KeyRound, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
@@ -11,17 +12,28 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const { login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = location.state?.from?.pathname;
+
+  const handleDemoFill = (role) => {
+    if (role === 'admin') {
+      setUsername('admin');
+      setPassword('admin123');
+    } else {
+      setUsername('volunteer1');
+      setPassword('vol123');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (!username.trim() || !password) {
-      setErrorMsg('कृपया वापरकर्ता नाव आणि पासवर्ड प्रविष्ट करा.');
+      setErrorMsg(t('loginEmptyError'));
       return;
     }
 
@@ -37,7 +49,7 @@ export default function Login() {
         navigate('/volunteer', { replace: true });
       }
     } catch (err) {
-      setErrorMsg(err.message || 'लॉगिन अयशस्वी झाले. कृपया तपशील तपासा.');
+      setErrorMsg(err.message || t('loginFailedError'));
     } finally {
       setSubmitting(false);
     }
@@ -51,7 +63,7 @@ export default function Login() {
           {/* Top Decorative Header */}
           <div className="text-center space-y-2 mb-6">
             <div className="inline-flex items-center gap-1 text-xs font-bold text-amber-400/90 tracking-widest uppercase">
-              <span>॥ श्री गणेशाय नमः ॥</span>
+              <span>{t('sacredMantra')}</span>
             </div>
 
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-0.5 shadow-lg shadow-orange-600/40">
@@ -61,10 +73,10 @@ export default function Login() {
             </div>
 
             <h1 className="text-2xl font-black tracking-tight text-white">
-              मंडळ कक्ष प्रवेश
+              {t('loginHeaderTitle')}
             </h1>
             <p className="text-xs text-orange-200/75">
-              स्वयंसेवक व व्यवस्थापकांसाठी अधिकृत प्रवेशद्वार
+              {t('loginHeaderSub')}
             </p>
           </div>
 
@@ -76,12 +88,35 @@ export default function Login() {
             </div>
           )}
 
+          {/* Quick Demo Fill Buttons */}
+          <div className="mb-5 rounded-2xl border border-amber-500/20 bg-black/40 p-3 text-xs">
+            <span className="text-orange-200/70 font-semibold block mb-2">
+              {t('demoAccountsTitle')}
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDemoFill('admin')}
+                className="py-1.5 px-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 font-bold transition text-center cursor-pointer"
+              >
+                {t('demoAdminBtn')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoFill('volunteer')}
+                className="py-1.5 px-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 font-bold transition text-center cursor-pointer"
+              >
+                {t('demoVolBtn')}
+              </button>
+            </div>
+          </div>
+
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username Field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-orange-200/90">
-                वापरकर्ता नाव (Username / ID)
+                {t('usernameLoginLabel')}
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-amber-400/70">
@@ -92,7 +127,7 @@ export default function Login() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="उदा. admin किंवा volunteer1"
+                  placeholder={t('usernameLoginPlaceholder')}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 pl-10 pr-3.5 text-sm text-white placeholder-orange-200/30 outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30"
                 />
               </div>
@@ -101,7 +136,7 @@ export default function Login() {
             {/* Password Field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-orange-200/90">
-                पासवर्ड (Password)
+                {t('passwordLoginLabel')}
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-amber-400/70">
@@ -112,7 +147,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="आपला सुरक्षित पासवर्ड टाका"
+                  placeholder={t('passwordLoginPlaceholder')}
                   className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 pl-10 pr-10 text-sm text-white placeholder-orange-200/30 outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30"
                 />
                 <button
@@ -134,12 +169,12 @@ export default function Login() {
               {submitting ? (
                 <>
                   <span className="animate-spin text-base">⏳</span>
-                  <span>पडताळणी सुरू आहे...</span>
+                  <span>{t('verifyingLogin')}</span>
                 </>
               ) : (
                 <>
                   <Lock className="h-4 w-4" />
-                  <span>प्रवेश करा (Sign In)</span>
+                  <span>{t('loginBtn')}</span>
                 </>
               )}
             </button>
@@ -152,7 +187,7 @@ export default function Login() {
               className="inline-flex items-center gap-1.5 text-xs text-orange-200/70 hover:text-amber-300 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>मुख्य पृष्ठावर परत जा</span>
+              <span>{t('backToHome')}</span>
             </Link>
           </div>
         </div>

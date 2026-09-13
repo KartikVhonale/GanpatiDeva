@@ -1,31 +1,28 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Share2 } from 'lucide-react';
+import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100, 11000];
 
-const SEVA_TYPES = [
-  { id: 'general', label: 'सर्वसाधारण देणगी', icon: '🪙' },
-  { id: 'prasad', label: 'महाप्रसाद सेवा', icon: '🍛' },
-  { id: 'aarti', label: 'दैनिक महाआरती', icon: '🔔' },
-  { id: 'modak', label: 'मोदक नैवेद्य', icon: '🍬' },
-  { id: 'deep', label: 'अखंड दीप & धूप', icon: '🪔' },
-  { id: 'flower', label: 'पुष्पवृष्टी व सजावट', icon: '🌸' },
-];
-
 export default function AdminForm({ onSubmitDonation }) {
+  const { t, lang } = useLanguage();
   const [donorName, setDonorName] = useState('');
   const [amount, setAmount] = useState('');
   const [city, setCity] = useState('');
   const [phone, setPhone] = useState('');
-  const [sevaCategory, setSevaCategory] = useState('महाप्रसाद सेवा');
-  const [paymentMode, setPaymentMode] = useState('रोख (Cash)');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('prasad');
+  const [paymentMode, setPaymentMode] = useState('cash'); // 'cash' | 'online'
   const [recentReceipt, setRecentReceipt] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successBanner, setSuccessBanner] = useState('');
+
+  const activeCategory = SEVA_CATEGORIES.find((s) => s.id === selectedCategoryId) || SEVA_CATEGORIES[1];
+  const activeCategoryName = lang === 'mr' ? activeCategory.mr : activeCategory.en;
+  const activePaymentName = paymentMode === 'cash' ? t('cash') : t('onlineUpi');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,22 +32,32 @@ export default function AdminForm({ onSubmitDonation }) {
     const numericAmount = parseInt(amount, 10);
 
     if (!donorName.trim()) {
-      setErrorMessage('कृपया भाविकांचे नाव प्रविष्ट करा (Please enter donor name).');
+      setErrorMessage(
+        lang === 'mr'
+          ? 'कृपया भाविकांचे नाव प्रविष्ट करा.'
+          : 'Please enter donor / devotee name.'
+      );
       return;
     }
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      setErrorMessage('रक्कम ० पेक्षा जास्त असणे आवश्यक आहे (Amount must be greater than 0).');
+      setErrorMessage(
+        lang === 'mr'
+          ? 'रक्कम ० पेक्षा जास्त असणे आवश्यक आहे.'
+          : 'Donation amount must be greater than 0.'
+      );
       return;
     }
 
     setIsSubmitting(true);
 
+    const defaultLocality = lang === 'mr' ? 'स्थानिक भाविक' : 'Local Devotee';
     const payload = {
       name: donorName.trim(),
       amount: numericAmount,
-      category: sevaCategory,
-      city: city.trim() || 'स्थानिक भाविक',
+      category: activeCategoryName,
+      city: city.trim() || defaultLocality,
       phone: phone.trim(),
+      paymentMode: activePaymentName,
     };
 
     try {
@@ -68,18 +75,25 @@ export default function AdminForm({ onSubmitDonation }) {
         }
       }
 
-      setSuccessBanner(`देणगी यशस्वीपणे नोंदवली! ₹${numericAmount.toLocaleString()} - ${donorName.trim()}`);
+      setSuccessBanner(
+        lang === 'mr'
+          ? `देणगी यशस्वीपणे नोंदवली! ₹${numericAmount.toLocaleString('mr-IN')} - ${donorName.trim()}`
+          : `Donation recorded successfully! ₹${numericAmount.toLocaleString('en-IN')} - ${donorName.trim()}`
+      );
 
       const receiptData = {
         receiptNo: `REC-${Date.now().toString().slice(-6)}`,
         name: donorName.trim(),
-        city: city.trim() || 'स्थानिक भाविक',
+        city: city.trim() || defaultLocality,
         phone: phone.trim(),
         amount: numericAmount,
-        category: sevaCategory,
-        paymentMode,
-        time: 'आत्ताच',
-        timestamp: new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' }),
+        category: activeCategoryName,
+        paymentMode: activePaymentName,
+        time: t('justNow'),
+        timestamp: new Date().toLocaleTimeString(lang === 'mr' ? 'mr-IN' : 'en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
       };
 
       setRecentReceipt(receiptData);
@@ -91,7 +105,7 @@ export default function AdminForm({ onSubmitDonation }) {
       setCity('');
     } catch (err) {
       console.warn('Backend API request error:', err.message);
-      setErrorMessage(err.message || 'नोंदणी करताना त्रुटी आली.');
+      setErrorMessage(err.message || (lang === 'mr' ? 'नोंदणी करताना त्रुटी आली.' : 'Failed to record donation.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -103,7 +117,11 @@ export default function AdminForm({ onSubmitDonation }) {
 
   // WhatsApp share link generator
   const getWhatsAppShareUrl = (receipt) => {
-    const text = `॥ श्री गणेशाय नमः ॥\n\nसार्वजनिक श्री गणेश उत्सव मंडळ २०२६\n\nपावती क्र: ${receipt.receiptNo}\nनाव: ${receipt.name}\nरक्कम: ₹${receipt.amount.toLocaleString()}\nसेवा: ${receipt.category}\nपेमेंट: ${receipt.paymentMode}\nवेळ: ${receipt.timestamp}\n\nबाप्पाच्या चरणी आपली सेवा रुजू झाली आहे! श्री गणेश कृपेने आपल्या सर्व मनोकामना पूर्ण होवोत. ॥ गणपती बाप्पा मोरया ॥`;
+    const isMr = lang === 'mr';
+    const text = isMr
+      ? `॥ श्री गणेशाय नमः ॥\n\nसार्वजनिक श्री गणेश उत्सव मंडळ २०२६\n\nपावती क्र: ${receipt.receiptNo}\nनाव: ${receipt.name}\nरक्कम: ₹${receipt.amount.toLocaleString('mr-IN')}\nसेवा: ${receipt.category}\nपेमेंट: ${receipt.paymentMode}\nवेळ: ${receipt.timestamp}\n\nबाप्पाच्या चरणी आपली सेवा रुजू झाली आहे! श्री गणेश कृपेने आपल्या सर्व मनोकामना पूर्ण होवोत. ॥ गणपती बाप्पा मोरया ॥`
+      : `|| Shree Ganeshaya Namah ||\n\nShree Ganesh Utsav Mandal 2026\n\nReceipt No: ${receipt.receiptNo}\nDevotee: ${receipt.name}\nAmount: ₹${receipt.amount.toLocaleString('en-IN')}\nSeva: ${receipt.category}\nPayment: ${receipt.paymentMode}\nTime: ${receipt.timestamp}\n\nYour devotional offering has been received at Bappa's sacred feet! May Lord Ganesha bless you with health, peace and prosperity.\n|| Ganpati Bappa Morya ||`;
+
     const cleanPhone = receipt.phone ? receipt.phone.replace(/\D/g, '') : '';
     const phoneParam = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     return phoneParam
@@ -127,14 +145,14 @@ export default function AdminForm({ onSubmitDonation }) {
         <div className="relative z-10 mb-4 sm:mb-6 text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300 mb-2.5 shadow-inner">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>📱 स्वयंसेवक मोबाईल काऊंटर</span>
+            <span>{t('mobileCounterBadge')}</span>
           </div>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow">
-            देणगी नोंदणी फॉर्म
+            {t('formTitle')}
           </h2>
           <p className="text-[11px] sm:text-xs text-orange-200/75 mt-0.5">
-            कॅश किंवा ऑनलाइन पावती तात्काळ नोंदवा (MongoDB & Live TV Sync)
+            {t('formSub')}
           </p>
         </div>
 
@@ -174,7 +192,7 @@ export default function AdminForm({ onSubmitDonation }) {
               <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
                 <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-emerald-300">
                   <span className="text-base">🪔</span>
-                  <span>पावती तयार झाली (Receipt Generated)</span>
+                  <span>{t('receiptGenerated')}</span>
                 </div>
                 <span className="text-[11px] font-mono bg-emerald-900/80 border border-emerald-400/30 px-2 py-0.5 rounded-lg text-emerald-200 font-bold">
                   {recentReceipt.receiptNo}
@@ -183,19 +201,21 @@ export default function AdminForm({ onSubmitDonation }) {
 
               <div className="grid grid-cols-2 gap-2 text-xs py-1">
                 <div>
-                  <span className="text-emerald-300/70 text-[11px]">भाविक:</span>
+                  <span className="text-emerald-300/70 text-[11px]">{t('donor')}:</span>
                   <div className="font-bold text-white text-sm truncate">{recentReceipt.name}</div>
                 </div>
                 <div className="text-right">
-                  <span className="text-emerald-300/70 text-[11px]">रक्कम:</span>
-                  <div className="font-black text-amber-300 text-base">₹{recentReceipt.amount.toLocaleString()}</div>
+                  <span className="text-emerald-300/70 text-[11px]">{t('amount')}:</span>
+                  <div className="font-black text-amber-300 text-base">
+                    ₹{recentReceipt.amount.toLocaleString(lang === 'mr' ? 'mr-IN' : 'en-IN')}
+                  </div>
                 </div>
                 <div>
-                  <span className="text-emerald-300/70 text-[11px]">सेवा प्रकार:</span>
+                  <span className="text-emerald-300/70 text-[11px]">{t('category')}:</span>
                   <div className="text-emerald-100">{recentReceipt.category}</div>
                 </div>
                 <div className="text-right">
-                  <span className="text-emerald-300/70 text-[11px]">पेमेंट:</span>
+                  <span className="text-emerald-300/70 text-[11px]">{t('paymentMethod').split('(')[0].trim()}:</span>
                   <div className="text-emerald-100">{recentReceipt.paymentMode}</div>
                 </div>
               </div>
@@ -209,7 +229,7 @@ export default function AdminForm({ onSubmitDonation }) {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3.5 py-2 text-black font-black shadow-md transition-all active:scale-95 cursor-pointer"
                 >
                   <Share2 className="h-3.5 w-3.5" />
-                  <span>WhatsApp वर पावती पाठवा</span>
+                  <span>{t('whatsappShareBtn')}</span>
                 </a>
 
                 <button
@@ -217,7 +237,7 @@ export default function AdminForm({ onSubmitDonation }) {
                   onClick={() => setRecentReceipt(null)}
                   className="text-emerald-300/80 hover:text-white underline text-[11px] cursor-pointer"
                 >
-                  नवीन नोंदणी
+                  {t('newReceiptBtn')}
                 </button>
               </div>
             </motion.div>
@@ -237,23 +257,26 @@ export default function AdminForm({ onSubmitDonation }) {
           {/* Payment Mode Segment */}
           <div>
             <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1.5">
-              पेमेंट पद्धत (Payment Method)
+              {t('paymentMethod')}
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {['रोख (Cash)', 'ऑनलाइन (UPI / QR)'].map((mode) => (
+              {[
+                { id: 'cash', label: t('cash'), icon: '💵' },
+                { id: 'online', label: t('onlineUpi'), icon: '📱' },
+              ].map((mode) => (
                 <button
-                  key={mode}
+                  key={mode.id}
                   type="button"
                   disabled={isSubmitting}
-                  onClick={() => setPaymentMode(mode)}
+                  onClick={() => setPaymentMode(mode.id)}
                   className={`min-h-[44px] py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-60 ${
-                    paymentMode === mode
+                    paymentMode === mode.id
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md border border-amber-300/60 ring-1 ring-amber-400'
                       : 'border border-amber-500/20 bg-orange-950/40 text-orange-200/70 hover:bg-orange-900/30 hover:text-white'
                   }`}
                 >
-                  <span className="text-base">{mode.includes('Cash') ? '💵' : '📱'}</span>
-                  <span>{mode}</span>
+                  <span className="text-base">{mode.icon}</span>
+                  <span>{mode.label}</span>
                 </button>
               ))}
             </div>
@@ -262,7 +285,7 @@ export default function AdminForm({ onSubmitDonation }) {
           {/* Donor Name Input */}
           <div>
             <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-              भाविकांचे नाव (Donor Name) <span className="text-red-400">*</span>
+              {t('donorNameLabel')}
             </label>
             <div className="relative">
               <input
@@ -271,7 +294,7 @@ export default function AdminForm({ onSubmitDonation }) {
                 autoCapitalize="words"
                 autoComplete="name"
                 disabled={isSubmitting}
-                placeholder="उदा. श्री. सचिन रमेश पाटील किंवा सहपरिवार"
+                placeholder={t('donorNamePlaceholder')}
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
                 className="w-full min-h-[44px] rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2.5 text-sm text-white placeholder-orange-300/40 outline-none backdrop-blur-md transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 disabled:opacity-50"
@@ -285,7 +308,7 @@ export default function AdminForm({ onSubmitDonation }) {
           {/* Amount Input & Quick Chips */}
           <div>
             <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-              देणगी रक्कम (Amount in ₹) <span className="text-red-400">*</span>
+              {t('amountLabel')}
             </label>
             <div className="relative mb-2">
               <span className="absolute left-3.5 top-2.5 text-lg font-black text-amber-400">
@@ -298,14 +321,14 @@ export default function AdminForm({ onSubmitDonation }) {
                 required
                 min="1"
                 disabled={isSubmitting}
-                placeholder="उदा. 1100"
+                placeholder={t('amountPlaceholder')}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full min-h-[48px] rounded-xl border border-amber-500/30 bg-black/50 pl-8 pr-3.5 py-2 text-lg sm:text-xl font-black text-amber-200 placeholder-orange-300/40 outline-none backdrop-blur-md transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 disabled:opacity-50"
               />
             </div>
 
-            {/* Quick Amount Touch Chips (Optimized grid for mobile) */}
+            {/* Quick Amount Touch Chips */}
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
               {QUICK_AMOUNTS.map((val) => (
                 <button
@@ -319,7 +342,7 @@ export default function AdminForm({ onSubmitDonation }) {
                       : 'border border-amber-500/25 bg-orange-950/40 text-orange-200 hover:bg-orange-800/40 hover:text-white'
                   }`}
                 >
-                  ₹{val.toLocaleString()}
+                  ₹{val.toLocaleString(lang === 'mr' ? 'mr-IN' : 'en-IN')}
                 </button>
               ))}
             </div>
@@ -328,23 +351,23 @@ export default function AdminForm({ onSubmitDonation }) {
           {/* Seva Category Selector */}
           <div>
             <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-              सेवा प्रकार (Seva Category)
+              {t('sevaTypeLabel')}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {SEVA_TYPES.map((seva) => (
+              {SEVA_CATEGORIES.map((seva) => (
                 <button
                   key={seva.id}
                   type="button"
                   disabled={isSubmitting}
-                  onClick={() => setSevaCategory(seva.label)}
+                  onClick={() => setSelectedCategoryId(seva.id)}
                   className={`min-h-[42px] flex items-center gap-2 rounded-xl p-2 text-xs font-semibold transition cursor-pointer disabled:opacity-50 active:scale-95 ${
-                    sevaCategory === seva.label
+                    selectedCategoryId === seva.id
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border border-amber-300/60 shadow-md font-bold'
                       : 'border border-amber-500/20 bg-orange-950/30 text-orange-200/70 hover:bg-orange-900/30 hover:text-white'
                   }`}
                 >
                   <span className="text-base">{seva.icon}</span>
-                  <span className="truncate">{seva.label}</span>
+                  <span className="truncate">{lang === 'mr' ? seva.mr : seva.en}</span>
                 </button>
               ))}
             </div>
@@ -354,12 +377,12 @@ export default function AdminForm({ onSubmitDonation }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/70 mb-1">
-                गाव / शहर (Locality / City)
+                {t('cityLabel')}
               </label>
               <input
                 type="text"
                 disabled={isSubmitting}
-                placeholder="उदा. दादर, मुंबई, पुणे"
+                placeholder={t('cityPlaceholder')}
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 className="w-full min-h-[42px] rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none backdrop-blur-md focus:border-amber-400 focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
@@ -368,13 +391,13 @@ export default function AdminForm({ onSubmitDonation }) {
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/70 mb-1">
-                मोबाईल क्र. (WhatsApp पावतीसाठी)
+                {t('phoneLabel')}
               </label>
               <input
                 type="tel"
                 inputMode="tel"
                 disabled={isSubmitting}
-                placeholder="१० अंकी मोबाईल नंबर"
+                placeholder={t('phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full min-h-[42px] rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none backdrop-blur-md focus:border-amber-400 focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
@@ -395,12 +418,12 @@ export default function AdminForm({ onSubmitDonation }) {
               {isSubmitting ? (
                 <>
                   <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>नोंद होत आहे...</span>
+                  <span>{t('submitting')}</span>
                 </>
               ) : (
                 <>
                   <span className="text-xl">🪔</span>
-                  <span>पावती तयार करा व देणगी नोंदवा</span>
+                  <span>{t('submitDonationBtn')}</span>
                   <span className="text-lg">🚩</span>
                 </>
               )}

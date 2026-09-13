@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { playTempleBell } from '../utils/audio';
+import { useLanguage } from '../context/LanguageContext';
 
 const AARTIS = [
   {
     id: 'sukhkarta',
-    title: 'सुखकर्ता दुखहर्ता (मुख्य आरती)',
-    author: 'श्री समर्थ रामदास स्वामी विरचित',
+    title: { mr: 'सुखकर्ता दुखहर्ता (मुख्य आरती)', en: 'Sukhkarta Dukhharta (Main Aarti)' },
+    author: { mr: 'श्री समर्थ रामदास स्वामी विरचित', en: 'Composed by Saint Samarth Ramdas Swami' },
     lines: [
       "सुखकर्ता दुखहर्ता वार्ता विघ्नाची । नुरवी पुरवी प्रेम कृपा जयाची ॥",
       "सर्वांगी सुंदर उटी शेंदुराची । कंठी झळके माळ मुक्ताफळांची ॥ १ ॥",
@@ -25,8 +26,8 @@ const AARTIS = [
   },
   {
     id: 'shendur',
-    title: 'शेंदुर लाल चढायो (आरती)',
-    author: 'पारंपरिक आरती',
+    title: { mr: 'शेंदुर लाल चढायो (आरती)', en: 'Shendur Lal Chadhayo (Aarti)' },
+    author: { mr: 'पारंपरिक आरती', en: 'Traditional Devotional Aarti' },
     lines: [
       "शेंदुर लाल चढायो अच्छा गजमुख को । दोंदिल लाल बिराजे सुत गौरीहर को ॥",
       "हाथ लिए गुडलड्डू सांई सुरवर को । महिमा कहे न जाय लागत हूं पद को ॥ १ ॥",
@@ -45,8 +46,8 @@ const AARTIS = [
   },
   {
     id: 'ghalin',
-    title: 'घालीन लोटांगण वंदीन चरण',
-    author: 'आरती सांगता व प्रार्थना',
+    title: { mr: 'घालीन लोटांगण वंदीन चरण', en: 'Ghalin Lotangan Vandin Charan' },
+    author: { mr: 'आरती सांगता व प्रार्थना', en: 'Conclusive Prayer & Surrender' },
     lines: [
       "घालीन लोटांगण वंदीन चरण । डोळ्यांनी पाहीन रूप तुझे ॥",
       "प्रेमे आलिंगिन आनंदे पूजिन । भावे ओवाळिन म्हणे नामा ॥ १ ॥",
@@ -65,8 +66,8 @@ const AARTIS = [
   },
   {
     id: 'sankat-nashan',
-    title: 'श्री संकटनाशन गणेश स्तोत्रम्',
-    author: 'नारद पुराणातील अत्यंत फलदायी स्तोत्र',
+    title: { mr: 'श्री संकटनाशन गणेश स्तोत्रम्', en: 'Shri Sankat Nashan Ganesha Stotram' },
+    author: { mr: 'नारद पुराणातील अत्यंत फलदायी स्तोत्र', en: 'Sacred Stotra from Narada Purana' },
     lines: [
       "॥ श्री गणेशाय नमः ॥",
       "प्रणम्य शिरसा देवं गौरीपुत्रं विनायकम् ।",
@@ -95,8 +96,8 @@ const AARTIS = [
   },
   {
     id: 'mantrapushpanjali',
-    title: 'मंत्रपुष्पांजली',
-    author: 'ऋग्वेदातील पवित्र मंत्र',
+    title: { mr: 'मंत्रपुष्पांजली', en: 'Mantra Pushpanjali' },
+    author: { mr: 'ऋग्वेदातील पवित्र मंत्र', en: 'Sacred Vedic Mantras from Rigveda' },
     lines: [
       "ॐ यज्ञेन यज्ञमयजन्त देवास्तानि धर्माणि प्रथमान्यासन् ।",
       "ते ह नाकं महिमानः सचन्त यत्र पूर्वे साध्याः सन्ति देवाः ॥",
@@ -119,6 +120,7 @@ const AARTIS = [
 ];
 
 export default function AartiSection() {
+  const { t, pick, isMarathi } = useLanguage();
   const [selectedAarti, setSelectedAarti] = useState(AARTIS[0]);
   const [fontSize, setFontSize] = useState(16); // in px
 
@@ -133,25 +135,25 @@ export default function AartiSection() {
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-300 mb-1.5">
             <span>📖</span>
-            <span>आरती व स्तोत्र संग्रह</span>
+            <span>{t('aartiSectionBadge')}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            श्री गणेश आरती, स्तोत्र व प्रार्थना
+            {t('aartiSectionTitle')}
           </h2>
           <p className="text-xs sm:text-sm text-orange-200/75 mt-0.5">
-            घरी किंवा सार्वजनिक मंडळात आरतीच्या वेळी सहज वाचण्यासाठी
+            {t('aartiSectionSub')}
           </p>
         </div>
 
         {/* Controls: Font size + Temple Bell */}
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-xs text-orange-200">
-            <span className="mr-2 text-[11px] font-semibold">अक्षर आकार:</span>
+            <span className="mr-2 text-[11px] font-semibold">{t('fontSizeLabel')}</span>
             <button
               type="button"
               onClick={() => setFontSize(Math.max(13, fontSize - 2))}
               className="h-6 w-6 rounded bg-black/40 hover:bg-orange-800/40 text-sm font-bold flex items-center justify-center cursor-pointer"
-              title="लहान करा"
+              title={isMarathi ? 'लहान करा' : 'Decrease font size'}
             >
               -
             </button>
@@ -160,7 +162,7 @@ export default function AartiSection() {
               type="button"
               onClick={() => setFontSize(Math.min(24, fontSize + 2))}
               className="h-6 w-6 rounded bg-black/40 hover:bg-orange-800/40 text-sm font-bold flex items-center justify-center cursor-pointer"
-              title="मोठे करा"
+              title={isMarathi ? 'मोठे करा' : 'Increase font size'}
             >
               +
             </button>
@@ -172,7 +174,7 @@ export default function AartiSection() {
             className="flex items-center gap-1.5 rounded-xl border border-amber-400/50 bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:scale-105 transition-all cursor-pointer"
           >
             <span>🔔</span>
-            <span>घंटी</span>
+            <span>{t('ringBellBtn')}</span>
           </button>
         </div>
       </div>
@@ -190,7 +192,7 @@ export default function AartiSection() {
                 : 'border border-amber-500/20 bg-orange-950/30 text-orange-200/80 hover:bg-orange-900/40 hover:text-white'
             }`}
           >
-            {a.title}
+            {pick(a.title)}
           </button>
         ))}
       </div>
@@ -200,14 +202,14 @@ export default function AartiSection() {
         <div className="border-b border-amber-500/30 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="text-xl sm:text-2xl font-black text-amber-200">
-              {selectedAarti.title}
+              {pick(selectedAarti.title)}
             </h3>
             <p className="text-xs text-orange-300/80 italic mt-0.5">
-              {selectedAarti.author}
+              {pick(selectedAarti.author)}
             </p>
           </div>
-          <div className="text-xs text-amber-300/80 bg-amber-950/40 border border-amber-400/30 px-3 py-1 rounded-full self-start">
-            ॥ गणपती बाप्पा मोरया ॥
+          <div className="text-xs text-amber-300/80 bg-amber-950/40 border border-amber-400/30 px-3 py-1 rounded-full self-start font-bold">
+            {isMarathi ? '॥ गणपती बाप्पा मोरया ॥' : '|| Ganpati Bappa Morya ||'}
           </div>
         </div>
 
@@ -238,7 +240,9 @@ export default function AartiSection() {
 
         {/* Footer Blessing */}
         <div className="mt-10 pt-4 border-t border-amber-500/20 text-center text-xs text-orange-300/70">
-          ॥ अनंत कोटी ब्रह्मांड नायक, राजाधिराज, योगीराज, श्री सिद्धिविनायक गणपती महाराज की जय ॥
+          {isMarathi
+            ? '॥ अनंत कोटी ब्रह्मांड नायक, राजाधिराज, योगीराज, श्री सिद्धिविनायक गणपती महाराज की जय ॥'
+            : '|| Ananta Koti Brahmanda Nayaka, Rajadhiraja, Yogiraja, Shri Siddhivinayak Ganapati Maharaj Ki Jai ||'}
         </div>
       </div>
     </section>

@@ -9,27 +9,18 @@ import {
   ShieldCheck,
   Send,
   X,
-  CheckCircle2,
   AlertCircle,
-  ExternalLink,
 } from 'lucide-react';
 import TotalCounter from '../components/TotalCounter';
 import RecentDonorsList from '../components/RecentDonorsList';
 import ScrollingTicker from '../components/ScrollingTicker';
 import useDonations from '../hooks/useDonations';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
 
 const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100];
-const SEVA_CATEGORIES = [
-  'महाप्रसाद सेवा',
-  'दैनिक महाआरती',
-  'मोदक नैवेद्य अर्पण',
-  'अखंड दीप & धूप सेवा',
-  'पुष्पवृष्टी व सजावट',
-];
 
 export default function DakshinaBoard() {
-  const { t, lang } = useLanguage();
+  const { t, pick, lang } = useLanguage();
   const {
     totalAmount,
     targetAmount,
@@ -45,7 +36,7 @@ export default function DakshinaBoard() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [currentTime, setCurrentTime] = useState(
-    new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    new Date().toLocaleTimeString(lang === 'mr' ? 'mr-IN' : 'en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   );
 
   // Verification Request Modal State
@@ -55,7 +46,7 @@ export default function DakshinaBoard() {
     amount: '',
     phone: '',
     city: '',
-    category: 'महाप्रसाद सेवा',
+    category: lang === 'mr' ? 'महाप्रसाद सेवा' : 'Maha-Prasad Seva',
     utrNumber: '',
   });
   const [submittingVerify, setSubmittingVerify] = useState(false);
@@ -64,9 +55,9 @@ export default function DakshinaBoard() {
 
   // Dynamic Settings from Admin (fallback to defaults)
   const upiId = settings?.upiId || 'mandal.ganpati@upi';
-  const upiName = settings?.upiName || 'सार्वजनिक श्री गणेश उत्सव मंडळ';
+  const upiName = settings?.upiName || (lang === 'mr' ? 'सार्वजनिक श्री गणेश उत्सव मंडळ' : 'Shree Ganesh Utsav Mandal');
   const qrCodeUrl = settings?.qrCodeUrl || '';
-  const qrCodeNote = settings?.qrCodeNote || 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा';
+  const qrCodeNote = settings?.qrCodeNote || (lang === 'mr' ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan & offer your humble devotion at Lord Ganesha\'s feet');
 
   const upiPayUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&cu=INR`;
   const autoQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayUrl)}`;
@@ -76,11 +67,11 @@ export default function DakshinaBoard() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(
-        new Date().toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        new Date().toLocaleTimeString(lang === 'mr' ? 'mr-IN' : 'en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       );
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [lang]);
 
   // Listen to fullscreen changes
   useEffect(() => {
@@ -117,15 +108,15 @@ export default function DakshinaBoard() {
 
     const numericAmount = Number(verifyForm.amount);
     if (!verifyForm.name.trim()) {
-      setVerifyError('कृपया आपले नाव प्रविष्ट करा.');
+      setVerifyError(t('enterValidName'));
       return;
     }
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      setVerifyError('कृपया वैध देणगी रक्कम प्रविष्ट करा.');
+      setVerifyError(t('enterValidAmount'));
       return;
     }
     if (!verifyForm.utrNumber.trim()) {
-      setVerifyError('कृपया UPI Transaction ID / 12 अंकी UTR नंबर प्रविष्ट करा.');
+      setVerifyError(t('enterValidUtr'));
       return;
     }
 
@@ -135,22 +126,22 @@ export default function DakshinaBoard() {
         name: verifyForm.name.trim(),
         amount: numericAmount,
         phone: verifyForm.phone.trim(),
-        city: verifyForm.city.trim() || 'ऑनलाइन भाविक',
+        city: verifyForm.city.trim() || (lang === 'mr' ? 'ऑनलाइन भाविक' : 'Online Devotee'),
         category: verifyForm.category,
         utrNumber: verifyForm.utrNumber.trim(),
       });
 
-      setVerifySuccess(res.message || 'पडताळणी विनंती यशस्वीपणे पाठवली!');
+      setVerifySuccess(res.message || t('verifySuccessMsg'));
       setVerifyForm({
         name: '',
         amount: '',
         phone: '',
         city: '',
-        category: 'महाप्रसाद सेवा',
+        category: lang === 'mr' ? 'महाप्रसाद सेवा' : 'Maha-Prasad Seva',
         utrNumber: '',
       });
     } catch (err) {
-      setVerifyError(err.message || 'विनंती पाठवताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+      setVerifyError(err.message || t('error'));
     } finally {
       setSubmittingVerify(false);
     }
@@ -232,7 +223,7 @@ export default function DakshinaBoard() {
           <div className="space-y-1 mb-2.5">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
               <QrCode className="h-3 w-3" />
-              <span>{lang === 'mr' ? 'डिजिटल सेवा अर्पण' : 'Digital Seva'}</span>
+              <span>{t('digitalSevaBadge')}</span>
             </div>
             <h3 className="text-lg font-extrabold text-white">
               {t('scanPayTitle')}
@@ -249,7 +240,6 @@ export default function DakshinaBoard() {
               alt="Mandal Official QR Code"
               className="w-44 h-44 sm:w-48 sm:h-48 object-contain rounded-xl"
               onError={(e) => {
-                // Fallback to auto-generated QR code if custom link fails
                 if (e.target.src !== autoQrUrl) {
                   e.target.src = autoQrUrl;
                 }
@@ -295,7 +285,7 @@ export default function DakshinaBoard() {
               }}
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-2.5 px-3 text-xs font-black text-white shadow-lg shadow-orange-600/30 ring-1 ring-amber-300/50 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
-              <span>🔔 मी ऑनलाइन पैसे भरले आहेत (पावती विनंती करा)</span>
+              <span>{t('verifyPaymentBtn')}</span>
             </button>
 
             <p className="text-[11px] text-orange-200/60 flex items-center justify-center gap-1">
@@ -326,13 +316,13 @@ export default function DakshinaBoard() {
             <div className="text-center space-y-1 mb-4">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/20 px-3 py-0.5 text-xs font-bold text-amber-300">
                 <span>🪔</span>
-                <span>ऑनलाइन देणगी पडताळणी</span>
+                <span>{t('verifyModalBadge')}</span>
               </div>
               <h3 className="text-xl font-black text-white">
-                पेमेंट पडताळणी विनंती (Verify Payment)
+                {t('verifyModalTitle')}
               </h3>
               <p className="text-xs text-orange-200/75">
-                आपण केलेल्या UPI पेमेंटचा तपशील पाठवा. व्यवस्थापकांच्या पडताळणीनंतर पावती तयार होईल.
+                {t('verifyModalSub')}
               </p>
             </div>
 
@@ -346,14 +336,14 @@ export default function DakshinaBoard() {
                   {verifySuccess}
                 </div>
                 <p className="text-xs text-orange-200/70">
-                  आपली सेवा बाप्पाच्या चरणी लवकरच डॅशबोर्ड व स्क्रीनवर जोडली जाईल!
+                  {t('verifySuccessSub')}
                 </p>
                 <button
                   type="button"
                   onClick={() => setIsVerifyModalOpen(false)}
                   className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-xs font-bold text-white shadow cursor-pointer"
                 >
-                  पूर्ण झाले (Close)
+                  {t('verifyDoneBtn')}
                 </button>
               </div>
             ) : (
@@ -369,12 +359,12 @@ export default function DakshinaBoard() {
                 {/* Donor Name */}
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-                    भाविकांचे नाव (Donor Name) <span className="text-red-400">*</span>
+                    {t('verifyNameLabel')}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="उदा. श्री. सचिन रमेश पाटील"
+                    placeholder={t('verifyNamePlaceholder')}
                     value={verifyForm.name}
                     onChange={(e) => setVerifyForm({ ...verifyForm, name: e.target.value })}
                     className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
@@ -384,13 +374,13 @@ export default function DakshinaBoard() {
                 {/* Amount & Quick Chips */}
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-                    दिलेली रक्कम (Amount Paid in ₹) <span className="text-red-400">*</span>
+                    {t('verifyAmountLabel')}
                   </label>
                   <input
                     type="number"
                     min="1"
                     required
-                    placeholder="उदा. 1100"
+                    placeholder={t('verifyAmountPlaceholder')}
                     value={verifyForm.amount}
                     onChange={(e) => setVerifyForm({ ...verifyForm, amount: e.target.value })}
                     className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-sm font-bold text-amber-300 placeholder-orange-300/40 outline-none focus:border-amber-400 mb-1.5"
@@ -416,18 +406,18 @@ export default function DakshinaBoard() {
                 {/* UTR / Transaction ID */}
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-                    UPI ट्रॅन्झॅक्शन / UTR नंबर <span className="text-red-400">*</span>
+                    {t('verifyUtrLabel')}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="उदा. 12 अंकी UTR किंवा Bank Ref. No."
+                    placeholder={t('verifyUtrPlaceholder')}
                     value={verifyForm.utrNumber}
                     onChange={(e) => setVerifyForm({ ...verifyForm, utrNumber: e.target.value })}
                     className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-xs font-mono text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
                   />
                   <span className="text-[10px] text-orange-200/60 mt-0.5 block">
-                    आपल्या GPay / PhonePe / Paytm वरील पेमेंट पावतीतील UTR नंबर टाका.
+                    {t('verifyUtrHint')}
                   </span>
                 </div>
 
@@ -435,11 +425,11 @@ export default function DakshinaBoard() {
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-                      मोबाईल नंबर
+                      {t('verifyPhoneLabel')}
                     </label>
                     <input
                       type="tel"
-                      placeholder="१० अंकी नंबर"
+                      placeholder={t('verifyPhonePlaceholder')}
                       value={verifyForm.phone}
                       onChange={(e) => setVerifyForm({ ...verifyForm, phone: e.target.value })}
                       className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
@@ -447,11 +437,11 @@ export default function DakshinaBoard() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-                      गाव / शहर
+                      {t('verifyCityLabel')}
                     </label>
                     <input
                       type="text"
-                      placeholder="उदा. मुंबई, पुणे"
+                      placeholder={t('verifyCityPlaceholder')}
                       value={verifyForm.city}
                       onChange={(e) => setVerifyForm({ ...verifyForm, city: e.target.value })}
                       className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
@@ -462,18 +452,21 @@ export default function DakshinaBoard() {
                 {/* Seva Category */}
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
-                    सेवा प्रकार
+                    {t('verifyCategoryLabel')}
                   </label>
                   <select
                     value={verifyForm.category}
                     onChange={(e) => setVerifyForm({ ...verifyForm, category: e.target.value })}
                     className="w-full rounded-xl border border-amber-500/30 bg-black/70 px-3 py-2 text-xs text-orange-100 outline-none focus:border-amber-400"
                   >
-                    {SEVA_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat} className="bg-orange-950 text-white">
-                        {cat}
-                      </option>
-                    ))}
+                    {SEVA_CATEGORIES.map((cat) => {
+                      const label = pick(cat);
+                      return (
+                        <option key={cat.id} value={label} className="bg-orange-950 text-white">
+                          {cat.icon} {label}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -484,11 +477,11 @@ export default function DakshinaBoard() {
                   className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-orange-600/40 hover:brightness-110 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
                 >
                   {submittingVerify ? (
-                    <span>पडताळणी विनंती पाठवत आहे...</span>
+                    <span>{t('verifySubmittingBtn')}</span>
                   ) : (
                     <>
                       <Send className="h-3.5 w-3.5" />
-                      <span>पडताळणीसाठी पाठवा (Submit Verification)</span>
+                      <span>{t('verifySubmitBtn')}</span>
                     </>
                   )}
                 </button>

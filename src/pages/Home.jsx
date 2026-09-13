@@ -15,11 +15,10 @@ import {
   Plus,
   Trash2,
   X,
-  Check,
   Save
 } from 'lucide-react';
 import { playFlowerChime, playTempleBell } from '../utils/audio';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, DEFAULT_SOCIAL_INITIATIVES } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import useDonations from '../hooks/useDonations';
 import AshtavinayakSection from '../components/AshtavinayakSection';
@@ -56,47 +55,8 @@ const DEFAULT_GANESHA_IMAGES = [
   'https://res.cloudinary.com/d0tgvag4/image/upload/f_auto,q_auto/v1789231032/Gemini_Generated_Image_a0g10oa0g10oa0g1_1.png',
 ];
 
-const DEFAULT_SOCIAL_INITIATIVES = [
-  {
-    id: 'init-1',
-    title: 'भव्य रक्तदान शिबिर (Blood Donation Camp)',
-    stats: '२५०+ बाटल्या रक्त संकलन',
-    desc: 'दरवर्षी गणेशोत्सवाच्या ५ व्या दिवशी स्थानिक शासकीय रुग्णालयांच्या सहकार्याने आयोजित.',
-    iconName: 'Droplet',
-    tag: 'आरोग्य सेवा',
-    color: 'border-rose-500/40 bg-rose-950/30 text-rose-300',
-  },
-  {
-    id: 'init-2',
-    title: 'दैनिक महाप्रसाद वाटप (Maha Prasad)',
-    stats: '१,५००+ दररोज थाळ्या',
-    desc: 'मंडळात येणाऱ्या प्रत्येक भाविकासाठी शुद्ध, सात्विक आणि तृप्त करणारा महाप्रसाद विनामूल्य.',
-    iconName: 'Utensils',
-    tag: 'अन्नदान सेवा',
-    color: 'border-amber-500/40 bg-amber-950/30 text-amber-300',
-  },
-  {
-    id: 'init-3',
-    title: 'गुणवंत विद्यार्थी सत्कार व शैक्षणिक मदत',
-    stats: '५० गरजू विद्यार्थ्यांना शिष्यवृत्ती',
-    desc: 'परिसरातील होतकरू विद्यार्थ्यांना वह्या, पुस्तके व शालेय साहित्य वाटप उपक्रम.',
-    iconName: 'GraduationCap',
-    tag: 'शैक्षणिक सेवा',
-    color: 'border-orange-500/40 bg-orange-950/30 text-orange-300',
-  },
-  {
-    id: 'init-4',
-    title: 'बाल संस्कार व सांस्कृतिक स्पर्धा',
-    stats: '४००+ बाल कलाकार सहभागी',
-    desc: 'चित्रकला, वकृत्व, श्लोक पठण व पारंपरिक भजन स्पर्धांचे आयोजन करून कलागुणांना प्रोत्साहन.',
-    iconName: 'Award',
-    tag: 'संस्कृती संवर्धन',
-    color: 'border-red-500/40 bg-red-950/30 text-red-300',
-  },
-];
-
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, pick, lang } = useLanguage();
   const { settings } = useDonations();
   const { isAdmin, token } = useAuth();
 
@@ -365,7 +325,7 @@ export default function Home() {
                         setCurrentImgIndex((prev) => (prev - 1 + activeImages.length) % activeImages.length);
                       }}
                       className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-amber-300 flex items-center justify-center text-sm font-black backdrop-blur-md cursor-pointer transition opacity-80 hover:opacity-100 z-20 border border-amber-400/40 shadow-md"
-                      title="मागील दर्शन"
+                      title={t('prevDarshan')}
                     >
                       ‹
                     </button>
@@ -376,7 +336,7 @@ export default function Home() {
                         setCurrentImgIndex((prev) => (prev + 1) % activeImages.length);
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-amber-300 flex items-center justify-center text-sm font-black backdrop-blur-md cursor-pointer transition opacity-80 hover:opacity-100 z-20 border border-amber-400/40 shadow-md"
-                      title="पुढील दर्शन"
+                      title={t('nextDarshan')}
                     >
                       ›
                     </button>
@@ -396,7 +356,7 @@ export default function Home() {
                             ? 'w-5 bg-amber-400'
                             : 'w-1.5 bg-white/40 hover:bg-white/70'
                         }`}
-                        title={`दर्शन ${idx + 1}`}
+                        title={`${t('darshanProgress')} ${idx + 1}`}
                       />
                     ))}
                   </div>
@@ -502,13 +462,13 @@ export default function Home() {
           <div>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-0.5 text-xs font-bold text-amber-300 mb-1">
               <HeartHandshake className="h-3.5 w-3.5" />
-              <span>सामाजिक व धार्मिक उपक्रम</span>
+              <span>{t('initiativesBadge')}</span>
             </div>
             <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
-              मंडळाचे सामाजिक उपक्रम (Initiatives Funded by Seva)
+              {t('initiativesTitle')}
             </h3>
             <span className="text-xs text-orange-200/70 block mt-0.5">
-              आपल्या वर्गणी व देणगीतून साकारलेली लोकोपयोगी कार्ये
+              {t('initiativesSubtitle')}
             </span>
           </div>
 
@@ -519,7 +479,7 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition shadow-sm cursor-pointer self-start md:self-auto"
             >
               <Edit3 className="h-3.5 w-3.5" />
-              <span>उपक्रम संपादित करा (Admin)</span>
+              <span>{t('editInitiativesBtn')}</span>
             </button>
           )}
         </div>
@@ -530,7 +490,7 @@ export default function Home() {
             const Icon = ICON_MAP[item.iconName] || item.icon || HeartHandshake;
             return (
               <motion.div
-                key={item.id || item.title}
+                key={item.id || (typeof item.title === 'string' ? item.title : item.title?.mr || idx)}
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -544,20 +504,20 @@ export default function Home() {
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="font-bold text-sm sm:text-base text-white">
-                      {item.title}
+                      {pick(item.title)}
                     </h4>
                     <span className={`inline-block rounded-full border px-2 py-0.2 text-[10px] font-bold ${item.color || 'border-amber-500/40 bg-amber-950/30 text-amber-300'}`}>
-                      {item.tag}
+                      {pick(item.tag)}
                     </span>
                   </div>
 
                   <p className="text-xs text-orange-200/80 leading-relaxed">
-                    {item.desc}
+                    {pick(item.desc)}
                   </p>
 
                   <div className="pt-1 text-xs font-bold text-amber-300 flex items-center gap-1.5">
                     <span>✦</span>
-                    <span>{item.stats}</span>
+                    <span>{pick(item.stats)}</span>
                   </div>
                 </div>
               </motion.div>
@@ -580,10 +540,10 @@ export default function Home() {
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <span>✏️</span>
-                  <span>सामाजिक उपक्रम संपादन (Admin Only)</span>
+                  <span>{t('adminInitiativesModalTitle')}</span>
                 </h3>
                 <p className="text-xs text-orange-200/70">
-                  येथे केलेले बदल मुख्य पृष्ठावर त्वरित थेट लागू होतील.
+                  {t('adminInitiativesModalSub')}
                 </p>
               </div>
               <button
@@ -610,13 +570,13 @@ export default function Home() {
                 >
                   <div className="flex items-center justify-between border-b border-amber-500/15 pb-2">
                     <span className="text-xs font-bold text-amber-300">
-                      उपक्रम #{idx + 1}
+                      {lang === 'mr' ? `उपक्रम #${idx + 1}` : `Initiative #${idx + 1}`}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleDeleteInitiativeItem(idx)}
                       className="p-1 rounded-lg text-red-400 hover:bg-red-950/60 transition cursor-pointer"
-                      title="काढून टाका"
+                      title={t('delete')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -625,27 +585,27 @@ export default function Home() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        उपक्रमाचे नाव / शीर्षक
+                        {lang === 'mr' ? 'उपक्रमाचे नाव / शीर्षक' : 'Initiative Title'}
                       </label>
                       <input
                         type="text"
-                        value={item.title}
+                        value={typeof item.title === 'string' ? item.title : pick(item.title)}
                         onChange={(e) => handleUpdateInitiativeItem(idx, 'title', e.target.value)}
                         className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                        placeholder="उदा. भव्य रक्तदान शिबिर"
+                        placeholder={lang === 'mr' ? 'उदा. भव्य रक्तदान शिबिर' : 'e.g. Blood Donation Drive'}
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        आकडेवारी / प्रभाव (Stats)
+                        {lang === 'mr' ? 'आकडेवारी / प्रभाव (Stats)' : 'Stats / Impact Metric'}
                       </label>
                       <input
                         type="text"
-                        value={item.stats}
+                        value={typeof item.stats === 'string' ? item.stats : pick(item.stats)}
                         onChange={(e) => handleUpdateInitiativeItem(idx, 'stats', e.target.value)}
                         className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                        placeholder="उदा. २५०+ बाटल्या रक्त संकलन"
+                        placeholder={lang === 'mr' ? 'उदा. २५०+ बाटल्या रक्त संकलन' : 'e.g. 250+ units collected'}
                       />
                     </div>
                   </div>
@@ -653,38 +613,38 @@ export default function Home() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        टॅग (Tag / Category)
+                        {lang === 'mr' ? 'टॅग (Tag / Category)' : 'Tag / Category'}
                       </label>
                       <input
                         type="text"
-                        value={item.tag}
+                        value={typeof item.tag === 'string' ? item.tag : pick(item.tag)}
                         onChange={(e) => handleUpdateInitiativeItem(idx, 'tag', e.target.value)}
                         className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                        placeholder="उदा. आरोग्य सेवा"
+                        placeholder={lang === 'mr' ? 'उदा. आरोग्य सेवा' : 'e.g. Health Seva'}
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        चिन्ह (Icon)
+                        {lang === 'mr' ? 'चिन्ह (Icon)' : 'Icon'}
                       </label>
                       <select
                         value={item.iconName || 'HeartHandshake'}
                         onChange={(e) => handleUpdateInitiativeItem(idx, 'iconName', e.target.value)}
                         className="w-full rounded-xl border border-amber-500/30 bg-black/80 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
                       >
-                        <option value="Droplet">🩸 Droplet (रक्तदान / आरोग्य)</option>
-                        <option value="Utensils">🍲 Utensils (महाप्रसाद / अन्नदान)</option>
-                        <option value="GraduationCap">🎓 GraduationCap (शिक्षण)</option>
-                        <option value="Award">🏆 Award (संस्कृती / स्पर्धा)</option>
-                        <option value="HeartHandshake">🤝 HeartHandshake (सेवा)</option>
-                        <option value="Flame">🔥 Flame (आरती / यज्ञ)</option>
+                        <option value="Droplet">🩸 Droplet {lang === 'mr' ? '(रक्तदान / आरोग्य)' : '(Blood / Health)'}</option>
+                        <option value="Utensils">🍲 Utensils {lang === 'mr' ? '(महाप्रसाद / अन्नदान)' : '(Prasad / Food)'}</option>
+                        <option value="GraduationCap">🎓 GraduationCap {lang === 'mr' ? '(शिक्षण)' : '(Education)'}</option>
+                        <option value="Award">🏆 Award {lang === 'mr' ? '(संस्कृती / स्पर्धा)' : '(Culture / Trophy)'}</option>
+                        <option value="HeartHandshake">🤝 HeartHandshake {lang === 'mr' ? '(सेवा)' : '(Community Seva)'}</option>
+                        <option value="Flame">🔥 Flame {lang === 'mr' ? '(आरती / यज्ञ)' : '(Aarti / Flame)'}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                        रंग शैली (Color Theme)
+                        {lang === 'mr' ? 'रंग शैली (Color Theme)' : 'Color Theme'}
                       </label>
                       <select
                         value={item.color || COLOR_OPTIONS[0].value}
@@ -702,14 +662,14 @@ export default function Home() {
 
                   <div>
                     <label className="block text-[11px] font-semibold text-orange-200/80 mb-1">
-                      सविस्तर माहिती (Description)
+                      {lang === 'mr' ? 'सविस्तर माहिती (Description)' : 'Detailed Description'}
                     </label>
                     <textarea
                       rows={2}
-                      value={item.desc}
+                      value={typeof item.desc === 'string' ? item.desc : pick(item.desc)}
                       onChange={(e) => handleUpdateInitiativeItem(idx, 'desc', e.target.value)}
                       className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-amber-400"
-                      placeholder="उपक्रमाबद्दल थोडक्यात माहिती..."
+                      placeholder={lang === 'mr' ? 'उपक्रमाबद्दल थोडक्यात माहिती...' : 'Brief summary about this initiative...'}
                     />
                   </div>
                 </div>
@@ -724,7 +684,7 @@ export default function Home() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-dashed border-amber-400/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
-                <span>+ नवीन उपक्रम जोडा (Add New)</span>
+                <span>{t('addInitiativeBtn')}</span>
               </button>
 
               <div className="w-full sm:w-auto flex items-center gap-2">
@@ -733,7 +693,7 @@ export default function Home() {
                   onClick={() => setIsEditingInitiatives(false)}
                   className="flex-1 sm:flex-initial px-4 py-2 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition cursor-pointer"
                 >
-                  रद्द करा
+                  {t('cancel')}
                 </button>
                 <button
                   type="button"
@@ -742,7 +702,7 @@ export default function Home() {
                   className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-lg shadow-orange-600/30 hover:brightness-110 active:scale-95 disabled:opacity-50 transition cursor-pointer"
                 >
                   <Save className="h-4 w-4" />
-                  <span>{savingInitiatives ? 'सेव्ह होत आहे...' : 'बदल सेव्ह करा'}</span>
+                  <span>{savingInitiatives ? t('saving') : t('saveInitiativesBtn')}</span>
                 </button>
               </div>
             </div>
@@ -753,7 +713,7 @@ export default function Home() {
       {/* Footer Auspicious Blessing Quote */}
       <div className="text-center py-4">
         <p className="font-serif text-amber-200/90 text-sm sm:text-base italic">
-          ॥ मोरया रे बाप्पा मोरया रे, पुढच्या वर्षी लवकर या ॥
+          {t('footerQuote')}
         </p>
       </div>
     </div>
