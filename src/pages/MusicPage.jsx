@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { playTempleBell } from '../utils/audio';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -79,24 +80,10 @@ export default function MusicPage() {
 
   const playerRef = useRef(null);
   const iframeRef = useRef(null);
-  const ytPlayerRef = useRef(null);
   const [autoPlayNext, setAutoPlayNext] = useState(true);
   const autoPlayNextRef = useRef(autoPlayNext);
   autoPlayNextRef.current = autoPlayNext;
-
-  // Load YouTube Iframe API script once for auto-play transition detection
-  useEffect(() => {
-    if (!window.YT) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      if (firstScriptTag && firstScriptTag.parentNode) {
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-      } else {
-        document.head.appendChild(tag);
-      }
-    }
-  }, []);
+  const lastEndedTimeRef = useRef(0);
 
   // Fetch all songs directly from MongoDB Atlas API
   const fetchSongs = useCallback(async () => {
@@ -252,51 +239,50 @@ export default function MusicPage() {
     showToast('🎲 यादृच्छिक गाणे सुरू झाले!');
   }, [songs]);
 
-  // Initialize YT.Player on the iframe to capture onStateChange (ENDED = 0)
-  const initYTPlayer = useCallback(() => {
-    if (!window.YT || !window.YT.Player || !iframeRef.current) return;
-    try {
-      if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
-        ytPlayerRef.current.destroy();
-      }
-      ytPlayerRef.current = new window.YT.Player(iframeRef.current, {
-        events: {
-          onStateChange: (event) => {
-            // event.data === 0 means video ENDED
-            if (event.data === 0 && autoPlayNextRef.current) {
-              console.log('🎵 YouTube track ended (onStateChange). Automatically playing next track...');
-              handleNextSong();
-            }
-          },
-        },
-      });
-    } catch (_) {}
-  }, [handleNextSong]);
-
-  useEffect(() => {
-    if (window.YT && window.YT.Player) {
-      initYTPlayer();
-    } else {
-      window.onYouTubeIframeAPIReady = () => {
-        initYTPlayer();
-      };
-    }
-  }, [activeSong?.youtubeId, initYTPlayer]);
-
-  // Window message listener fallback for YouTube iframe postMessage
+  // Window postMessage listener for YouTube embed events (Auto-play Next & Error resilience)
   useEffect(() => {
     const handleWindowMessage = (e) => {
+      // Validate origin to ensure it's from YouTube
+      if (e.origin && !e.origin.includes('youtube.com') && !e.origin.includes('youtube-nocookie.com')) {
+        return;
+      }
       try {
         const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-        // YouTube embeds send { event: 'onStateChange', info: 0 } when video finishes
-        if (
-          data &&
-          ((data.event === 'onStateChange' && (data.info === 0 || data.info === '0')) ||
-            (data.data && data.data.playerState === 0))
-        ) {
-          if (autoPlayNextRef.current) {
-            console.log('🎵 YouTube track finished (postMessage). Automatically playing next track...');
-            handleNextSong();
+        if (!data) return;
+
+        // Detect video ENDED (info === 0 or info.playerState === 0)
+        const isEnded =
+          (data.event === 'onStateChange' && (data.info === 0 || data.info === '0')) ||
+          (data.event === 'infoDelivery' && data.info && (data.info.playerState === 0 || data.info.playerState === '0')) ||
+          (data.data && (data.data.playerState === 0 || data.data.info === 0));
+
+        if (isEnded) {
+          const now = Date.now();
+          if (now - lastEndedTimeRef.current > 2000) {
+            lastEndedTimeRef.current = now;
+            if (autoPlayNextRef.current) {
+              console.log('🎵 YouTube track ended. Automatically playing next track...');
+              handleNextSong();
+            }
+          }
+        }
+
+        // Handle YouTube video errors (error codes 100, 101, 150 = private or embed restricted)
+        const isError =
+          data.event === 'onError' ||
+          (data.event === 'infoDelivery' && data.info && data.info.errorCode && data.info.errorCode > 0);
+
+        if (isError) {
+          const now = Date.now();
+          if (now - lastEndedTimeRef.current > 3000) {
+            lastEndedTimeRef.current = now;
+            console.warn('YouTube embed encountered an issue with track:', activeSong?.title, data);
+            if (autoPlayNextRef.current) {
+              showToast('या व्हिडिओचे थेट प्लेबॅक मर्यादित आहे. पुढील गाणे सुरू होत आहे...');
+              setTimeout(() => {
+                handleNextSong();
+              }, 1200);
+            }
           }
         }
       } catch (_) {}
@@ -304,20 +290,26 @@ export default function MusicPage() {
 
     window.addEventListener('message', handleWindowMessage);
     return () => window.removeEventListener('message', handleWindowMessage);
-  }, [handleNextSong]);
+  }, [handleNextSong, activeSong?.title]);
 
-  // Handshake with YouTube iframe on load
+  // Handshake with YouTube iframe on load to register postMessage listeners
   const handleIframeLoad = () => {
     try {
       if (iframeRef.current && iframeRef.current.contentWindow) {
-        iframeRef.current.contentWindow.postMessage('{"event":"listening","id":1}', '*');
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'listening', id: 1 }),
+          '*'
+        );
         iframeRef.current.contentWindow.postMessage(
           JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }),
           '*'
         );
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onError'] }),
+          '*'
+        );
       }
     } catch (_) {}
-    initYTPlayer();
   };
 
   // Handle like song
@@ -512,7 +504,8 @@ export default function MusicPage() {
       {/* THEATER MODE / NOW PLAYING YOUTUBE VIDEO PLAYER           */}
       {/* ========================================================= */}
       <section ref={playerRef} className="space-y-4">
-        {isLoading ? (
+        <ErrorBoundary onReset={fetchSongs}>
+          {isLoading ? (
           <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)] text-center space-y-4">
             <div className="flex items-center justify-center gap-2 text-amber-400 font-black text-sm sm:text-base">
               <Sparkles className="h-5 w-5 animate-spin text-amber-400" />
@@ -569,19 +562,27 @@ export default function MusicPage() {
                   ref={iframeRef}
                   id="ganpati-youtube-iframe"
                   key={activeSong.youtubeId}
-                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(
-                    typeof window !== 'undefined' ? window.location.origin : ''
-                  )}`}
+                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1&playsinline=1`}
                   title={activeSong.title}
-                  className="w-full h-full"
+                  className="w-full h-full border-0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
+                  loading="eager"
                   onLoad={handleIframeLoad}
+                  onError={(err) => console.warn('YouTube iframe load error:', err)}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-black/90 text-amber-300">
-                  <AlertCircle className="h-8 w-8" />
-                  <span className="ml-2 font-bold">व्हिडिओ उपलब्ध नाही</span>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black/90 text-amber-300 p-6 text-center">
+                  <AlertCircle className="h-10 w-10 text-amber-400" />
+                  <p className="font-bold text-sm">व्हिडिओ उपलब्ध नाही किंवा लिंक बदलली आहे</p>
+                  <button
+                    type="button"
+                    onClick={handleNextSong}
+                    className="flex items-center gap-2 rounded-xl bg-amber-500/20 border border-amber-400/40 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-all cursor-pointer"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                    <span>पुढील गाणे लावा (Next Song)</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -724,6 +725,7 @@ export default function MusicPage() {
             <p className="font-bold">{t('noSongsFound')}</p>
           </div>
         )}
+        </ErrorBoundary>
       </section>
 
       {/* ========================================================= */}

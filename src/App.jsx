@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import BottomMobileNav from './components/BottomMobileNav';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import useDonations from './hooks/useDonations';
@@ -47,45 +48,47 @@ function AppContent() {
 
         {/* Page Routes with Lazy Loading Suspense */}
         <main className="min-h-[70vh]">
-          <Suspense fallback={<PageLoadingFallback />}>
-            <Routes>
-              {/* Devotional Home Page */}
-              <Route path="/" element={<Home />} />
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoadingFallback />}>
+              <Routes>
+                {/* Devotional Home Page */}
+                <Route path="/" element={<Home />} />
 
-              {/* Live TV Dakshina Board (Public display) */}
-              <Route path="/dakshina" element={<DakshinaBoard />} />
+                {/* Live TV Dakshina Board (Public display) */}
+                <Route path="/dakshina" element={<DakshinaBoard />} />
 
-              {/* Ganpati Bhakti Music & Suggestions (YouTube Player) */}
-              <Route path="/music" element={<MusicPage />} />
+                {/* Ganpati Bhakti Music & Suggestions (YouTube Player) */}
+                <Route path="/music" element={<MusicPage />} />
 
-              {/* Login for Volunteers & Admin */}
-              <Route path="/login" element={<Login />} />
+                {/* Login for Volunteers & Admin */}
+                <Route path="/login" element={<Login />} />
 
-            {/* Volunteer Desk - Protected for logged-in users with access */}
-            <Route
-              path="/volunteer"
-              element={
-                <ProtectedRoute>
-                  <VolunteerDesk />
-                </ProtectedRoute>
-              }
-            />
+                {/* Volunteer Desk - Protected for logged-in users with access */}
+                <Route
+                  path="/volunteer"
+                  element={
+                    <ProtectedRoute>
+                      <VolunteerDesk />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Admin Management - Protected strictly for Admin role */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requireRole="admin">
-                  <AdminManagement />
-                </ProtectedRoute>
-              }
-            />
+                {/* Admin Management - Protected strictly for Admin role */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requireRole="admin">
+                      <AdminManagement />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </main>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </main>
 
         {/* Shared Festive Footer */}
         <footer className="mt-14 rounded-3xl border border-amber-500/20 bg-orange-950/25 p-6 md:p-8 text-center backdrop-blur-xl space-y-3">
