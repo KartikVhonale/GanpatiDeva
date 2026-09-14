@@ -413,9 +413,8 @@ export default function AdminManagement() {
     }
   };
 
-  // Toggle Music Suggestion Status (Approved / Rejected)
-  const handleToggleMusicStatus = async (id, currentStatus) => {
-    const nextStatus = currentStatus === 'approved' ? 'rejected' : 'approved';
+  // Set Music Suggestion Status (approved, pending, rejected)
+  const handleSetMusicStatus = async (id, targetStatus) => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/music-suggestions/${id}`, {
         method: 'PATCH',
@@ -423,7 +422,7 @@ export default function AdminManagement() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({ status: targetStatus }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update status');
@@ -923,11 +922,15 @@ export default function AdminManagement() {
           >
             <Music className="h-4 w-4 text-amber-400" />
             <span>{t('tabMusic')}</span>
-            {musicSuggestions.length > 0 && (
+            {musicSuggestions.filter((s) => s.status === 'pending').length > 0 ? (
+              <span className="rounded-full bg-amber-400 text-black px-2 py-0.5 text-[10px] font-extrabold shadow-sm animate-pulse">
+                {musicSuggestions.filter((s) => s.status === 'pending').length} नवीन
+              </span>
+            ) : musicSuggestions.length > 0 ? (
               <span className="rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 text-[10px] font-bold">
                 {musicSuggestions.length}
               </span>
-            )}
+            ) : null}
           </button>
         </div>
       </div>
@@ -2382,29 +2385,45 @@ export default function AdminManagement() {
                       </div>
 
                       {/* Status & Actions */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-500/15">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-500/15">
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
-                            isApproved
+                            item.status === 'approved'
                               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : item.status === 'pending'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                               : 'bg-red-500/20 text-red-300 border-red-500/40'
                           }`}
                         >
-                          {isApproved ? '✓ Live मंजूर' : '✕ अस्वीकृत'}
+                          {item.status === 'approved'
+                            ? '✓ Live मंजूर'
+                            : item.status === 'pending'
+                            ? '⏳ मंजुरी प्रलंबित'
+                            : '✕ अस्वीकृत'}
                         </span>
 
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMusicStatus(item._id || item.id, item.status)}
-                            className={`rounded-xl px-3 py-1 text-xs font-bold border transition cursor-pointer ${
-                              isApproved
-                                ? 'border-amber-500/40 bg-amber-950/40 text-amber-300 hover:bg-amber-900/50'
-                                : 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50'
-                            }`}
-                          >
-                            {isApproved ? 'अस्वीकृत करा' : 'मंजूर करा'}
-                          </button>
+                        <div className="flex items-center gap-1.5">
+                          {item.status !== 'approved' && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetMusicStatus(item._id || item.id, 'approved')}
+                              className="rounded-xl px-2.5 py-1 text-xs font-bold border border-emerald-500/50 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60 transition cursor-pointer"
+                              title="मंजूर करून थेट Live करा"
+                            >
+                              ✓ मंजूर करा
+                            </button>
+                          )}
+
+                          {item.status !== 'rejected' && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetMusicStatus(item._id || item.id, 'rejected')}
+                              className="rounded-xl px-2.5 py-1 text-xs font-bold border border-red-500/40 bg-red-950/50 text-red-300 hover:bg-red-900/60 transition cursor-pointer"
+                              title="अस्वीकृत करा"
+                            >
+                              ✕ अस्वीकृत
+                            </button>
+                          )}
 
                           <button
                             type="button"

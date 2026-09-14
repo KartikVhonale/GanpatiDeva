@@ -314,14 +314,6 @@ export default function MusicPage() {
       const data = await res.json();
       await fetchSongs();
 
-      if (data.suggestion) {
-        const createdSong = {
-          id: data.suggestion._id || data.suggestion.id,
-          ...data.suggestion,
-        };
-        setActiveSong(createdSong);
-      }
-
       setIsSuggestModalOpen(false);
       setSuggestForm({
         title: '',
@@ -334,12 +326,12 @@ export default function MusicPage() {
       });
 
       playTempleBell();
-      showToast(t('songSubmittedSuccess'));
-
-      // Smooth scroll to player
-      if (playerRef.current) {
-        playerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      showToast(
+        data.message ||
+          (isMarathi
+            ? 'गाणे यशस्वीरित्या पाठवले आहे! मंडळाच्या प्रशासक मंजुरीनंतर (Admin Approval) हे गाणे थेट लाइव्ह प्लेअरमध्ये दिसेल.'
+            : 'Song submitted successfully! It will appear live after Mandal Admin approval.')
+      );
     } catch (err) {
       setSubmitError(err.message || 'गाणे सुचवताना त्रुटी आली');
     } finally {
@@ -1004,6 +996,16 @@ export default function MusicPage() {
                     placeholder={t('messagePlaceholder')}
                     className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
                   />
+                </div>
+
+                {/* Approval Notice Banner */}
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-200/90 flex items-start gap-2">
+                  <span className="text-sm">ℹ️</span>
+                  <p>
+                    {isMarathi
+                      ? 'टीप: आपण सुचवलेले गाणे मंडळाच्या पडताळणी व प्रशासक मंजुरीनंतर (Admin Approval) थेट या लाइव्ह प्लेअरमध्ये जोडले जाईल.'
+                      : 'Note: Suggested songs will go live in this player upon Mandal Admin verification and approval.'}
+                  </p>
                 </div>
 
                 {/* Submit CTA */}
