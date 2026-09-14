@@ -24,6 +24,7 @@ import useDonations from '../hooks/useDonations';
 import AshtavinayakSection from '../components/AshtavinayakSection';
 import SymbolismSection from '../components/SymbolismSection';
 import UtsavSchedule from '../components/UtsavSchedule';
+import NoticeBoard from '../components/NoticeBoard';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -437,6 +438,11 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 2.5 MANDAL OFFICIAL NOTICE BOARD (अधिकृत सूचना फलक)                         */}
+      {/* ========================================================================= */}
+      <NoticeBoard />
 
       {/* ========================================================================= */}
       {/* 3. ASHTAVINAYAK SACRED TEMPLES SHOWCASE                                   */}

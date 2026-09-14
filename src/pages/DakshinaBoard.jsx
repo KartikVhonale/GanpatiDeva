@@ -17,7 +17,9 @@ import ScrollingTicker from '../components/ScrollingTicker';
 import useDonations from '../hooks/useDonations';
 import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
 import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
+import { io } from 'socket.io-client';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100];
 
 export default function DakshinaBoard() {
@@ -55,10 +57,11 @@ export default function DakshinaBoard() {
   const [verifyError, setVerifyError] = useState('');
   const [localQrDataUrl, setLocalQrDataUrl] = useState('');
   const [selectedAmount, setSelectedAmount] = useState(101);
+  const [liveNotices, setLiveNotices] = useState([]);
 
   // Dynamic Settings from Admin (fallback to 8484844728@slc)
   const upiId = (settings?.upiId && settings.upiId !== 'mandal.ganpati@upi') ? settings.upiId : '8484844728@slc';
-  const upiName = settings?.upiName || (lang === 'mr' ? 'सार्वजनिक श्री गणेश उत्सव मंडळ' : 'Shree Ganesh Utsav Mandal');
+  const upiName = settings?.upiName || (lang === 'mr' ? 'श्री बाल गणेश मंडळ धानोरा बु.' : 'Shri Baal Ganesh Mandal Dhanora Bk.');
   const qrCodeUrl = settings?.qrCodeUrl || '';
   const qrCodeNote = settings?.qrCodeNote || (lang === 'mr' ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan & offer your humble devotion at Lord Ganesha\'s feet');
 
@@ -104,6 +107,35 @@ export default function DakshinaBoard() {
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Fetch real-time live notices for TV Screen Ticker
+  useEffect(() => {
+    const fetchBoardNotices = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/notices`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.notices)) {
+          setLiveNotices(data.notices);
+        }
+      } catch (e) {}
+    };
+    fetchBoardNotices();
+
+    let socket;
+    try {
+      socket = io(BACKEND_URL, { transports: ['websocket', 'polling'] });
+      socket.on('notices_updated', (data) => {
+        if (data && Array.isArray(data.notices)) {
+          setLiveNotices(data.notices);
+        } else {
+          fetchBoardNotices();
+        }
+      });
+    } catch (e) {}
+    return () => {
+      if (socket) socket.disconnect();
+    };
   }, []);
 
   const toggleFullscreen = () => {
@@ -225,6 +257,27 @@ export default function DakshinaBoard() {
           </button>
         </div>
       </div>
+
+      {/* Real-time Notice Board Ticker for Live Pandal TV Display */}
+      {liveNotices.length > 0 && (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/35 bg-gradient-to-r from-orange-950/80 via-red-950/60 to-black/80 py-2.5 px-3.5 backdrop-blur-xl shadow-md flex items-center gap-3">
+          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black shadow-inner">
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
+            <span>📢 {lang === 'mr' ? 'मंडळ सूचना' : 'Mandal Notice'}:</span>
+          </div>
+          <div className="overflow-hidden whitespace-nowrap w-full">
+            <div className="inline-flex animate-marquee gap-8 text-xs sm:text-sm font-bold text-amber-200">
+              {liveNotices.map((n, i) => (
+                <span key={n._id || i} className="inline-flex items-center gap-2">
+                  <span className="text-amber-400 font-black">[{n.title}]</span>
+                  <span>{n.content}</span>
+                  <span className="text-amber-500/60">✦</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grid: Total Counter (Main) + Dedicated UPI QR Code Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

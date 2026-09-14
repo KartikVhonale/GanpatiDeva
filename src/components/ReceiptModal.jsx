@@ -54,8 +54,8 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
   // WhatsApp formatted receipt text
   const getWhatsAppShareUrl = () => {
     const text = isMarathi
-      ? `॥ श्री गणेशाय नमः ॥\n\n🚩 *सार्वजनिक श्री गणेश उत्सव मंडळ २०२६*\n\n📜 *अधिकृत देणगी पावती (Official Receipt)*\n━━━━━━━━━━━━━━━━━━━━\n• *पावती क्र:* ${receiptNo}\n• *भाविकांचे नाव:* ${devoteeName}\n• *गाव / शहर:* ${city}\n${phone ? `• *मोबाईल:* ${phone}\n` : ''}• *देणगी रक्कम:* ₹${formattedAmount}/-\n• *सेवा प्रकार:* ${category}\n• *पेमेंट माध्यम:* ${paymentMode}${utrNumber ? ` (UTR: ${utrNumber})` : ''}\n• *तारीख व वेळ:* ${dateStr}, ${timeStr}\n• *पावती देणारा:* ${recordedBy}\n━━━━━━━━━━━━━━━━━━━━\nबाप्पाच्या चरणी आपली सेवा रुजू झाली आहे!\nश्री गणेश कृपेने आपल्या सर्व मनोकामना पूर्ण होवोत.\n\n॥ गणपती बाप्पा मोरया, मंगलमूर्ती मोरया ॥`
-      : `|| Shree Ganeshaya Namah ||\n\n🚩 *Shree Ganesh Utsav Mandal 2026*\n\n📜 *Official Donation Receipt*\n━━━━━━━━━━━━━━━━━━━━\n• *Receipt No:* ${receiptNo}\n• *Devotee Name:* ${devoteeName}\n• *City / Locality:* ${city}\n${phone ? `• *Mobile:* ${phone}\n` : ''}• *Donation Amount:* ₹${formattedAmount}/-\n• *Seva Offering:* ${category}\n• *Payment Mode:* ${paymentMode}${utrNumber ? ` (UTR: ${utrNumber})` : ''}\n• *Date & Time:* ${dateStr}, ${timeStr}\n• *Issued By:* ${recordedBy}\n━━━━━━━━━━━━━━━━━━━━\nYour devotional offering has been gratefully accepted at Lord Ganesha's sacred feet!\nMay Bappa bless you and your family with health, happiness and prosperity.\n\n|| Ganpati Bappa Morya ||`;
+      ? `॥ श्री गणेशाय नमः ॥\n\n🚩 *श्री बाल गणेश मंडळ धानोरा बु. २०२६*\n\n📜 *अधिकृत देणगी पावती (Official Receipt)*\n━━━━━━━━━━━━━━━━━━━━\n• *पावती क्र:* ${receiptNo}\n• *भाविकांचे नाव:* ${devoteeName}\n• *गाव / शहर:* ${city}\n${phone ? `• *मोबाईल:* ${phone}\n` : ''}• *देणगी रक्कम:* ₹${formattedAmount}/-\n• *सेवा प्रकार:* ${category}\n• *पेमेंट माध्यम:* ${paymentMode}${utrNumber ? ` (UTR: ${utrNumber})` : ''}\n• *तारीख व वेळ:* ${dateStr}, ${timeStr}\n• *पावती देणारा:* ${recordedBy}\n━━━━━━━━━━━━━━━━━━━━\nबाप्पाच्या चरणी आपली सेवा रुजू झाली आहे!\nश्री गणेश कृपेने आपल्या सर्व मनोकामना पूर्ण होवोत.\n\n॥ गणपती बाप्पा मोरया, मंगलमूर्ती मोरया ॥`
+      : `|| Shree Ganeshaya Namah ||\n\n🚩 *Shri Baal Ganesh Mandal Dhanora Bk. 2026*\n\n📜 *Official Donation Receipt*\n━━━━━━━━━━━━━━━━━━━━\n• *Receipt No:* ${receiptNo}\n• *Devotee Name:* ${devoteeName}\n• *City / Locality:* ${city}\n${phone ? `• *Mobile:* ${phone}\n` : ''}• *Donation Amount:* ₹${formattedAmount}/-\n• *Seva Offering:* ${category}\n• *Payment Mode:* ${paymentMode}${utrNumber ? ` (UTR: ${utrNumber})` : ''}\n• *Date & Time:* ${dateStr}, ${timeStr}\n• *Issued By:* ${recordedBy}\n━━━━━━━━━━━━━━━━━━━━\nYour devotional offering has been gratefully accepted at Lord Ganesha's sacred feet!\nMay Bappa bless you and your family with health, happiness and prosperity.\n\n|| Ganpati Bappa Morya ||`;
 
     const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
     let phoneParam = '';
@@ -75,7 +75,7 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
   };
 
   const handleCopyReceipt = () => {
-    const text = `॥ श्री गणेशाय नमः ॥\nसार्वजनिक श्री गणेश उत्सव मंडळ २०२६\nपावती क्र: ${receiptNo}\nनाव: ${devoteeName}\nरक्कम: ₹${formattedAmount}\nसेवा: ${category}\nपेमेंट: ${paymentMode}\nतारीख: ${dateStr} ${timeStr}\nपावती देणारा: ${recordedBy}\n॥ गणपती बाप्पा मोरया ॥`;
+    const text = `॥ श्री गणेशाय नमः ॥\nश्री बाल गणेश मंडळ धानोरा बु. २०२६\nपावती क्र: ${receiptNo}\nनाव: ${devoteeName}\nरक्कम: ₹${formattedAmount}\nसेवा: ${category}\nपेमेंट: ${paymentMode}\nतारीख: ${dateStr} ${timeStr}\nपावती देणारा: ${recordedBy}\n॥ गणपती बाप्पा मोरया ॥`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -111,10 +111,10 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
               ॥ श्री गणेशाय नमः ॥
             </div>
             <h2 className="text-lg sm:text-xl font-black text-amber-950 tracking-tight leading-tight">
-              सार्वजनिक श्री गणेश उत्सव मंडळ
+              {isMarathi ? 'श्री बाल गणेश मंडळ' : 'Shri Baal Ganesh Mandal'}
             </h2>
             <div className="text-[11px] font-semibold text-amber-900/80">
-              धानोरा बुद्रुक • उत्सव वर्ष २०२६
+              {isMarathi ? 'धानोरा बुद्रुक • उत्सव वर्ष २०२६' : 'Dhanora Bk. • Utsav Year 2026'}
             </div>
             <div className="inline-block mt-1 px-3 py-0.5 rounded-full bg-amber-600 text-white font-bold text-[10px] uppercase tracking-wider shadow-sm">
               {isMarathi ? 'अधिकृत देणगी पावती' : 'Official Donation Receipt'}

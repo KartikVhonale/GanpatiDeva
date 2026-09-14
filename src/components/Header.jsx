@@ -5,13 +5,14 @@ import websiteIcon from '../assets/svg.png';
 
 export default function Header({ 
   mandalName, 
-  location = "Dhanora bk", 
+  location, 
   tagline,
   isConnected = false,
 }) {
   const { t, isMarathi } = useLanguage();
 
   const displayMandalName = mandalName || t('mandalName');
+  const displayLocation = location || (isMarathi ? "धानोरा बुद्रुक" : "Dhanora Bk.");
   const displayTagline = tagline || (isMarathi
     ? "वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ • निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा"
     : "May Lord Ganesha remove all obstacles and shower divine blessings upon you");
@@ -64,7 +65,7 @@ export default function Header({
             </h1>
 
             <p className="text-xs md:text-sm text-orange-200/80 mt-0.5 font-medium flex items-center justify-center md:justify-start gap-1">
-              <span>📍 {location}</span>
+              <span>📍 {displayLocation}</span>
             </p>
             <p className="text-[11px] text-amber-200/70 italic mt-1 max-w-md">
               {displayTagline}
