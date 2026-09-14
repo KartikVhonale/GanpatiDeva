@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
   Tv,
+  Music,
   UserCheck,
   Bell,
   Shield,
@@ -50,6 +51,11 @@ export default function Navbar({ isConnected }) {
       label: t('liveBoard'),
       icon: Tv,
       highlight: true,
+    },
+    {
+      to: '/music',
+      label: t('musicShort'),
+      icon: Music,
     },
     {
       to: '/volunteer',

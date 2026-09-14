@@ -25,11 +25,10 @@ import {
   EyeOff,
   ShieldAlert,
   Clock,
-  Lock,
   Receipt,
   Megaphone,
   Edit3,
-  Pin,
+  Music,
 } from 'lucide-react';
 import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
 import ReceiptModal from '../components/ReceiptModal';
@@ -47,7 +46,7 @@ export default function AdminManagement() {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['verification', 'settings', 'notices', 'users', 'donations', 'security'].includes(tabParam)) {
+    if (tabParam && ['verification', 'settings', 'notices', 'users', 'donations', 'security', 'music'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -115,6 +114,10 @@ export default function AdminManagement() {
     priority: 'normal',
     isActive: true,
   });
+
+  // 7. Music Suggestions Management State
+  const [musicSuggestions, setMusicSuggestions] = useState([]);
+  const [loadingMusicSuggestions, setLoadingMusicSuggestions] = useState(false);
 
   // General Feedback Toast
   const [feedback, setFeedback] = useState({ type: '', message: '' });
@@ -262,6 +265,24 @@ export default function AdminManagement() {
     }
   }, [token]);
 
+  // Fetch Devotee Music Suggestions
+  const fetchMusicSuggestions = useCallback(async () => {
+    setLoadingMusicSuggestions(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/music-suggestions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.suggestions)) {
+        setMusicSuggestions(data.suggestions);
+      }
+    } catch (err) {
+      console.error('Error fetching music suggestions:', err);
+    } finally {
+      setLoadingMusicSuggestions(false);
+    }
+  }, [token]);
+
   // Initial Load
   useEffect(() => {
     fetchUsers();
@@ -270,7 +291,8 @@ export default function AdminManagement() {
     fetchAdminDonations();
     fetchBlockedIps();
     fetchAdminNotices();
-  }, [fetchUsers, fetchSettings, fetchPaymentRequests, fetchAdminDonations, fetchBlockedIps, fetchAdminNotices]);
+    fetchMusicSuggestions();
+  }, [fetchUsers, fetchSettings, fetchPaymentRequests, fetchAdminDonations, fetchBlockedIps, fetchAdminNotices, fetchMusicSuggestions]);
 
   // Refresh All
   const refreshAll = () => {
@@ -280,6 +302,7 @@ export default function AdminManagement() {
     fetchAdminDonations();
     fetchBlockedIps();
     fetchAdminNotices();
+    fetchMusicSuggestions();
   };
 
   // Create or Update Notice
@@ -385,6 +408,56 @@ export default function AdminManagement() {
         type: 'success',
         message: isMarathi ? 'सूचना यशस्वीरित्या हटवली!' : 'Notice deleted successfully!',
       });
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message });
+    }
+  };
+
+  // Toggle Music Suggestion Status (Approved / Rejected)
+  const handleToggleMusicStatus = async (id, currentStatus) => {
+    const nextStatus = currentStatus === 'approved' ? 'rejected' : 'approved';
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/music-suggestions/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update status');
+
+      setFeedback({
+        type: 'success',
+        message: data.message || (isMarathi ? 'गाण्याची स्थिती अद्ययावत झाली!' : 'Music status updated!'),
+      });
+      fetchMusicSuggestions();
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message });
+    }
+  };
+
+  // Delete Music Suggestion
+  const handleDeleteMusicSuggestion = async (id, title) => {
+    const confirmPrompt = isMarathi
+      ? `खरोखर "${title}" हे गाणे हटवायचे आहे का?`
+      : `Are you sure you want to delete "${title}"?`;
+    if (!window.confirm(confirmPrompt)) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/music-suggestions/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete suggestion');
+
+      setFeedback({
+        type: 'success',
+        message: data.message || (isMarathi ? 'गाणे यशस्वीरित्या हटवले!' : 'Song deleted!'),
+      });
+      fetchMusicSuggestions();
     } catch (err) {
       setFeedback({ type: 'error', message: err.message });
     }
@@ -834,6 +907,25 @@ export default function AdminManagement() {
             {blockedIps.length > 0 && (
               <span className="rounded-full bg-red-600 text-white px-2 py-0.5 text-[10px] font-black animate-pulse">
                 {blockedIps.length}
+              </span>
+            )}
+          </button>
+
+          {/* Tab 7: Music Suggestions (भक्ती संगीत) */}
+          <button
+            type="button"
+            onClick={() => handleTabChange('music')}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeTab === 'music'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
+                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
+            }`}
+          >
+            <Music className="h-4 w-4 text-amber-400" />
+            <span>{t('tabMusic')}</span>
+            {musicSuggestions.length > 0 && (
+              <span className="rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 text-[10px] font-bold">
+                {musicSuggestions.length}
               </span>
             )}
           </button>
@@ -2184,6 +2276,160 @@ export default function AdminManagement() {
                 <Megaphone className="h-8 w-8 text-amber-400/40 mx-auto mb-2" />
                 <p className="text-xs sm:text-sm text-orange-200/60 font-semibold">
                   {isMarathi ? 'अद्याप कोणतीही सूचना तयार केलेली नाही. वरील फॉर्म वापरून पहिली सूचना प्रकाशित करा.' : 'No announcements created yet. Use the form above to publish the first one.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* TAB 7: DEVOTEE MUSIC SUGGESTIONS MANAGEMENT                          */}
+      {/* ===================================================================== */}
+      {activeTab === 'music' && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-stone-950/80 to-black/90 backdrop-blur-xl">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                <Music className="h-4 w-4" />
+                <span>{t('mandalName')}</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                {t('adminMusicTitle')}
+              </h3>
+              <p className="text-xs text-orange-200/70">
+                {t('adminMusicSub')}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/music"
+                className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:scale-105 transition-all"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>{isMarathi ? 'संगीत प्लेअर उघडा ↗' : 'Open Music Player ↗'}</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Suggestions List */}
+          <div className="space-y-3">
+            {loadingMusicSuggestions ? (
+              <div className="p-12 text-center text-orange-200/60 rounded-3xl border border-amber-500/20 bg-black/40">
+                <span className="inline-block h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mb-2" />
+                <p className="text-xs">{t('loading')}</p>
+              </div>
+            ) : musicSuggestions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {musicSuggestions.map((item) => {
+                  const isApproved = item.status === 'approved';
+                  return (
+                    <div
+                      key={item._id || item.id}
+                      className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-4 backdrop-blur-xl space-y-3 flex flex-col justify-between"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1 min-w-0">
+                          <span className="rounded-full bg-amber-500/20 border border-amber-400/30 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase">
+                            {item.category}
+                          </span>
+                          <h4 className="font-bold text-white text-base tracking-tight truncate">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs text-orange-200/70">
+                            {item.singer || 'सुचवलेले गाणे'}
+                          </p>
+                        </div>
+
+                        {/* YouTube Preview Thumbnail */}
+                        {item.youtubeId && (
+                          <a
+                            href={`https://www.youtube.com/watch?v=${item.youtubeId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="relative h-16 w-24 rounded-xl overflow-hidden shrink-0 border border-amber-500/30 group"
+                            title="Watch on YouTube"
+                          >
+                            <img
+                              src={`https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg`}
+                              alt={item.title}
+                              className="h-full w-full object-cover group-hover:scale-110 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                              <ExternalLink className="h-4 w-4 text-white" />
+                            </div>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Devotee Info & Message */}
+                      <div className="text-xs space-y-1 pt-2 border-t border-amber-500/15">
+                        <div className="flex items-center justify-between text-orange-200/80">
+                          <span className="font-semibold text-amber-300">
+                            👤 {item.suggestedBy || 'अनामिक भाविक'} {item.phone ? `(${item.phone})` : ''}
+                          </span>
+                          <span className="text-[10px] text-orange-200/50">
+                            {new Date(item.createdAt).toLocaleDateString('mr-IN')}
+                          </span>
+                        </div>
+                        {item.message && (
+                          <p className="italic text-orange-200/70 text-[11px] bg-black/30 p-2 rounded-lg border border-amber-500/10">
+                            "{item.message}"
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Status & Actions */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-500/15">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                            isApproved
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : 'bg-red-500/20 text-red-300 border-red-500/40'
+                          }`}
+                        >
+                          {isApproved ? '✓ Live मंजूर' : '✕ अस्वीकृत'}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMusicStatus(item._id || item.id, item.status)}
+                            className={`rounded-xl px-3 py-1 text-xs font-bold border transition cursor-pointer ${
+                              isApproved
+                                ? 'border-amber-500/40 bg-amber-950/40 text-amber-300 hover:bg-amber-900/50'
+                                : 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50'
+                            }`}
+                          >
+                            {isApproved ? 'अस्वीकृत करा' : 'मंजूर करा'}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMusicSuggestion(item._id || item.id, item.title)}
+                            className="p-1.5 rounded-xl border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60 transition cursor-pointer"
+                            title={t('delete')}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-14 text-center rounded-3xl border border-dashed border-amber-500/25 bg-black/40 p-8 space-y-2">
+                <Music className="h-10 w-10 text-amber-400/40 mx-auto" />
+                <p className="text-sm font-bold text-white">
+                  {isMarathi ? 'अद्याप कोणत्याही भाविकाने गाणे सुचवलेले नाही.' : 'No music suggestions submitted yet.'}
+                </p>
+                <p className="text-xs text-orange-200/60">
+                  {isMarathi
+                    ? 'भाविक संगीत पृष्ठावरून बाप्पाची आवडती गाणी सुचवू शकतात.'
+                    : 'Devotees can suggest their favorite Ganpati songs from the music page.'}
                 </p>
               </div>
             )}

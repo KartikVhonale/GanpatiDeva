@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Tv, UserCheck, Shield, LogIn } from 'lucide-react';
+import { Home, Tv, Music, UserCheck, Shield, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -19,6 +19,11 @@ export default function BottomMobileNav() {
       label: t('liveBoardShort'),
       icon: Tv,
       highlight: true,
+    },
+    {
+      to: '/music',
+      label: t('musicShort'),
+      icon: Music,
     },
     {
       to: '/volunteer',

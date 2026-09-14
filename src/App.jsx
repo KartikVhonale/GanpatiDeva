@@ -1,8 +1,10 @@
 import React from 'react';
+import { Analytics } from "@vercel/analytics/next"
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import DakshinaBoard from './pages/DakshinaBoard';
+import MusicPage from './pages/MusicPage';
 import VolunteerDesk from './pages/VolunteerDesk';
 import AdminManagement from './pages/AdminManagement';
 import Login from './pages/Login';
@@ -37,6 +39,9 @@ function AppContent() {
 
             {/* Live TV Dakshina Board (Public display) */}
             <Route path="/dakshina" element={<DakshinaBoard />} />
+
+            {/* Ganpati Bhakti Music & Suggestions (YouTube Player) */}
+            <Route path="/music" element={<MusicPage />} />
 
             {/* Login for Volunteers & Admin */}
             <Route path="/login" element={<Login />} />
