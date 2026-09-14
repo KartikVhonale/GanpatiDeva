@@ -1,7 +1,7 @@
-﻿User-agent: *
+User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /volunteer
 Disallow: /login
 
-Sitemap: /sitemap.xml
+Sitemap: https://ganaptidhanora.vercel.app/sitemap.xml
