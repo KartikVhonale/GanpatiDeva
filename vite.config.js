@@ -8,9 +8,4 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  resolve: {
-    alias: {
-      '@vercel/analytics/next': '@vercel/analytics/react',
-    },
-  },
 })
