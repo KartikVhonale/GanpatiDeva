@@ -78,6 +78,25 @@ export default function MusicPage() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const playerRef = useRef(null);
+  const iframeRef = useRef(null);
+  const ytPlayerRef = useRef(null);
+  const [autoPlayNext, setAutoPlayNext] = useState(true);
+  const autoPlayNextRef = useRef(autoPlayNext);
+  autoPlayNextRef.current = autoPlayNext;
+
+  // Load YouTube Iframe API script once for auto-play transition detection
+  useEffect(() => {
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      if (firstScriptTag && firstScriptTag.parentNode) {
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      } else {
+        document.head.appendChild(tag);
+      }
+    }
+  }, []);
 
   // Fetch all songs directly from MongoDB Atlas API
   const fetchSongs = useCallback(async () => {
@@ -200,31 +219,105 @@ export default function MusicPage() {
     }
   };
 
-  // Next / Previous song
-  const handleNextSong = () => {
-    const currentIndex = songs.findIndex((s) => s.id === activeSong.id);
-    if (currentIndex !== -1) {
-      const nextIndex = (currentIndex + 1) % songs.length;
-      setActiveSong(songs[nextIndex]);
-    }
-  };
+  // Next / Previous song (memoized with useCallback)
+  const handleNextSong = useCallback(() => {
+    if (!songs || songs.length === 0) return;
+    setActiveSong((prev) => {
+      if (!prev) return songs[0];
+      const currentIndex = songs.findIndex((s) => (s.id || s._id) === (prev.id || prev._id));
+      const nextIndex = currentIndex !== -1 ? (currentIndex + 1) % songs.length : 0;
+      return songs[nextIndex];
+    });
+  }, [songs]);
 
-  const handlePrevSong = () => {
-    const currentIndex = songs.findIndex((s) => s.id === activeSong.id);
-    if (currentIndex !== -1) {
-      const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-      setActiveSong(songs[prevIndex]);
-    }
-  };
+  const handlePrevSong = useCallback(() => {
+    if (!songs || songs.length === 0) return;
+    setActiveSong((prev) => {
+      if (!prev) return songs[0];
+      const currentIndex = songs.findIndex((s) => (s.id || s._id) === (prev.id || prev._id));
+      const prevIndex = currentIndex !== -1 ? (currentIndex - 1 + songs.length) % songs.length : 0;
+      return songs[prevIndex];
+    });
+  }, [songs]);
 
-  const handleShuffle = () => {
-    if (songs.length <= 1) return;
-    let randomIndex;
-    do {
-      randomIndex = Math.floor(Math.random() * songs.length);
-    } while (songs[randomIndex].id === activeSong.id);
-    setActiveSong(songs[randomIndex]);
+  const handleShuffle = useCallback(() => {
+    if (!songs || songs.length <= 1) return;
+    setActiveSong((prev) => {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * songs.length);
+      } while (prev && (songs[randomIndex].id || songs[randomIndex]._id) === (prev.id || prev._id));
+      return songs[randomIndex];
+    });
     showToast('🎲 यादृच्छिक गाणे सुरू झाले!');
+  }, [songs]);
+
+  // Initialize YT.Player on the iframe to capture onStateChange (ENDED = 0)
+  const initYTPlayer = useCallback(() => {
+    if (!window.YT || !window.YT.Player || !iframeRef.current) return;
+    try {
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
+        ytPlayerRef.current.destroy();
+      }
+      ytPlayerRef.current = new window.YT.Player(iframeRef.current, {
+        events: {
+          onStateChange: (event) => {
+            // event.data === 0 means video ENDED
+            if (event.data === 0 && autoPlayNextRef.current) {
+              console.log('🎵 YouTube track ended (onStateChange). Automatically playing next track...');
+              handleNextSong();
+            }
+          },
+        },
+      });
+    } catch (_) {}
+  }, [handleNextSong]);
+
+  useEffect(() => {
+    if (window.YT && window.YT.Player) {
+      initYTPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = () => {
+        initYTPlayer();
+      };
+    }
+  }, [activeSong?.youtubeId, initYTPlayer]);
+
+  // Window message listener fallback for YouTube iframe postMessage
+  useEffect(() => {
+    const handleWindowMessage = (e) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        // YouTube embeds send { event: 'onStateChange', info: 0 } when video finishes
+        if (
+          data &&
+          ((data.event === 'onStateChange' && (data.info === 0 || data.info === '0')) ||
+            (data.data && data.data.playerState === 0))
+        ) {
+          if (autoPlayNextRef.current) {
+            console.log('🎵 YouTube track finished (postMessage). Automatically playing next track...');
+            handleNextSong();
+          }
+        }
+      } catch (_) {}
+    };
+
+    window.addEventListener('message', handleWindowMessage);
+    return () => window.removeEventListener('message', handleWindowMessage);
+  }, [handleNextSong]);
+
+  // Handshake with YouTube iframe on load
+  const handleIframeLoad = () => {
+    try {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage('{"event":"listening","id":1}', '*');
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }),
+          '*'
+        );
+      }
+    } catch (_) {}
+    initYTPlayer();
   };
 
   // Handle like song
@@ -473,12 +566,17 @@ export default function MusicPage() {
             <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl">
               {activeSong.youtubeId ? (
                 <iframe
+                  ref={iframeRef}
+                  id="ganpati-youtube-iframe"
                   key={activeSong.youtubeId}
-                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1`}
+                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(
+                    typeof window !== 'undefined' ? window.location.origin : ''
+                  )}`}
                   title={activeSong.title}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
+                  onLoad={handleIframeLoad}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-black/90 text-amber-300">
@@ -537,14 +635,51 @@ export default function MusicPage() {
                 )}
               </div>
 
-              {/* Controls Row */}
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Controls Row with Autoplay Toggle */}
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                {/* Autoplay Next Song Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAutoPlayNext((prev) => {
+                      const next = !prev;
+                      showToast(
+                        next
+                          ? (isMarathi ? 'ऑटो-प्ले चालू (गाणे संपल्यावर पुढील गाणे आपोआप सुरू होईल 🎶)' : 'Autoplay ON - Next song will play automatically')
+                          : (isMarathi ? 'ऑटो-प्ले बंद' : 'Autoplay OFF')
+                      );
+                      return next;
+                    });
+                  }}
+                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                    autoPlayNext
+                      ? 'border-emerald-500/50 bg-emerald-950/60 text-emerald-300 shadow-sm shadow-emerald-900/40 ring-1 ring-emerald-400/40'
+                      : 'border-amber-500/25 bg-orange-950/40 text-orange-200/60 hover:text-white'
+                  }`}
+                  title={autoPlayNext ? 'ऑटो-प्ले चालू (गाणे संपल्यावर पुढील गाणे आपोआप सुरू होईल)' : 'ऑटो-प्ले बंद करा'}
+                >
+                  <Radio className={`h-3.5 w-3.5 ${autoPlayNext ? 'text-emerald-400 animate-pulse' : ''}`} />
+                  <span className="hidden xs:inline">
+                    {autoPlayNext
+                      ? (isMarathi ? 'अखंड संगीत (Auto Next)' : 'Auto Next ON')
+                      : (isMarathi ? 'ऑटो-प्ले बंद' : 'Auto Next OFF')}
+                  </span>
+                </button>
+
                 <button
                   onClick={handlePrevSong}
                   className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
                   title="मागील गाणे (Previous)"
                 >
                   <SkipBack className="h-4 w-4" />
+                </button>
+
+                <button
+                  onClick={handleShuffle}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
+                  title="यादृच्छिक गाणे (Shuffle)"
+                >
+                  <Shuffle className="h-4 w-4" />
                 </button>
 
                 <button

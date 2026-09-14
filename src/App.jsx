@@ -1,18 +1,32 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Analytics } from "@vercel/analytics/react";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import DakshinaBoard from './pages/DakshinaBoard';
-import MusicPage from './pages/MusicPage';
-import VolunteerDesk from './pages/VolunteerDesk';
-import AdminManagement from './pages/AdminManagement';
-import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import BottomMobileNav from './components/BottomMobileNav';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import useDonations from './hooks/useDonations';
+
+// Code-split route components for instant initial load and high mobile scalability
+const Home = React.lazy(() => import('./pages/Home'));
+const DakshinaBoard = React.lazy(() => import('./pages/DakshinaBoard'));
+const MusicPage = React.lazy(() => import('./pages/MusicPage'));
+const VolunteerDesk = React.lazy(() => import('./pages/VolunteerDesk'));
+const AdminManagement = React.lazy(() => import('./pages/AdminManagement'));
+const Login = React.lazy(() => import('./pages/Login'));
+
+// Festive fast loading spinner for route transitions
+function PageLoadingFallback() {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+      <div className="h-10 w-10 animate-spin rounded-full border-3 border-amber-500/30 border-t-amber-400" />
+      <span className="text-xs font-bold text-amber-200/75 animate-pulse font-serif tracking-wide">
+        ॥ श्री गणेशाय नमः ॥ लोड होत आहे...
+      </span>
+    </div>
+  );
+}
 
 function AppContent() {
   const { isConnected } = useDonations();
@@ -31,20 +45,21 @@ function AppContent() {
         {/* Shared Festive Navbar with Language Switcher */}
         <Navbar isConnected={isConnected} />
 
-        {/* Page Routes */}
+        {/* Page Routes with Lazy Loading Suspense */}
         <main className="min-h-[70vh]">
-          <Routes>
-            {/* Devotional Home Page */}
-            <Route path="/" element={<Home />} />
+          <Suspense fallback={<PageLoadingFallback />}>
+            <Routes>
+              {/* Devotional Home Page */}
+              <Route path="/" element={<Home />} />
 
-            {/* Live TV Dakshina Board (Public display) */}
-            <Route path="/dakshina" element={<DakshinaBoard />} />
+              {/* Live TV Dakshina Board (Public display) */}
+              <Route path="/dakshina" element={<DakshinaBoard />} />
 
-            {/* Ganpati Bhakti Music & Suggestions (YouTube Player) */}
-            <Route path="/music" element={<MusicPage />} />
+              {/* Ganpati Bhakti Music & Suggestions (YouTube Player) */}
+              <Route path="/music" element={<MusicPage />} />
 
-            {/* Login for Volunteers & Admin */}
-            <Route path="/login" element={<Login />} />
+              {/* Login for Volunteers & Admin */}
+              <Route path="/login" element={<Login />} />
 
             {/* Volunteer Desk - Protected for logged-in users with access */}
             <Route
@@ -69,7 +84,8 @@ function AppContent() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </main>
+        </Suspense>
+      </main>
 
         {/* Shared Festive Footer */}
         <footer className="mt-14 rounded-3xl border border-amber-500/20 bg-orange-950/25 p-6 md:p-8 text-center backdrop-blur-xl space-y-3">
