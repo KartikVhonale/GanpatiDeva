@@ -25,6 +25,7 @@ import {
   Headphones,
   Bell,
   Tv,
+  Maximize2,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { playTempleBell } from '../utils/audio';
@@ -79,7 +80,9 @@ export default function MusicPage() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const playerRef = useRef(null);
+  const videoContainerRef = useRef(null);
   const iframeRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [autoPlayNext, setAutoPlayNext] = useState(true);
   const autoPlayNextRef = useRef(autoPlayNext);
   autoPlayNextRef.current = autoPlayNext;
@@ -238,6 +241,40 @@ export default function MusicPage() {
     });
     showToast('🎲 यादृच्छिक गाणे सुरू झाले!');
   }, [songs]);
+
+  // Mobile-optimized Fullscreen / Theater Mode toggle
+  const toggleFullscreen = useCallback(() => {
+    if (!videoContainerRef.current) return;
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (videoContainerRef.current.requestFullscreen) {
+          videoContainerRef.current.requestFullscreen();
+        } else if (videoContainerRef.current.webkitRequestFullscreen) {
+          videoContainerRef.current.webkitRequestFullscreen();
+        }
+        setIsFullscreen(true);
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        setIsFullscreen(false);
+      }
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+    };
+  }, []);
 
   // Window postMessage listener for YouTube embed events (Auto-play Next & Error resilience)
   useEffect(() => {
@@ -488,14 +525,14 @@ export default function MusicPage() {
               <span>{t('suggestSongBtn')}</span>
             </button>
 
-            <Link
+            {/* <Link
               to="/dakshina"
               className="flex items-center gap-2 rounded-2xl border border-amber-500/35 bg-orange-950/60 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-amber-300 hover:bg-orange-900/60 transition-all"
             >
               <Tv className="h-4 w-4 text-amber-400" />
               <span className="hidden sm:inline">{t('liveBoard')}</span>
               <span className="sm:hidden">{t('liveBoardShort')}</span>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </header>
@@ -503,98 +540,110 @@ export default function MusicPage() {
       {/* ========================================================= */}
       {/* THEATER MODE / NOW PLAYING YOUTUBE VIDEO PLAYER           */}
       {/* ========================================================= */}
-      <section ref={playerRef} className="space-y-4">
+      <section ref={playerRef} className="scroll-mt-20 sm:scroll-mt-24 space-y-3 sm:space-y-4">
         <ErrorBoundary onReset={fetchSongs}>
           {isLoading ? (
-          <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)] text-center space-y-4">
-            <div className="flex items-center justify-center gap-2 text-amber-400 font-black text-sm sm:text-base">
-              <Sparkles className="h-5 w-5 animate-spin text-amber-400" />
-              <span>{isMarathi ? 'MongoDB मधून भक्ती संगीत थेट लोड होत आहे...' : 'Loading music directly from MongoDB Atlas...'}</span>
+          <div className="rounded-2xl sm:rounded-3xl border border-amber-500/35 bg-black/80 p-5 sm:p-10 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)] text-center space-y-4">
+            <div className="flex items-center justify-center gap-2 text-amber-400 font-black text-xs sm:text-base">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-amber-400" />
+              <span>{isMarathi ? 'भक्ती संगीत थेट लोड होत आहे...' : 'Loading devotional music...'}</span>
             </div>
-            <div className="aspect-video max-w-2xl mx-auto rounded-2xl bg-orange-950/20 border border-amber-500/20 flex items-center justify-center animate-pulse">
-              <Music className="h-14 w-14 text-amber-500/40 animate-bounce" />
+            <div className="aspect-video max-w-2xl mx-auto rounded-xl sm:rounded-2xl bg-orange-950/20 border border-amber-500/20 flex items-center justify-center animate-pulse">
+              <Music className="h-10 w-10 sm:h-14 sm:w-14 text-amber-500/40 animate-bounce" />
             </div>
           </div>
         ) : activeSong ? (
-          <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-3 sm:p-5 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)]">
-            {/* Top Status Bar of Player */}
-            <div className="flex items-center justify-between gap-2 pb-3 px-1 border-b border-amber-500/20 mb-3 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="flex h-2.5 w-2.5 relative">
+          <div className="rounded-2xl sm:rounded-3xl border border-amber-500/35 bg-black/85 p-2 sm:p-4 md:p-5 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)]">
+            {/* Top Status Bar of Player Window */}
+            <div className="flex items-center justify-between gap-1.5 pb-2 sm:pb-3 px-1 border-b border-amber-500/20 mb-2 sm:mb-3 text-xs">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="flex h-2 w-2 sm:h-2.5 sm:w-2.5 relative shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-emerald-500" />
                 </span>
-                <span className="font-bold text-amber-300 uppercase tracking-wider text-[11px] sm:text-xs flex items-center gap-1.5">
-                  <Radio className="h-3.5 w-3.5 text-red-500 animate-pulse" />
-                  {t('nowPlaying')}
+                <span className="font-bold text-amber-300 uppercase tracking-wider text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 truncate">
+                  <Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-500 animate-pulse shrink-0" />
+                  <span>{t('nowPlaying')}</span>
                 </span>
                 {activeSong.isSuggestion && (
-                  <span className="rounded-full bg-rose-500/20 border border-rose-400/40 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+                  <span className="rounded-full bg-rose-500/20 border border-rose-400/40 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-rose-300 shrink-0">
                     {t('catMusicSuggestions')}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <button
+                  onClick={toggleFullscreen}
+                  title={isFullscreen ? 'सामान्य पडदा (Exit Fullscreen)' : 'मोठा पडदा (Theater/Fullscreen)'}
+                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2 sm:px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                >
+                  <Maximize2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">{isFullscreen ? 'Exit' : 'Theater'}</span>
+                </button>
                 <button
                   onClick={handleShuffle}
                   title="Shuffle / Random"
-                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2 sm:px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
                 >
-                  <Shuffle className="h-3.5 w-3.5 text-amber-400" />
+                  <Shuffle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />
                   <span className="hidden sm:inline">Shuffle</span>
                 </button>
                 <button
                   onClick={handleShare}
                   title="Share Song"
-                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2 sm:px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
                 >
-                  {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 text-amber-400" />}
+                  {copiedLink ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" /> : <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />}
                   <span className="hidden sm:inline">{copiedLink ? 'Copied' : t('shareSong')}</span>
                 </button>
               </div>
             </div>
 
-            {/* YouTube Responsive Video Container */}
-            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl">
+            {/* YouTube Responsive Video Container Window */}
+            <div
+              ref={videoContainerRef}
+              className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-amber-500/35 shadow-2xl ring-1 ring-amber-400/20"
+            >
               {activeSong.youtubeId ? (
                 <iframe
                   ref={iframeRef}
                   id="ganpati-youtube-iframe"
                   key={activeSong.youtubeId}
-                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1&playsinline=1`}
+                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1&playsinline=1&modestbranding=1&iv_load_policy=3&fs=1`}
                   title={activeSong.title}
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  className="absolute inset-0 w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                   allowFullScreen
                   loading="eager"
                   onLoad={handleIframeLoad}
                   onError={(err) => console.warn('YouTube iframe load error:', err)}
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black/90 text-amber-300 p-6 text-center">
-                  <AlertCircle className="h-10 w-10 text-amber-400" />
-                  <p className="font-bold text-sm">व्हिडिओ उपलब्ध नाही किंवा लिंक बदलली आहे</p>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2.5 bg-black/90 text-amber-300 p-4 sm:p-6 text-center">
+                  <AlertCircle className="h-8 w-8 sm:h-10 sm:w-10 text-amber-400" />
+                  <p className="font-bold text-xs sm:text-sm">व्हिडिओ उपलब्ध नाही किंवा लिंक बदलली आहे</p>
                   <button
                     type="button"
                     onClick={handleNextSong}
-                    className="flex items-center gap-2 rounded-xl bg-amber-500/20 border border-amber-400/40 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 px-3.5 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-all cursor-pointer"
                   >
-                    <SkipForward className="h-4 w-4" />
+                    <SkipForward className="h-3.5 w-3.5" />
                     <span>पुढील गाणे लावा (Next Song)</span>
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Player Metadata & Control Row */}
-            <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
-              <div className="space-y-1.5 min-w-0">
+            {/* Player Metadata & Controls - Highly Optimized for Phone Screens & Desktop */}
+            <div className="mt-3 sm:mt-4 space-y-3 px-0.5 sm:px-1">
+              {/* Song Title, Category & Artist */}
+              <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
+                  <h2 className="text-base sm:text-lg md:text-xl font-black text-white tracking-tight leading-snug">
                     {activeSong.title}
                   </h2>
-                  <span className="rounded-md bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-black text-amber-300 shrink-0 uppercase">
+                  <span className="rounded-md bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-black text-amber-300 shrink-0 uppercase tracking-wide">
                     {activeSong.category}
                   </span>
                   {activeSong.movieOrAlbum && (
@@ -604,118 +653,107 @@ export default function MusicPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2.5 text-xs text-orange-200/80 flex-wrap">
-                  <span className="font-semibold text-amber-300">
+                <div className="flex items-center gap-2 text-xs text-orange-200/80 font-medium">
+                  <span className="text-amber-300 font-semibold">
                     {activeSong.artist || activeSong.singer || 'श्री गणेश भक्ती'}
                   </span>
-                  <span>•</span>
-                  <span className="text-orange-300/80">{activeSong.duration || 'Special Track'}</span>
-                  {activeSong.suggestedBy && (
-                    <>
-                      <span>•</span>
-                      <span className="text-rose-300 font-bold flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {t('suggestedByDevotee')} {activeSong.suggestedBy}
-                      </span>
-                    </>
-                  )}
+                  <span className="text-orange-400/60">•</span>
+                  <span className="text-orange-300/80 font-mono text-[11px] sm:text-xs">
+                    {activeSong.duration || 'Special Track'}
+                  </span>
                 </div>
-
-                {activeSong.vibe && (
-                  <p className="text-xs text-amber-200/90 font-medium pt-0.5 flex items-start gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span className="italic"><strong className="text-amber-400 not-italic">Vibe:</strong> {activeSong.vibe}</span>
-                  </p>
-                )}
-
-                {activeSong.message && (
-                  <p className="text-xs italic text-orange-200/70 pt-0.5 flex items-center gap-1.5">
-                    <MessageSquare className="h-3 w-3 text-amber-400 shrink-0" />
-                    "{activeSong.message}"
-                  </p>
-                )}
               </div>
 
-              {/* Controls Row with Autoplay Toggle */}
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                {/* Autoplay Next Song Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAutoPlayNext((prev) => {
-                      const next = !prev;
-                      showToast(
-                        next
-                          ? (isMarathi ? 'ऑटो-प्ले चालू (गाणे संपल्यावर पुढील गाणे आपोआप सुरू होईल 🎶)' : 'Autoplay ON - Next song will play automatically')
-                          : (isMarathi ? 'ऑटो-प्ले बंद' : 'Autoplay OFF')
-                      );
-                      return next;
-                    });
-                  }}
-                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    autoPlayNext
-                      ? 'border-emerald-500/50 bg-emerald-950/60 text-emerald-300 shadow-sm shadow-emerald-900/40 ring-1 ring-emerald-400/40'
-                      : 'border-amber-500/25 bg-orange-950/40 text-orange-200/60 hover:text-white'
-                  }`}
-                  title={autoPlayNext ? 'ऑटो-प्ले चालू (गाणे संपल्यावर पुढील गाणे आपोआप सुरू होईल)' : 'ऑटो-प्ले बंद करा'}
-                >
-                  <Radio className={`h-3.5 w-3.5 ${autoPlayNext ? 'text-emerald-400 animate-pulse' : ''}`} />
-                  <span className="hidden xs:inline">
-                    {autoPlayNext
-                      ? (isMarathi ? 'अखंड संगीत (Auto Next)' : 'Auto Next ON')
-                      : (isMarathi ? 'ऑटो-प्ले बंद' : 'Auto Next OFF')}
-                  </span>
-                </button>
+              {/* Mobile & Desktop Responsive Controls Bar */}
+              <div className="pt-2.5 sm:pt-3 border-t border-amber-500/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+                {/* Main Playback Cluster (Prev, Shuffle, Next) */}
+                <div className="flex items-center justify-center gap-2 sm:gap-2.5">
+                  <button
+                    onClick={handlePrevSong}
+                    className="flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-amber-500/35 bg-orange-950/60 text-amber-300 hover:bg-orange-900/70 hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
+                    title="मागील गाणे (Previous)"
+                  >
+                    <SkipBack className="h-4 w-4" />
+                  </button>
 
-                <button
-                  onClick={handlePrevSong}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
-                  title="मागील गाणे (Previous)"
-                >
-                  <SkipBack className="h-4 w-4" />
-                </button>
+                  <button
+                    onClick={handleShuffle}
+                    className="flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-amber-500/35 bg-orange-950/60 text-amber-300 hover:bg-orange-900/70 hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
+                    title="यादृच्छिक गाणे (Shuffle)"
+                  >
+                    <Shuffle className="h-4 w-4" />
+                  </button>
 
-                <button
-                  onClick={handleShuffle}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
-                  title="यादृच्छिक गाणे (Shuffle)"
-                >
-                  <Shuffle className="h-4 w-4" />
-                </button>
+                  <button
+                    onClick={handleNextSong}
+                    className="flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-orange-500/50 bg-gradient-to-r from-amber-500/30 to-orange-600/30 text-amber-200 hover:scale-105 active:scale-95 transition-all shadow-md shadow-orange-900/30 cursor-pointer"
+                    title="पुढील गाणे (Next)"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </button>
+                </div>
 
-                <button
-                  onClick={handleNextSong}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
-                  title="पुढील गाणे (Next)"
-                >
-                  <SkipForward className="h-4 w-4" />
-                </button>
-
-                <button
-                  onClick={(e) => handleLike(e, activeSong)}
-                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    likedSongIds.includes(activeSong.id || activeSong._id)
-                      ? 'border-red-500/50 bg-red-600/25 text-red-300 shadow-md shadow-red-600/30'
-                      : 'border-amber-500/30 bg-orange-950/50 text-orange-200 hover:text-white'
-                  }`}
-                >
-                  <Heart
-                    className={`h-4 w-4 ${
-                      likedSongIds.includes(activeSong.id || activeSong._id) ? 'fill-red-500 text-red-500' : ''
+                {/* Secondary Actions: Autoplay toggle, Like counter, YouTube link */}
+                <div className="flex items-center justify-between sm:justify-end gap-2">
+                  {/* Autoplay Next Song Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAutoPlayNext((prev) => {
+                        const next = !prev;
+                        showToast(
+                          next
+                            ? (isMarathi ? 'ऑटो-प्ले चालू 🎶' : 'Autoplay ON')
+                            : (isMarathi ? 'ऑटो-प्ले बंद' : 'Autoplay OFF')
+                        );
+                        return next;
+                      });
+                    }}
+                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      autoPlayNext
+                        ? 'border-emerald-500/50 bg-emerald-950/70 text-emerald-300 shadow-sm shadow-emerald-900/40 ring-1 ring-emerald-400/40'
+                        : 'border-amber-500/25 bg-orange-950/40 text-orange-200/60 hover:text-white'
                     }`}
-                  />
-                  <span>{activeSong.likes || 0}</span>
-                </button>
+                    title={autoPlayNext ? 'ऑटो-प्ले चालू (गाणे संपल्यावर पुढील गाणे आपोआप सुरू होईल)' : 'ऑटो-प्ले बंद करा'}
+                  >
+                    <Radio className={`h-3.5 w-3.5 shrink-0 ${autoPlayNext ? 'text-emerald-400 animate-pulse' : ''}`} />
+                    <span className="whitespace-nowrap">
+                      {autoPlayNext
+                        ? (isMarathi ? 'अखंड संगीत' : 'Auto Next')
+                        : (isMarathi ? 'ऑटो-प्ले बंद' : 'Auto Next OFF')}
+                    </span>
+                  </button>
 
-                <a
-                  href={`https://www.youtube.com/watch?v=${activeSong.youtubeId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/50 px-3 py-2 text-xs font-bold text-red-200 transition-all cursor-pointer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t('openInYoutube')}</span>
-                </a>
+                  {/* Like Button */}
+                  <button
+                    onClick={(e) => handleLike(e, activeSong)}
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      likedSongIds.includes(activeSong.id || activeSong._id)
+                        ? 'border-red-500/50 bg-red-600/25 text-red-300 shadow-md shadow-red-600/30'
+                        : 'border-amber-500/30 bg-orange-950/50 text-orange-200 hover:text-white'
+                    }`}
+                    title="गाणे आवडले"
+                  >
+                    <Heart
+                      className={`h-4 w-4 shrink-0 ${
+                        likedSongIds.includes(activeSong.id || activeSong._id) ? 'fill-red-500 text-red-500' : ''
+                      }`}
+                    />
+                    <span className="text-xs">{activeSong.likes || 0}</span>
+                  </button>
+
+                  {/* Open in YouTube */}
+                  <a
+                    href={`https://www.youtube.com/watch?v=${activeSong.youtubeId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/50 px-2.5 sm:px-3 py-2 text-xs font-bold text-red-200 transition-all cursor-pointer"
+                    title={t('openInYoutube')}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    <span className="hidden xs:inline">{t('openInYoutube')}</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
