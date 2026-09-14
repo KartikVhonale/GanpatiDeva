@@ -1,0 +1,7 @@
+﻿User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /volunteer
+Disallow: /login
+
+Sitemap: /sitemap.xml
