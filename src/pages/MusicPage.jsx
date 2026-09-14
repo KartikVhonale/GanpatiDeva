@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import {
   Music,
   Play,
@@ -30,271 +31,6 @@ import { playTempleBell } from '../utils/audio';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-// Fallback curated songs (available instantly on first render before API responds)
-const INITIAL_CURATED_SONGS = [
-  // महाआरती व स्तोत्रे
-  {
-    id: 'curated-aarti-1',
-    title: 'सुखकर्ता दुःखहर्ता (Sukhkarta Dukh Harta)',
-    titleEn: 'Sukhkarta Dukh Harta - Traditional Aarti',
-    singer: 'लता मंगेशकर (Lata Mangeshkar)',
-    category: 'aarti',
-    youtubeId: '8Mmsn84X2aU',
-    duration: '4:22',
-    isCurated: true,
-    description: 'समर्थ रामदास स्वामी विरचित श्री गणेशाची अत्यंत पवित्र व भावपूर्ण मुख्य महाआरती.',
-    likes: 124,
-  },
-  {
-    id: 'curated-aarti-2',
-    title: 'शेंदुर लाल चढायो (Shendur Lal Chadhayo)',
-    titleEn: 'Shendur Lal Chadhayo - Classic Aarti',
-    singer: 'रवींद्र साठे (Ravindra Sathe)',
-    category: 'aarti',
-    youtubeId: 'w6e2q4rEwZ8',
-    duration: '3:45',
-    isCurated: true,
-    description: 'सिंदूर वंदना आणि अष्टविनायकांचे स्मरण करणारी मंगलमय आरती.',
-    likes: 98,
-  },
-  {
-    id: 'curated-aarti-3',
-    title: 'घालीन लोटांगण वंदिन चरण (Ghalin Lotangan)',
-    titleEn: 'Ghalin Lotangan Vandin Charan',
-    singer: 'पारंपारिक मंत्रपुष्पांजली (Traditional)',
-    category: 'aarti',
-    youtubeId: 'X9mN5pZ4d3I',
-    duration: '2:50',
-    isCurated: true,
-    description: 'आरतीची सांगता करणारी मन आणि आत्मा तृप्त करणारी पवित्र प्रार्थना.',
-    likes: 76,
-  },
-  {
-    id: 'curated-aarti-4',
-    title: 'दुर्गे दुर्घट भारी (Durge Durgat Bhari)',
-    titleEn: 'Durge Durgat Bhari - Devi Aarti',
-    singer: 'अनुराधा पौडवाल (Anuradha Paudwal)',
-    category: 'aarti',
-    youtubeId: 'd4Bv3u7qX0o',
-    duration: '4:15',
-    isCurated: true,
-    description: 'गणेशोत्सवात आरतीनंतर गायली जाणारी आदिमाया दुर्गेची जगप्रसिद्ध आरती.',
-    likes: 65,
-  },
-
-  // आगमन व ढोल-ताशा
-  {
-    id: 'curated-aagman-1',
-    title: 'देवा श्री गणेशा (Deva Shree Ganesha)',
-    titleEn: 'Deva Shree Ganesha - Agneepath',
-    singer: 'अजय गोगावले (Ajay-Atul)',
-    category: 'aagman',
-    youtubeId: 'o-0ygW-B_gI',
-    duration: '5:56',
-    isCurated: true,
-    description: 'बाप्पाच्या आगमन मिरवणुकीत संपूर्ण अंगावर रोमांच उभे करणारे सुप्रसिद्ध गीत.',
-    likes: 245,
-  },
-  {
-    id: 'curated-aagman-2',
-    title: 'मोरया रे (Morya Re - Bappa Morya Re)',
-    titleEn: 'Morya Re - Shankar Mahadevan (Don)',
-    singer: 'शंकर महादेवन (Shankar Mahadevan)',
-    category: 'aagman',
-    youtubeId: '_H4m0j_w_Xg',
-    duration: '5:50',
-    isCurated: true,
-    description: 'मुंबई व महाराष्ट्रातील गणेश मंडपांची ओळख बनलेला जल्लोषमय ट्रॅक.',
-    likes: 198,
-  },
-  {
-    id: 'curated-aagman-3',
-    title: 'आला रे आला गणपती आला (Aala Re Aala Ganesha)',
-    titleEn: 'Aala Re Aala Ganesha - Daddy',
-    singer: 'वाजिद, साजिद (Sajid-Wajid)',
-    category: 'aagman',
-    youtubeId: 's0-PzC_sK90',
-    duration: '4:35',
-    isCurated: true,
-    description: 'लालबाग व गिरगावच्या बाप्पाच्या आगमनाची थरारक अनुभूती देणारे गाणे.',
-    likes: 142,
-  },
-  {
-    id: 'curated-aagman-4',
-    title: 'पुणेरी व नाशिक ढोल-ताशा जुगलबंदी (Dhol Tasha Beats)',
-    titleEn: 'Puneri & Nashik Dhol Tasha Jugalbandi',
-    singer: 'पारंपारिक ढोल ताशा पथक (Dhol Tasha Pathak)',
-    category: 'aagman',
-    youtubeId: 'zN18K9Pj_dE',
-    duration: '6:12',
-    isCurated: true,
-    description: 'टाळ, मृदुंग आणि ढोल-ताशांच्या कडक आवाजात बाप्पाचे जंगी स्वागत!',
-    likes: 167,
-  },
-  {
-    id: 'curated-aagman-5',
-    title: 'बाप्पा मोरया रे (Bappa Morya Re - Pralhad Shinde)',
-    titleEn: 'Bappa Morya Re - Pralhad Shinde',
-    singer: 'प्रल्हाद शिंदे (Pralhad Shinde)',
-    category: 'aagman',
-    youtubeId: 'oUqV9B_uMbc',
-    duration: '5:10',
-    isCurated: true,
-    description: 'महाराष्ट्राच्या खेड्यापाड्यात आणि शहरात गुंजणारा लोकमान्य भक्ती आवाज.',
-    likes: 215,
-  },
-
-  // भावपूर्ण भक्तीगीते
-  {
-    id: 'curated-bhajan-1',
-    title: 'प्रथम तुला वंदितो (Pratham Tula Vandito)',
-    titleEn: 'Pratham Tula Vandito - Ashtavinayak',
-    singer: 'अनुराधा पौडवाल, सुरेश वाडकर',
-    category: 'bhajan',
-    youtubeId: 'P7p9lE0U36A',
-    duration: '6:24',
-    isCurated: true,
-    description: 'कोणत्याही शुभकार्याची मंगल सुरुवात करणारे महाराष्ट्राचे अमर गणेशगीत.',
-    likes: 280,
-  },
-  {
-    id: 'curated-bhajan-2',
-    title: 'तुझ मागतो मी आता (Tujh Magato Mi Aata)',
-    titleEn: 'Tujh Magato Mi Aata - Lata Mangeshkar',
-    singer: 'लता मंगेशकर, हृदयनाथ मंगेशकर',
-    category: 'bhajan',
-    youtubeId: 'hK0Z7mY5X5Q',
-    duration: '4:48',
-    isCurated: true,
-    description: 'संत ज्ञानेश्वर महाराज रचित आणि लतादीदींच्या मधुर स्वरातील भावपूर्ण प्रार्थना.',
-    likes: 182,
-  },
-  {
-    id: 'curated-bhajan-3',
-    title: 'ओंकार स्वरूपा (Omkar Swarupa)',
-    titleEn: 'Omkar Swarupa - Suresh Wadkar',
-    singer: 'सुरेश वाडकर (Suresh Wadkar)',
-    category: 'bhajan',
-    youtubeId: 'd4Bv3u7qX0o',
-    duration: '7:15',
-    isCurated: true,
-    description: 'सद्गुरू आणि विघ्नहर्त्याचे ध्यान करणारा अध्यात्मिक स्वरानुभव.',
-    likes: 165,
-  },
-  {
-    id: 'curated-bhajan-4',
-    title: 'उठा उठा हो सकळीक (Utha Utha Ho Sakalika)',
-    titleEn: 'Utha Utha Ho Sakalika - Prabhat Bhupali',
-    singer: 'पं. भीमसेन जोशी (Bhimsen Joshi)',
-    category: 'bhajan',
-    youtubeId: 'Wv7L9g9z_B0',
-    duration: '5:02',
-    isCurated: true,
-    description: 'पहाटेच्या मंगल वेळी बाप्पाला जागे करणारी सुरेल भूपाळी.',
-    likes: 110,
-  },
-  {
-    id: 'curated-bhajan-5',
-    title: 'तू सुखकर्ता तू दुःखहर्ता (Tu Sukhkarta Tu Dukh Harta)',
-    titleEn: 'Tu Sukhkarta Tu Dukh Harta - Hariharan',
-    singer: 'हरिहरन (Hariharan)',
-    category: 'bhajan',
-    youtubeId: 'K1F49uK8a3M',
-    duration: '5:32',
-    isCurated: true,
-    description: 'भक्तांच्या मनोकामना पूर्ण करणारी शांत आणि प्रभावी गणेश वंदना.',
-    likes: 118,
-  },
-
-  // आधुनिक व जल्लोष हिट्स
-  {
-    id: 'curated-modern-1',
-    title: 'श्री गणेशाय धीमहि (Shree Ganeshay Dheemahi)',
-    titleEn: 'Shree Ganeshay Dheemahi - Shankar Mahadevan',
-    singer: 'शंकर महादेवन (Shankar Mahadevan)',
-    category: 'modern',
-    youtubeId: 'h18T3a4_JvU',
-    duration: '6:18',
-    isCurated: true,
-    description: 'एकदंताय वक्रतुण्डाय गौरीतनयाय धीमहि - जगप्रसिद्ध आधुनिक स्तोत्र संगीत.',
-    likes: 295,
-  },
-  {
-    id: 'curated-modern-2',
-    title: 'गजानना (Gajanana - Bajirao Mastani)',
-    titleEn: 'Gajanana - Sukhwinder Singh',
-    singer: 'सुखविंदर सिंग (Sukhwinder Singh)',
-    category: 'modern',
-    youtubeId: 'f8YJ0h4mQ1g',
-    duration: '3:34',
-    isCurated: true,
-    description: 'श्रीमंत बाजीराव पेशवे यांच्या काळातील भव्य आणि ओजस्वी गणेश महाआरती.',
-    likes: 140,
-  },
-  {
-    id: 'curated-modern-3',
-    title: 'विघ्नहर्ता (Vighnaharta - Antim)',
-    titleEn: 'Vighnaharta - Ajay Gogavale',
-    singer: 'अजय गोगावले (Ajay Gogavale)',
-    category: 'modern',
-    youtubeId: '2JpS1c068_c',
-    duration: '4:18',
-    isCurated: true,
-    description: 'हाय-एनर्जी मॉडर्न गणेश उत्सव गाणे.',
-    likes: 125,
-  },
-  {
-    id: 'curated-modern-4',
-    title: 'बप्पा (Bappa - Banjo)',
-    titleEn: 'Bappa - Vishal Dadlani (Banjo)',
-    singer: 'विशाल दादलानी (Vishal Dadlani)',
-    category: 'modern',
-    youtubeId: 'U0H_L7hC0dE',
-    duration: '4:38',
-    isCurated: true,
-    description: 'तरुणाईच्या आवडीचे रॉक व ढोल ताशाचे अप्रतिम मिश्रण.',
-    likes: 104,
-  },
-  {
-    id: 'curated-modern-5',
-    title: 'सुनो गणपती बाप्पा मोरया (Suno Ganpati Bappa Morya)',
-    titleEn: 'Suno Ganpati Bappa Morya - Judwaa 2',
-    singer: 'अमित मिश्रा (Amit Mishra)',
-    category: 'modern',
-    youtubeId: 'kS6c4qG8hM0',
-    duration: '4:40',
-    isCurated: true,
-    description: 'गणेशोत्सवाच्या मंचावर सादर होणारे तरुणाईचे आवडीचे गाणे.',
-    likes: 92,
-  },
-
-  // भावुक विसर्जन गीते
-  {
-    id: 'curated-visarjan-1',
-    title: 'बाप्पा निघाले गावाला (Bappa Nighale Gaavala)',
-    titleEn: 'Bappa Nighale Gaavala - Visarjan Special',
-    singer: 'अनंत पांचाळ (Anant Panchal)',
-    category: 'visarjan',
-    youtubeId: 'BfC8w-ZfE7M',
-    duration: '6:45',
-    isCurated: true,
-    description: 'अनंत चतुर्दशीच्या दिवशी डोळ्यात अश्रू आणणारे भावुक विसर्जन गीत.',
-    likes: 210,
-  },
-  {
-    id: 'curated-visarjan-2',
-    title: 'मोरया रे बाप्पा मोरया रे पुढच्या वर्षी लवकर या',
-    titleEn: 'Pudhchya Varshi Lavkar Ya - Visarjan',
-    singer: 'अजय-अतुल / पारंपारिक',
-    category: 'visarjan',
-    youtubeId: '5n2F6b7Qf7k',
-    duration: '5:22',
-    isCurated: true,
-    description: 'निरोप देताना सर्वांच्या तोंडी असणारा लाडका जयघोष.',
-    likes: 188,
-  },
-];
-
 // Helper to extract YouTube video ID from URL
 function extractYouTubeId(urlOrId) {
   if (!urlOrId) return '';
@@ -308,11 +44,12 @@ function extractYouTubeId(urlOrId) {
 }
 
 export default function MusicPage() {
-  const { t } = useLanguage();
+  const { t, isMarathi } = useLanguage();
 
-  // State
-  const [songs, setSongs] = useState(INITIAL_CURATED_SONGS);
-  const [activeSong, setActiveSong] = useState(INITIAL_CURATED_SONGS[0]);
+  // State: All music is strictly fetched from MongoDB
+  const [songs, setSongs] = useState([]);
+  const [activeSong, setActiveSong] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [likedSongIds, setLikedSongIds] = useState(() => {
@@ -342,24 +79,68 @@ export default function MusicPage() {
 
   const playerRef = useRef(null);
 
-  // Fetch all songs (Curated + Approved Devotee Suggestions) from backend
-  const fetchSongs = async () => {
+  // Fetch all songs directly from MongoDB Atlas API
+  const fetchSongs = useCallback(async () => {
     try {
+      setIsLoading(true);
       const res = await fetch(`${BACKEND_URL}/api/music/songs`);
       if (res.ok) {
         const data = await res.json();
-        if (data.all && Array.isArray(data.all) && data.all.length > 0) {
+        if (data.all && Array.isArray(data.all)) {
           setSongs(data.all);
+          setActiveSong((prev) => {
+            if (prev && data.all.some((s) => s.id === prev.id || s._id === prev._id)) {
+              return prev;
+            }
+            return data.all.length > 0 ? data.all[0] : null;
+          });
         }
       }
     } catch (err) {
-      console.warn('Using initial curated songs fallback:', err.message);
+      console.error('Error fetching songs from MongoDB:', err);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
 
+  // Real-time synchronization via Socket.io & initial load
   useEffect(() => {
     fetchSongs();
-  }, []);
+
+    let socket;
+    try {
+      socket = io(BACKEND_URL, {
+        transports: ['websocket', 'polling'],
+      });
+
+      socket.on('songs_updated', () => {
+        fetchSongs();
+      });
+
+      socket.on('new_music_suggestion', () => {
+        fetchSongs();
+      });
+
+      socket.on('music_liked', (data) => {
+        if (data && data.id) {
+          setSongs((prev) =>
+            prev.map((s) => (s.id === data.id || s._id === data.id ? { ...s, likes: data.likes } : s))
+          );
+          setActiveSong((prev) =>
+            prev && (prev.id === data.id || prev._id === data.id)
+              ? { ...prev, likes: data.likes }
+              : prev
+          );
+        }
+      });
+    } catch (err) {
+      console.warn('Socket connection error in MusicPage:', err);
+    }
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, [fetchSongs]);
 
   // Save likes to localStorage
   useEffect(() => {
@@ -377,11 +158,9 @@ export default function MusicPage() {
   // Categories configuration with icons and labels
   const categories = useMemo(() => [
     { id: 'all', label: t('catMusicAll'), icon: Music, color: 'from-amber-500 to-orange-600' },
-    { id: 'aarti', label: t('catMusicAarti'), icon: Bell, color: 'from-yellow-500 to-amber-600' },
     { id: 'aagman', label: t('catMusicAagman'), icon: Flame, color: 'from-orange-500 to-red-600' },
     { id: 'bhajan', label: t('catMusicBhajan'), icon: Headphones, color: 'from-emerald-500 to-teal-700' },
-    { id: 'modern', label: t('catMusicModern'), icon: Radio, color: 'from-purple-500 to-pink-600' },
-    { id: 'visarjan', label: t('catMusicVisarjan'), icon: Sparkles, color: 'from-blue-500 to-cyan-600' },
+    { id: 'aarti', label: t('catMusicAarti'), icon: Bell, color: 'from-yellow-500 to-amber-600' },
     { id: 'suggestions', label: t('catMusicSuggestions'), icon: User, color: 'from-rose-500 to-red-700' },
   ], [t]);
 
@@ -401,6 +180,9 @@ export default function MusicPage() {
         song.title.toLowerCase().includes(q) ||
         (song.titleEn && song.titleEn.toLowerCase().includes(q)) ||
         (song.singer && song.singer.toLowerCase().includes(q)) ||
+        (song.artist && song.artist.toLowerCase().includes(q)) ||
+        (song.movieOrAlbum && song.movieOrAlbum.toLowerCase().includes(q)) ||
+        (song.vibe && song.vibe.toLowerCase().includes(q)) ||
         (song.suggestedBy && song.suggestedBy.toLowerCase().includes(q)) ||
         (song.description && song.description.toLowerCase().includes(q));
 
@@ -518,56 +300,28 @@ export default function MusicPage() {
         message: suggestForm.message.trim(),
       };
 
-      let newSong;
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/music/suggest`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+      const res = await fetch(`${BACKEND_URL}/api/music/suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-        if (res.ok) {
-          const data = await res.json();
-          newSong = {
-            id: data.suggestion._id || data.suggestion.id,
-            title: data.suggestion.title,
-            titleEn: data.suggestion.title,
-            singer: data.suggestion.singer || 'सुचवलेले गाणे',
-            category: data.suggestion.category,
-            youtubeId: data.suggestion.youtubeId,
-            duration: 'Play Now',
-            isCurated: false,
-            isSuggestion: true,
-            suggestedBy: data.suggestion.suggestedBy,
-            message: data.suggestion.message,
-            likes: 1,
-          };
-        }
-      } catch (networkErr) {
-        console.warn('Backend unavailable, using local suggestion mode:', networkErr);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'गाणे सेव्ह करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
       }
 
-      // If backend failed or offline, construct local suggestion object
-      if (!newSong) {
-        newSong = {
-          id: `local-suggest-${Math.random().toString(36).slice(2, 9)}`,
-          title: payload.title,
-          titleEn: payload.title,
-          singer: payload.singer || 'सुचवलेले गाणे',
-          category: payload.category,
-          youtubeId: extractedId,
-          duration: 'Play Now',
-          isCurated: false,
-          isSuggestion: true,
-          suggestedBy: payload.suggestedBy,
-          message: payload.message,
-          likes: 1,
+      const data = await res.json();
+      await fetchSongs();
+
+      if (data.suggestion) {
+        const createdSong = {
+          id: data.suggestion._id || data.suggestion.id,
+          ...data.suggestion,
         };
+        setActiveSong(createdSong);
       }
 
-      // Add to songs state at the top
-      setSongs((prev) => [newSong, ...prev]);
-      setActiveSong(newSong);
       setIsSuggestModalOpen(false);
       setSuggestForm({
         title: '',
@@ -673,145 +427,176 @@ export default function MusicPage() {
       {/* THEATER MODE / NOW PLAYING YOUTUBE VIDEO PLAYER           */}
       {/* ========================================================= */}
       <section ref={playerRef} className="space-y-4">
-        <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-3 sm:p-5 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)]">
-          {/* Top Status Bar of Player */}
-          <div className="flex items-center justify-between gap-2 pb-3 px-1 border-b border-amber-500/20 mb-3 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-              </span>
-              <span className="font-bold text-amber-300 uppercase tracking-wider text-[11px] sm:text-xs flex items-center gap-1.5">
-                <Radio className="h-3.5 w-3.5 text-red-500 animate-pulse" />
-                {t('nowPlaying')}
-              </span>
-              {activeSong.isSuggestion && (
-                <span className="rounded-full bg-rose-500/20 border border-rose-400/40 px-2 py-0.5 text-[10px] font-bold text-rose-300">
-                  {t('catMusicSuggestions')}
-                </span>
-              )}
+        {isLoading ? (
+          <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)] text-center space-y-4">
+            <div className="flex items-center justify-center gap-2 text-amber-400 font-black text-sm sm:text-base">
+              <Sparkles className="h-5 w-5 animate-spin text-amber-400" />
+              <span>{isMarathi ? 'MongoDB मधून भक्ती संगीत थेट लोड होत आहे...' : 'Loading music directly from MongoDB Atlas...'}</span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleShuffle}
-                title="Shuffle / Random"
-                className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
-              >
-                <Shuffle className="h-3.5 w-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Shuffle</span>
-              </button>
-              <button
-                onClick={handleShare}
-                title="Share Song"
-                className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
-              >
-                {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 text-amber-400" />}
-                <span className="hidden sm:inline">{copiedLink ? 'Copied' : t('shareSong')}</span>
-              </button>
+            <div className="aspect-video max-w-2xl mx-auto rounded-2xl bg-orange-950/20 border border-amber-500/20 flex items-center justify-center animate-pulse">
+              <Music className="h-14 w-14 text-amber-500/40 animate-bounce" />
             </div>
           </div>
-
-          {/* YouTube Responsive Video Container */}
-          <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl">
-            {activeSong.youtubeId ? (
-              <iframe
-                key={activeSong.youtubeId}
-                src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1`}
-                title={activeSong.title}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-black/90 text-amber-300">
-                <AlertCircle className="h-8 w-8" />
-                <span className="ml-2 font-bold">व्हिडिओ उपलब्ध नाही</span>
-              </div>
-            )}
-          </div>
-
-          {/* Player Metadata & Control Row */}
-          <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
-                  {activeSong.title}
-                </h2>
-                <span className="rounded-md bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-black text-amber-300 shrink-0 uppercase">
-                  {activeSong.category}
+        ) : activeSong ? (
+          <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-3 sm:p-5 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)]">
+            {/* Top Status Bar of Player */}
+            <div className="flex items-center justify-between gap-2 pb-3 px-1 border-b border-amber-500/20 mb-3 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
                 </span>
-              </div>
-
-              <div className="flex items-center gap-3 text-xs text-orange-200/80 flex-wrap">
-                <span className="font-semibold text-amber-400">{activeSong.singer || 'मंडळ भक्ती संगीत'}</span>
-                <span>•</span>
-                <span>{activeSong.duration || 'Special Track'}</span>
-                {activeSong.suggestedBy && (
-                  <>
-                    <span>•</span>
-                    <span className="text-rose-300 font-bold flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {t('suggestedByDevotee')} {activeSong.suggestedBy}
-                    </span>
-                  </>
+                <span className="font-bold text-amber-300 uppercase tracking-wider text-[11px] sm:text-xs flex items-center gap-1.5">
+                  <Radio className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                  {t('nowPlaying')}
+                </span>
+                {activeSong.isSuggestion && (
+                  <span className="rounded-full bg-rose-500/20 border border-rose-400/40 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+                    {t('catMusicSuggestions')}
+                  </span>
                 )}
               </div>
 
-              {activeSong.message && (
-                <p className="text-xs italic text-orange-200/70 pt-0.5 flex items-center gap-1.5">
-                  <MessageSquare className="h-3 w-3 text-amber-400 shrink-0" />
-                  "{activeSong.message}"
-                </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleShuffle}
+                  title="Shuffle / Random"
+                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                >
+                  <Shuffle className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Shuffle</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  title="Share Song"
+                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                >
+                  {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 text-amber-400" />}
+                  <span className="hidden sm:inline">{copiedLink ? 'Copied' : t('shareSong')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* YouTube Responsive Video Container */}
+            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-amber-500/30 shadow-2xl">
+              {activeSong.youtubeId ? (
+                <iframe
+                  key={activeSong.youtubeId}
+                  src={`https://www.youtube-nocookie.com/embed/${activeSong.youtubeId}?autoplay=1&rel=0&enablejsapi=1`}
+                  title={activeSong.title}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-black/90 text-amber-300">
+                  <AlertCircle className="h-8 w-8" />
+                  <span className="ml-2 font-bold">व्हिडिओ उपलब्ध नाही</span>
+                </div>
               )}
             </div>
 
-            {/* Controls Row */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={handlePrevSong}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
-                title="मागील गाणे (Previous)"
-              >
-                <SkipBack className="h-4 w-4" />
-              </button>
+            {/* Player Metadata & Control Row */}
+            <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
+              <div className="space-y-1.5 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
+                    {activeSong.title}
+                  </h2>
+                  <span className="rounded-md bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-black text-amber-300 shrink-0 uppercase">
+                    {activeSong.category}
+                  </span>
+                  {activeSong.movieOrAlbum && (
+                    <span className="rounded-md bg-orange-950/80 border border-orange-500/35 px-2 py-0.5 text-[10px] font-bold text-amber-200 shrink-0">
+                      🎬 {activeSong.movieOrAlbum}
+                    </span>
+                  )}
+                </div>
 
-              <button
-                onClick={handleNextSong}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
-                title="पुढील गाणे (Next)"
-              >
-                <SkipForward className="h-4 w-4" />
-              </button>
+                <div className="flex items-center gap-2.5 text-xs text-orange-200/80 flex-wrap">
+                  <span className="font-semibold text-amber-300">
+                    {activeSong.artist || activeSong.singer || 'श्री गणेश भक्ती'}
+                  </span>
+                  <span>•</span>
+                  <span className="text-orange-300/80">{activeSong.duration || 'Special Track'}</span>
+                  {activeSong.suggestedBy && (
+                    <>
+                      <span>•</span>
+                      <span className="text-rose-300 font-bold flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {t('suggestedByDevotee')} {activeSong.suggestedBy}
+                      </span>
+                    </>
+                  )}
+                </div>
 
-              <button
-                onClick={(e) => handleLike(e, activeSong)}
-                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                  likedSongIds.includes(activeSong.id)
-                    ? 'border-red-500/50 bg-red-600/25 text-red-300 shadow-md shadow-red-600/30'
-                    : 'border-amber-500/30 bg-orange-950/50 text-orange-200 hover:text-white'
-                }`}
-              >
-                <Heart
-                  className={`h-4 w-4 ${
-                    likedSongIds.includes(activeSong.id) ? 'fill-red-500 text-red-500' : ''
+                {activeSong.vibe && (
+                  <p className="text-xs text-amber-200/90 font-medium pt-0.5 flex items-start gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <span className="italic"><strong className="text-amber-400 not-italic">Vibe:</strong> {activeSong.vibe}</span>
+                  </p>
+                )}
+
+                {activeSong.message && (
+                  <p className="text-xs italic text-orange-200/70 pt-0.5 flex items-center gap-1.5">
+                    <MessageSquare className="h-3 w-3 text-amber-400 shrink-0" />
+                    "{activeSong.message}"
+                  </p>
+                )}
+              </div>
+
+              {/* Controls Row */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handlePrevSong}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
+                  title="मागील गाणे (Previous)"
+                >
+                  <SkipBack className="h-4 w-4" />
+                </button>
+
+                <button
+                  onClick={handleNextSong}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-orange-950/50 text-amber-300 hover:bg-orange-900/60 transition-all cursor-pointer"
+                  title="पुढील गाणे (Next)"
+                >
+                  <SkipForward className="h-4 w-4" />
+                </button>
+
+                <button
+                  onClick={(e) => handleLike(e, activeSong)}
+                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                    likedSongIds.includes(activeSong.id || activeSong._id)
+                      ? 'border-red-500/50 bg-red-600/25 text-red-300 shadow-md shadow-red-600/30'
+                      : 'border-amber-500/30 bg-orange-950/50 text-orange-200 hover:text-white'
                   }`}
-                />
-                <span>{activeSong.likes || 0}</span>
-              </button>
+                >
+                  <Heart
+                    className={`h-4 w-4 ${
+                      likedSongIds.includes(activeSong.id || activeSong._id) ? 'fill-red-500 text-red-500' : ''
+                    }`}
+                  />
+                  <span>{activeSong.likes || 0}</span>
+                </button>
 
-              <a
-                href={`https://www.youtube.com/watch?v=${activeSong.youtubeId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/50 px-3 py-2 text-xs font-bold text-red-200 transition-all cursor-pointer"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t('openInYoutube')}</span>
-              </a>
+                <a
+                  href={`https://www.youtube.com/watch?v=${activeSong.youtubeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/50 px-3 py-2 text-xs font-bold text-red-200 transition-all cursor-pointer"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t('openInYoutube')}</span>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-8 text-center text-orange-200 backdrop-blur-2xl">
+            <Music className="mx-auto h-12 w-12 text-amber-400/50 mb-2" />
+            <p className="font-bold">{t('noSongsFound')}</p>
+          </div>
+        )}
       </section>
 
       {/* ========================================================= */}
@@ -889,7 +674,21 @@ export default function MusicPage() {
           <span>{t('mandalName')}</span>
         </div>
 
-        {filteredSongs.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-amber-500/20 bg-orange-950/30 p-3.5 space-y-3 animate-pulse"
+              >
+                <div className="aspect-video w-full rounded-xl bg-orange-950/60" />
+                <div className="h-4 w-3/4 bg-amber-500/20 rounded" />
+                <div className="h-3 w-1/2 bg-amber-500/10 rounded" />
+                <div className="h-3 w-1/4 bg-amber-500/10 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : filteredSongs.length === 0 ? (
           <div className="rounded-3xl border border-amber-500/20 bg-orange-950/20 p-12 text-center backdrop-blur-xl">
             <Music className="mx-auto h-12 w-12 text-orange-400/40 mb-3" />
             <p className="font-bold text-orange-200">{t('noSongsFound')}</p>
@@ -977,12 +776,24 @@ export default function MusicPage() {
                         </h3>
                       </div>
 
-                      <p className="text-xs text-orange-200/70 line-clamp-1 mt-0.5 font-medium">
-                        {song.singer || 'श्री गणेश भक्ती'}
-                      </p>
+                      <div className="flex items-center gap-1.5 text-xs text-orange-200/80 font-medium mt-1 line-clamp-1 flex-wrap">
+                        <span className="text-amber-400 font-semibold">{song.artist || song.singer || 'श्री गणेश भक्ती'}</span>
+                        {song.movieOrAlbum && (
+                          <>
+                            <span className="text-orange-500/50">•</span>
+                            <span className="text-orange-200/70 text-[11px]">🎬 {song.movieOrAlbum}</span>
+                          </>
+                        )}
+                      </div>
+
+                      {song.vibe && (
+                        <p className="text-[11px] text-amber-200/80 line-clamp-2 mt-1.5 italic bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/15">
+                          "{song.vibe}"
+                        </p>
+                      )}
 
                       {song.message && (
-                        <p className="text-[11px] text-amber-300/80 italic line-clamp-1 mt-1">
+                        <p className="text-[11px] text-rose-300/90 italic line-clamp-1 mt-1">
                           "{song.message}"
                         </p>
                       )}
@@ -1102,11 +913,9 @@ export default function MusicPage() {
                       }
                       className="w-full rounded-xl border border-amber-500/30 bg-orange-950 px-3.5 py-2 text-xs sm:text-sm text-white focus:border-amber-400 focus:outline-none"
                     >
-                      <option value="aagman">आगमन व ढोल-ताशा (Aagman)</option>
-                      <option value="aarti">महाआरती व स्तोत्रे (Aarti)</option>
-                      <option value="bhajan">भावपूर्ण भक्तीगीते (Bhajan)</option>
-                      <option value="modern">आधुनिक व जल्लोष हिट्स (Modern)</option>
-                      <option value="visarjan">भावुक विसर्जन गीते (Visarjan)</option>
+                      <option value="aagman">आगमन, ढोल-ताशा व जल्लोष (Aagman & Dhol Tasha)</option>
+                      <option value="bhajan">अमर मराठी क्लासिक्स व लोकगीते (Classics & Folk)</option>
+                      <option value="aarti">आरती, स्तुती व नित्य प्रार्थना (Aartis & Stutis)</option>
                     </select>
                   </div>
                 </div>

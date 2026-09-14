@@ -1,5 +1,5 @@
 import React from 'react';
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from '@vercel/analytics/next';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -99,6 +99,7 @@ export default function App() {
       <LanguageProvider>
         <AuthProvider>
           <AppContent />
+          <Analytics />
         </AuthProvider>
       </LanguageProvider>
     </BrowserRouter>
