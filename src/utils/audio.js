@@ -1,10 +1,27 @@
-// Web Audio API synthesized Temple Bell & Shankh Sound Effects
+// Web Audio API synthesized Temple Bell & Shankh Sound Effects - Optimized singleton AudioContext
+
+let sharedAudioCtx = null;
+
+function getAudioContext() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
 
 export function playTempleBell() {
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
     // Fundamental + Harmonic overtones for a rich brass temple bell
     const frequencies = [587.33, 1174.66, 1760.0, 2349.32]; // D5 and higher harmonics
@@ -37,9 +54,8 @@ export function playTempleBell() {
 
 export function playFlowerChime() {
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
     const notes = [523.25, 659.25, 783.99, 1046.5]; // C E G C arpeggio
     notes.forEach((freq, i) => {

@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
 import { io } from 'socket.io-client';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+const DonationsContext = createContext(null);
 
 const CATEGORIES = [
   { category: "महाप्रसाद सेवा", icon: "🍛", badgeColor: "border-amber-400/40 bg-amber-500/20 text-amber-200", isPrasad: true },
@@ -12,11 +14,11 @@ const CATEGORIES = [
   { category: "सुवर्ण/रजत छत्र सेवा", icon: "👑", badgeColor: "border-red-400/40 bg-red-500/20 text-red-200" },
 ];
 
-export function useDonations() {
+function useDonationsInternal() {
   const [totalAmount, setTotalAmount] = useState(0);
-  const [targetAmount, setTargetAmount] = useState(500000);
+  const [targetAmount, setTargetAmount] = useState(10000);
   const [settings, setSettings] = useState({
-    targetAmount: 100000,
+    targetAmount: 10000,
     upiId: '8484844728@slc',
     upiName: 'श्री बाल गणेश मंडळ धानोरा बु.',
     qrCodeUrl: '',
@@ -71,7 +73,7 @@ export function useDonations() {
         setTotalAmount(Number(data.totalVargani) || 0);
       }
       if (data.targetAmount !== undefined) {
-        setTargetAmount(Number(data.targetAmount) || 500000);
+        setTargetAmount(Number(data.targetAmount) || 10000);
       }
       if (data.donorCount !== undefined) {
         setDonorCount(Number(data.donorCount) || 0);
@@ -341,7 +343,7 @@ export function useDonations() {
     return data;
   }, []);
 
-  return {
+  const value = useMemo(() => ({
     totalAmount,
     targetAmount,
     settings,
@@ -359,7 +361,38 @@ export function useDonations() {
     submitPaymentRequest,
     deleteDonation,
     refetchDonations: fetchInitialDonations,
-  };
+  }), [
+    totalAmount,
+    targetAmount,
+    settings,
+    pendingRequestsCount,
+    donorCount,
+    prasadCount,
+    aartiSponsors,
+    cashTotal,
+    onlineTotal,
+    donors,
+    latestDonation,
+    isConnected,
+    isLoading,
+    addManualDonation,
+    submitPaymentRequest,
+    deleteDonation,
+    fetchInitialDonations,
+  ]);
+
+  return value;
+}
+
+export function DonationsProvider({ children }) {
+  const donationState = useDonationsInternal();
+  return React.createElement(DonationsContext.Provider, { value: donationState }, children);
+}
+
+export function useDonations() {
+  const context = useContext(DonationsContext);
+  if (context) return context;
+  return useDonationsInternal();
 }
 
 export default useDonations;

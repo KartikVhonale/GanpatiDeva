@@ -8,7 +8,7 @@ const CountUp = CountUpRaw?.default || CountUpRaw;
 
 export default function TotalCounter({
   totalAmount = 0,
-  targetAmount = 500000,
+  targetAmount = 10000,
   donorCount = 0,
   prasadCount = 0,
   aartiSponsors = 0,

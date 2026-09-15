@@ -18,7 +18,6 @@ import useDonations from '../hooks/useDonations';
 import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
-import { io } from 'socket.io-client';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100];

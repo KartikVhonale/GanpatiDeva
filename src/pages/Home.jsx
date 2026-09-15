@@ -151,6 +151,15 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [activeImages.length, isPaused]);
 
+  // Preload next image in background for instant smooth rotation
+  useEffect(() => {
+    if (activeImages && activeImages.length > 1) {
+      const nextIdx = (currentImgIndex + 1) % activeImages.length;
+      const img = new Image();
+      img.src = activeImages[nextIdx];
+    }
+  }, [currentImgIndex, activeImages]);
+
   const [floatingParticles, setFloatingParticles] = useState([]);
   const [diyaLit, setDiyaLit] = useState(false);
   const [ritualFeedback, setRitualFeedback] = useState('');
@@ -433,6 +442,9 @@ export default function Home() {
                     key={currentImgIndex}
                     src={activeImages[currentImgIndex]}
                     alt={`भगवान श्री गणेश रूप ${currentImgIndex + 1}`}
+                    loading={currentImgIndex === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    fetchPriority={currentImgIndex === 0 ? "high" : "auto"}
                     initial={{ opacity: 0, scale: 1.08 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}

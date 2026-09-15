@@ -9,7 +9,7 @@ import ThemeSelectorModal from './components/ThemeSelectorModal';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import useDonations from './hooks/useDonations';
+import useDonations, { DonationsProvider } from './hooks/useDonations';
 
 // Code-split route components for instant initial load and high mobile scalability
 const Home = React.lazy(() => import('./pages/Home'));
@@ -184,8 +184,10 @@ export default function App() {
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <AppContent />
-            <Analytics />
+            <DonationsProvider>
+              <AppContent />
+              <Analytics />
+            </DonationsProvider>
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

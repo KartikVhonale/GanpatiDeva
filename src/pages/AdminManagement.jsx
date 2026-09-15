@@ -74,7 +74,7 @@ export default function AdminManagement() {
 
   // 2. Settings Management State (Target Amount, UPI ID, QR Code)
   const [settings, setSettings] = useState({
-    targetAmount: 500000,
+    targetAmount: 10000,
     upiId: '8484844728@slc',
     upiName: 'श्री बाल गणेश मंडळ धानोरा बु.',
     qrCodeUrl: '',
@@ -1221,7 +1221,7 @@ export default function AdminManagement() {
                     required
                     value={settings.targetAmount}
                     onChange={(e) => setSettings({ ...settings, targetAmount: e.target.value })}
-                    placeholder="500000"
+                    placeholder="10000"
                     className={`w-full rounded-xl border py-2.5 pl-8 pr-3.5 text-sm font-black outline-none ${
                       isLight
                         ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] placeholder-stone-400 focus:border-[#CC5500] focus:ring-2 focus:ring-[#CC5500]/20'

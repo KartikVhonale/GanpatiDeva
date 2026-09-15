@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronDown } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,7 @@ export default function RecentDonorsList({ donors = [] }) {
   const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [displayLimit, setDisplayLimit] = useState(30);
 
   const categories = [
     { id: "all", label: t('allDonorsTab') },
@@ -22,24 +23,47 @@ export default function RecentDonorsList({ donors = [] }) {
     { id: "vip", label: t('vipSevaTab') },
   ];
 
-  const sortedDonors = [...donors].sort(
-    (a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
-  );
+  const sortedDonors = useMemo(() => {
+    return [...donors].sort(
+      (a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0) || new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+    );
+  }, [donors]);
 
-  const filteredDonors = sortedDonors.filter(donor => {
-    // Search filter
-    const matchesSearch = (donor.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (donor.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (donor.category || '').toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
+  const filteredDonors = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return sortedDonors.filter((donor) => {
+      // Search filter
+      if (query) {
+        const matchesSearch =
+          (donor.name || '').toLowerCase().includes(query) ||
+          (donor.city || '').toLowerCase().includes(query) ||
+          (donor.category || '').toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
-    // Tab filter
-    if (activeTab === "all") return true;
-    if (activeTab === "prasad") return donor.category?.includes("महाप्रसाद") || donor.category?.includes("मोदक") || donor.category?.toLowerCase().includes("prasad");
-    if (activeTab === "aarti") return donor.category?.includes("आरती") || donor.category?.includes("दीप") || donor.category?.includes("छत्र") || donor.category?.toLowerCase().includes("aarti");
-    if (activeTab === "vip") return donor.amount >= 10000;
-    return true;
-  });
+      // Tab filter
+      if (activeTab === "all") return true;
+      if (activeTab === "prasad")
+        return (
+          donor.category?.includes("महाप्रसाद") ||
+          donor.category?.includes("मोदक") ||
+          donor.category?.toLowerCase().includes("prasad")
+        );
+      if (activeTab === "aarti")
+        return (
+          donor.category?.includes("आरती") ||
+          donor.category?.includes("दीप") ||
+          donor.category?.includes("छत्र") ||
+          donor.category?.toLowerCase().includes("aarti")
+        );
+      if (activeTab === "vip") return (Number(donor.amount) || 0) >= 10000;
+      return true;
+    });
+  }, [sortedDonors, searchQuery, activeTab]);
+
+  const visibleDonors = useMemo(() => {
+    return filteredDonors.slice(0, displayLimit);
+  }, [filteredDonors, displayLimit]);
 
   return (
     <section id="recent-donors" className="relative w-full space-y-5">
@@ -113,8 +137,8 @@ export default function RecentDonorsList({ donors = [] }) {
       {/* Donor List Cards with Framer Motion Layout, Entrance & Exit */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout" initial={false}>
-          {filteredDonors.length > 0 ? (
-            filteredDonors.map((donor) => {
+          {visibleDonors.length > 0 ? (
+            visibleDonors.map((donor) => {
               const isJustNow = donor.time && (donor.time.includes("Just now") || donor.time.includes("आत्ताच"));
               return (
                 <motion.div
@@ -249,6 +273,24 @@ export default function RecentDonorsList({ donors = [] }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Progressive Load More Pagination */}
+      {filteredDonors.length > displayLimit && (
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => setDisplayLimit((prev) => prev + 30)}
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-bold transition shadow-md cursor-pointer ${
+              isLight
+                ? 'bg-[#CC5500] hover:bg-[#B7410E] text-[#FFFDD0]'
+                : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black'
+            }`}
+          >
+            <span>{lang === 'mr' ? 'आणखी देणगीदार पहा' : 'Load More Devotees'}</span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </section>
   );
 }
