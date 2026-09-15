@@ -716,12 +716,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Footer Auspicious Blessing Quote */}
-      <div className="text-center py-4">
-        <p className="font-serif text-amber-200/90 text-sm sm:text-base italic">
-          {t('footerQuote')}
-        </p>
-      </div>
     </div>
   );
 }

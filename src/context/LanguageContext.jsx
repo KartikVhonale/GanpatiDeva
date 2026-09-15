@@ -71,7 +71,6 @@ export const TRANSLATIONS = {
     prevDarshan: 'मागील दर्शन',
     nextDarshan: 'पुढील दर्शन',
     darshanProgress: 'दर्शन',
-    footerQuote: '॥ मोरया रे बाप्पा मोरया रे, पुढच्या वर्षी लवकर या ॥',
 
     // Ashtavinayak Section
     ashtavinayakBadge: 'महाराष्ट्राची कुलदैवते',
@@ -495,7 +494,6 @@ export const TRANSLATIONS = {
     prevDarshan: 'Previous Darshan',
     nextDarshan: 'Next Darshan',
     darshanProgress: 'Darshan',
-    footerQuote: '|| Ganpati Bappa Morya, Pudhchya Varshi Lavkar Ya ||',
 
     // Ashtavinayak Section
     ashtavinayakBadge: 'Guardian Deities of Maharashtra',
