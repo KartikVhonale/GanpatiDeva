@@ -28,6 +28,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { playTempleBell } from '../utils/audio';
 import ErrorBoundary from '../components/ErrorBoundary';
 
@@ -47,6 +48,7 @@ function extractYouTubeId(urlOrId) {
 
 export default function MusicPage() {
   const { t, isMarathi } = useLanguage();
+  const { isLight } = useTheme();
 
   // State: All music is strictly fetched from MongoDB
   const [songs, setSongs] = useState([]);
@@ -486,28 +488,42 @@ export default function MusicPage() {
       {/* ========================================================= */}
       {/* PAGE HEADER & HERO BANNER                                 */}
       {/* ========================================================= */}
-      <header className="relative rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/80 via-red-950/70 to-black/90 p-5 sm:p-8 backdrop-blur-2xl shadow-[0_10px_35px_rgba(234,88,12,0.25)] overflow-hidden">
+      <header className={`relative rounded-3xl border p-5 sm:p-8 backdrop-blur-2xl overflow-hidden transition-colors ${
+        isLight
+          ? 'border-[#CC5500]/30 bg-[#FFFDD0] text-[#2B2B2B] shadow-[0_10px_35px_rgba(204,85,0,0.1)]'
+          : 'border-amber-500/30 bg-gradient-to-br from-orange-950/80 via-red-950/70 to-black/90 shadow-[0_10px_35px_rgba(234,88,12,0.25)] text-white'
+      }`}>
         {/* Festive background accents */}
-        <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-gradient-to-br from-amber-500/20 to-red-600/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-gradient-to-tr from-orange-600/15 to-amber-400/10 blur-3xl" />
+        <div className={`pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl ${
+          isLight ? 'bg-[#CC5500]/10' : 'bg-gradient-to-br from-amber-500/20 to-red-600/10'
+        }`} />
+        <div className={`pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full blur-3xl ${
+          isLight ? 'bg-[#B7410E]/10' : 'bg-gradient-to-tr from-orange-600/15 to-amber-400/10'
+        }`} />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/15 px-3.5 py-1 text-xs font-bold text-amber-300">
-              <Sparkles className="h-3.5 w-3.5 animate-spin" />
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-xs font-bold ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+            }`}>
+              <Sparkles className={`h-3.5 w-3.5 animate-spin ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`} />
               <span>{t('sacredMantra')}</span>
-              <span className="text-orange-400">•</span>
+              <span className={isLight ? 'text-[#CC5500]/40' : 'text-orange-400'}>•</span>
               <span>{t('mandalName')}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white flex items-center gap-3">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-red-400">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight flex items-center gap-3">
+              <span className={isLight ? 'text-[#CC5500]' : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-red-400'}>
                 {t('musicTitle')}
               </span>
               <span className="text-2xl sm:text-3xl">🪔</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-orange-200/80 max-w-2xl">
+            <p className={`text-xs sm:text-sm max-w-2xl ${
+              isLight ? 'text-stone-600' : 'text-orange-200/80'
+            }`}>
               {t('musicSubtitle')}
             </p>
           </div>
@@ -519,20 +535,15 @@ export default function MusicPage() {
                 playTempleBell();
                 setIsSuggestModalOpen(true);
               }}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95 transition-all border border-amber-300/40 cursor-pointer"
+              className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                isLight
+                  ? 'bg-[#CC5500] hover:bg-[#B7410E] text-[#FFFDD0] shadow-[#CC5500]/25'
+                  : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 text-white shadow-orange-600/30 border border-amber-300/40'
+              }`}
             >
               <PlusCircle className="h-4 w-4 sm:h-5 sm:w-5" />
               <span>{t('suggestSongBtn')}</span>
             </button>
-
-            {/* <Link
-              to="/dakshina"
-              className="flex items-center gap-2 rounded-2xl border border-amber-500/35 bg-orange-950/60 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-amber-300 hover:bg-orange-900/60 transition-all"
-            >
-              <Tv className="h-4 w-4 text-amber-400" />
-              <span className="hidden sm:inline">{t('liveBoard')}</span>
-              <span className="sm:hidden">{t('liveBoardShort')}</span>
-            </Link> */}
           </div>
         </div>
       </header>
@@ -543,30 +554,48 @@ export default function MusicPage() {
       <section ref={playerRef} className="scroll-mt-20 sm:scroll-mt-24 space-y-3 sm:space-y-4">
         <ErrorBoundary onReset={fetchSongs}>
           {isLoading ? (
-          <div className="rounded-2xl sm:rounded-3xl border border-amber-500/35 bg-black/80 p-5 sm:p-10 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)] text-center space-y-4">
-            <div className="flex items-center justify-center gap-2 text-amber-400 font-black text-xs sm:text-base">
-              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-amber-400" />
+          <div className={`rounded-2xl sm:rounded-3xl border p-5 sm:p-10 backdrop-blur-2xl text-center space-y-4 ${
+            isLight
+              ? 'border-[#CC5500]/30 bg-[#FFFDD0] text-[#2B2B2B]'
+              : 'border-amber-500/35 bg-black/80 shadow-[0_15px_45px_rgba(234,88,12,0.3)]'
+          }`}>
+            <div className={`flex items-center justify-center gap-2 font-black text-xs sm:text-base ${
+              isLight ? 'text-[#CC5500]' : 'text-amber-400'
+            }`}>
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
               <span>{isMarathi ? 'भक्ती संगीत थेट लोड होत आहे...' : 'Loading devotional music...'}</span>
             </div>
-            <div className="aspect-video max-w-2xl mx-auto rounded-xl sm:rounded-2xl bg-orange-950/20 border border-amber-500/20 flex items-center justify-center animate-pulse">
-              <Music className="h-10 w-10 sm:h-14 sm:w-14 text-amber-500/40 animate-bounce" />
+            <div className={`aspect-video max-w-2xl mx-auto rounded-xl sm:rounded-2xl border flex items-center justify-center animate-pulse ${
+              isLight ? 'bg-[#F5F5DC] border-[#CC5500]/20' : 'bg-orange-950/20 border-amber-500/20'
+            }`}>
+              <Music className={`h-10 w-10 sm:h-14 sm:w-14 animate-bounce ${isLight ? 'text-[#CC5500]/40' : 'text-amber-500/40'}`} />
             </div>
           </div>
         ) : activeSong ? (
-          <div className="rounded-2xl sm:rounded-3xl border border-amber-500/35 bg-black/85 p-2 sm:p-4 md:p-5 backdrop-blur-2xl shadow-[0_15px_45px_rgba(234,88,12,0.3)]">
+          <div className={`rounded-2xl sm:rounded-3xl border p-2 sm:p-4 md:p-5 backdrop-blur-2xl transition-colors ${
+            isLight
+              ? 'border-[#CC5500]/30 bg-[#FFFDD0] shadow-[0_15px_45px_rgba(204,85,0,0.12)] text-[#2B2B2B]'
+              : 'border-amber-500/35 bg-black/85 shadow-[0_15px_45px_rgba(234,88,12,0.3)] text-white'
+          }`}>
             {/* Top Status Bar of Player Window */}
-            <div className="flex items-center justify-between gap-1.5 pb-2 sm:pb-3 px-1 border-b border-amber-500/20 mb-2 sm:mb-3 text-xs">
+            <div className={`flex items-center justify-between gap-1.5 pb-2 sm:pb-3 px-1 border-b mb-2 sm:mb-3 text-xs ${
+              isLight ? 'border-[#CC5500]/20' : 'border-amber-500/20'
+            }`}>
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                 <span className="flex h-2 w-2 sm:h-2.5 sm:w-2.5 relative shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-emerald-500" />
                 </span>
-                <span className="font-bold text-amber-300 uppercase tracking-wider text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 truncate">
+                <span className={`font-bold uppercase tracking-wider text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 truncate ${
+                  isLight ? 'text-[#CC5500]' : 'text-amber-300'
+                }`}>
                   <Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-500 animate-pulse shrink-0" />
                   <span>{t('nowPlaying')}</span>
                 </span>
                 {activeSong.isSuggestion && (
-                  <span className="rounded-full bg-rose-500/20 border border-rose-400/40 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-rose-300 shrink-0">
+                  <span className={`rounded-full border px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold shrink-0 ${
+                    isLight ? 'bg-rose-100 border-rose-400/50 text-rose-800' : 'bg-rose-500/20 border-rose-400/40 text-rose-300'
+                  }`}>
                     {t('catMusicSuggestions')}
                   </span>
                 )}
@@ -576,25 +605,37 @@ export default function MusicPage() {
                 <button
                   onClick={toggleFullscreen}
                   title={isFullscreen ? 'सामान्य पडदा (Exit Fullscreen)' : 'मोठा पडदा (Theater/Fullscreen)'}
-                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2 sm:px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                  className={`flex items-center gap-1 rounded-xl border px-2 sm:px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-700 hover:text-[#CC5500]'
+                      : 'border-amber-500/30 bg-orange-950/40 text-orange-200 hover:text-white'
+                  }`}
                 >
-                  <Maximize2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />
+                  <Maximize2 className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`} />
                   <span className="hidden sm:inline">{isFullscreen ? 'Exit' : 'Theater'}</span>
                 </button>
                 <button
                   onClick={handleShuffle}
                   title="Shuffle / Random"
-                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2 sm:px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                  className={`flex items-center gap-1 rounded-xl border px-2 sm:px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-700 hover:text-[#CC5500]'
+                      : 'border-amber-500/30 bg-orange-950/40 text-orange-200 hover:text-white'
+                  }`}
                 >
-                  <Shuffle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />
+                  <Shuffle className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`} />
                   <span className="hidden sm:inline">Shuffle</span>
                 </button>
                 <button
                   onClick={handleShare}
                   title="Share Song"
-                  className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-orange-950/40 px-2 sm:px-2.5 py-1 text-[11px] font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                  className={`flex items-center gap-1 rounded-xl border px-2 sm:px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-700 hover:text-[#CC5500]'
+                      : 'border-amber-500/30 bg-orange-950/40 text-orange-200 hover:text-white'
+                  }`}
                 >
-                  {copiedLink ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" /> : <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400" />}
+                  {copiedLink ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" /> : <Share2 className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`} />}
                   <span className="hidden sm:inline">{copiedLink ? 'Copied' : t('shareSong')}</span>
                 </button>
               </div>
@@ -640,37 +681,55 @@ export default function MusicPage() {
               {/* Song Title, Category & Artist */}
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-lg md:text-xl font-black text-white tracking-tight leading-snug">
+                  <h2 className={`text-base sm:text-lg md:text-xl font-black tracking-tight leading-snug ${
+                    isLight ? 'text-stone-900' : 'text-white'
+                  }`}>
                     {activeSong.title}
                   </h2>
-                  <span className="rounded-md bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-black text-amber-300 shrink-0 uppercase tracking-wide">
+                  <span className={`rounded-md border px-2 py-0.5 text-[10px] font-black shrink-0 uppercase tracking-wide ${
+                    isLight
+                      ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                      : 'bg-amber-500/20 border-amber-400/40 text-amber-300'
+                  }`}>
                     {activeSong.category}
                   </span>
                   {activeSong.movieOrAlbum && (
-                    <span className="rounded-md bg-orange-950/80 border border-orange-500/35 px-2 py-0.5 text-[10px] font-bold text-amber-200 shrink-0">
+                    <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold shrink-0 ${
+                      isLight
+                        ? 'bg-[#FFFDD0] border-[#CC5500]/30 text-stone-700'
+                        : 'bg-orange-950/80 border-orange-500/35 text-amber-200'
+                    }`}>
                       🎬 {activeSong.movieOrAlbum}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-orange-200/80 font-medium">
-                  <span className="text-amber-300 font-semibold">
+                <div className={`flex items-center gap-2 text-xs font-medium ${
+                  isLight ? 'text-stone-600' : 'text-orange-200/80'
+                }`}>
+                  <span className={`font-semibold ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                     {activeSong.artist || activeSong.singer || 'श्री गणेश भक्ती'}
                   </span>
-                  <span className="text-orange-400/60">•</span>
-                  <span className="text-orange-300/80 font-mono text-[11px] sm:text-xs">
+                  <span className={isLight ? 'text-stone-400' : 'text-orange-400/60'}>•</span>
+                  <span className={`font-mono text-[11px] sm:text-xs ${isLight ? 'text-stone-500' : 'text-orange-300/80'}`}>
                     {activeSong.duration || 'Special Track'}
                   </span>
                 </div>
               </div>
 
               {/* Mobile & Desktop Responsive Controls Bar */}
-              <div className="pt-2.5 sm:pt-3 border-t border-amber-500/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+              <div className={`pt-2.5 sm:pt-3 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 ${
+                isLight ? 'border-[#CC5500]/20' : 'border-amber-500/20'
+              }`}>
                 {/* Main Playback Cluster (Prev, Shuffle, Next) */}
                 <div className="flex items-center justify-center gap-2 sm:gap-2.5">
                   <button
                     onClick={handlePrevSong}
-                    className="flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-amber-500/35 bg-orange-950/60 text-amber-300 hover:bg-orange-900/70 hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
+                    className={`flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#FFFDD0]'
+                        : 'border-amber-500/35 bg-orange-950/60 text-amber-300 hover:bg-orange-900/70'
+                    }`}
                     title="मागील गाणे (Previous)"
                   >
                     <SkipBack className="h-4 w-4" />
@@ -678,7 +737,11 @@ export default function MusicPage() {
 
                   <button
                     onClick={handleShuffle}
-                    className="flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-amber-500/35 bg-orange-950/60 text-amber-300 hover:bg-orange-900/70 hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
+                    className={`flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#FFFDD0]'
+                        : 'border-amber-500/35 bg-orange-950/60 text-amber-300 hover:bg-orange-900/70'
+                    }`}
                     title="यादृच्छिक गाणे (Shuffle)"
                   >
                     <Shuffle className="h-4 w-4" />
@@ -686,7 +749,11 @@ export default function MusicPage() {
 
                   <button
                     onClick={handleNextSong}
-                    className="flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-orange-500/50 bg-gradient-to-r from-amber-500/30 to-orange-600/30 text-amber-200 hover:scale-105 active:scale-95 transition-all shadow-md shadow-orange-900/30 cursor-pointer"
+                    className={`flex h-10 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-xl border transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
+                      isLight
+                        ? 'border-[#CC5500] bg-[#CC5500] text-white hover:bg-[#B7410E] shadow-[#CC5500]/20'
+                        : 'border-orange-500/50 bg-gradient-to-r from-amber-500/30 to-orange-600/30 text-amber-200 shadow-orange-900/30'
+                    }`}
                     title="पुढील गाणे (Next)"
                   >
                     <SkipForward className="h-4 w-4" />
@@ -711,12 +778,16 @@ export default function MusicPage() {
                     }}
                     className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
                       autoPlayNext
-                        ? 'border-emerald-500/50 bg-emerald-950/70 text-emerald-300 shadow-sm shadow-emerald-900/40 ring-1 ring-emerald-400/40'
-                        : 'border-amber-500/25 bg-orange-950/40 text-orange-200/60 hover:text-white'
+                        ? isLight
+                          ? 'border-emerald-600/50 bg-emerald-50 text-emerald-800 shadow-sm ring-1 ring-emerald-500/30'
+                          : 'border-emerald-500/50 bg-emerald-950/70 text-emerald-300 shadow-sm shadow-emerald-900/40 ring-1 ring-emerald-400/40'
+                        : isLight
+                          ? 'border-[#CC5500]/25 bg-[#F5F5DC] text-stone-600 hover:text-[#CC5500]'
+                          : 'border-amber-500/25 bg-orange-950/40 text-orange-200/60 hover:text-white'
                     }`}
                     title={autoPlayNext ? 'ऑटो-प्ले चालू (गाणे संपल्यावर पुढील गाणे आपोआप सुरू होईल)' : 'ऑटो-प्ले बंद करा'}
                   >
-                    <Radio className={`h-3.5 w-3.5 shrink-0 ${autoPlayNext ? 'text-emerald-400 animate-pulse' : ''}`} />
+                    <Radio className={`h-3.5 w-3.5 shrink-0 ${autoPlayNext ? (isLight ? 'text-emerald-600 animate-pulse' : 'text-emerald-400 animate-pulse') : ''}`} />
                     <span className="whitespace-nowrap">
                       {autoPlayNext
                         ? (isMarathi ? 'अखंड संगीत' : 'Auto Next')
@@ -729,8 +800,12 @@ export default function MusicPage() {
                     onClick={(e) => handleLike(e, activeSong)}
                     className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
                       likedSongIds.includes(activeSong.id || activeSong._id)
-                        ? 'border-red-500/50 bg-red-600/25 text-red-300 shadow-md shadow-red-600/30'
-                        : 'border-amber-500/30 bg-orange-950/50 text-orange-200 hover:text-white'
+                        ? isLight
+                          ? 'border-red-400/50 bg-red-50 text-red-700 shadow-sm'
+                          : 'border-red-500/50 bg-red-600/25 text-red-300 shadow-md shadow-red-600/30'
+                        : isLight
+                          ? 'border-[#CC5500]/25 bg-[#F5F5DC] text-stone-600 hover:text-[#CC5500]'
+                          : 'border-amber-500/30 bg-orange-950/50 text-orange-200 hover:text-white'
                     }`}
                     title="गाणे आवडले"
                   >
@@ -747,7 +822,11 @@ export default function MusicPage() {
                     href={`https://www.youtube.com/watch?v=${activeSong.youtubeId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/50 px-2.5 sm:px-3 py-2 text-xs font-bold text-red-200 transition-all cursor-pointer"
+                    className={`flex items-center justify-center gap-1 rounded-xl border px-2.5 sm:px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      isLight
+                        ? 'border-red-400/40 bg-red-50 text-red-700 hover:bg-red-100'
+                        : 'border-red-500/40 bg-red-950/40 hover:bg-red-900/50 text-red-200'
+                    }`}
                     title={t('openInYoutube')}
                   >
                     <ExternalLink className="h-3.5 w-3.5 shrink-0" />
@@ -758,8 +837,12 @@ export default function MusicPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl border border-amber-500/35 bg-black/80 p-8 text-center text-orange-200 backdrop-blur-2xl">
-            <Music className="mx-auto h-12 w-12 text-amber-400/50 mb-2" />
+          <div className={`rounded-3xl border p-8 text-center backdrop-blur-2xl ${
+            isLight
+              ? 'border-[#CC5500]/20 bg-[#FFFDD0]/90 text-stone-700'
+              : 'border-amber-500/35 bg-black/80 text-orange-200'
+          }`}>
+            <Music className={`mx-auto h-12 w-12 mb-2 ${isLight ? 'text-[#CC5500]/60' : 'text-amber-400/50'}`} />
             <p className="font-bold">{t('noSongsFound')}</p>
           </div>
         )}
@@ -791,15 +874,25 @@ export default function MusicPage() {
                 }}
                 className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-black transition-all shrink-0 cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-amber-500 to-red-600 text-white shadow-lg shadow-orange-600/35 border border-amber-300 scale-105'
-                    : 'border border-amber-500/25 bg-orange-950/40 text-orange-200/80 hover:bg-orange-900/40 hover:text-white'
+                    ? isLight
+                      ? 'bg-[#CC5500] text-white shadow-lg shadow-[#CC5500]/30 border border-[#B7410E] scale-105'
+                      : 'bg-gradient-to-r from-amber-500 to-red-600 text-white shadow-lg shadow-orange-600/35 border border-amber-300 scale-105'
+                    : isLight
+                      ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] hover:text-[#CC5500]'
+                      : 'border border-amber-500/25 bg-orange-950/40 text-orange-200/80 hover:bg-orange-900/40 hover:text-white'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
                 <span>{cat.label}</span>
                 <span
                   className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
-                    isActive ? 'bg-black/40 text-amber-200' : 'bg-amber-500/20 text-amber-300'
+                    isActive
+                      ? isLight
+                        ? 'bg-white/30 text-white'
+                        : 'bg-black/40 text-amber-200'
+                      : isLight
+                        ? 'bg-[#CC5500]/15 text-[#CC5500]'
+                        : 'bg-amber-500/20 text-amber-300'
                   }`}
                 >
                   {count}
@@ -811,18 +904,26 @@ export default function MusicPage() {
 
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-300/70" />
+          <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 ${
+            isLight ? 'text-[#CC5500]' : 'text-orange-300/70'
+          }`} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('searchSongsPlaceholder')}
-            className="w-full rounded-2xl border border-amber-500/30 bg-orange-950/40 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-white placeholder-orange-300/40 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+            className={`w-full rounded-2xl border py-2.5 pl-10 pr-10 text-xs sm:text-sm focus:outline-none focus:ring-2 ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-[#CC5500]/20'
+                : 'border-amber-500/30 bg-orange-950/40 text-white placeholder-orange-300/40 focus:border-amber-400 focus:ring-amber-400'
+            }`}
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-orange-300/70 hover:text-white"
+              className={`absolute right-3.5 top-1/2 -translate-y-1/2 ${
+                isLight ? 'text-stone-400 hover:text-[#CC5500]' : 'text-orange-300/70 hover:text-white'
+              }`}
             >
               <X className="h-4 w-4" />
             </button>
@@ -834,7 +935,9 @@ export default function MusicPage() {
       {/* SONGS GRID (PLAYABLE CARDS)                               */}
       {/* ========================================================= */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between text-xs text-orange-200/70 px-1 font-bold">
+        <div className={`flex items-center justify-between text-xs px-1 font-bold ${
+          isLight ? 'text-stone-600' : 'text-orange-200/70'
+        }`}>
           <span>
             {filteredSongs.length} {t('music')}
           </span>
@@ -846,25 +949,35 @@ export default function MusicPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-amber-500/20 bg-orange-950/30 p-3.5 space-y-3 animate-pulse"
+                className={`rounded-2xl border p-3.5 space-y-3 animate-pulse ${
+                  isLight ? 'border-[#CC5500]/20 bg-[#F5F5DC]' : 'border-amber-500/20 bg-orange-950/30'
+                }`}
               >
-                <div className="aspect-video w-full rounded-xl bg-orange-950/60" />
-                <div className="h-4 w-3/4 bg-amber-500/20 rounded" />
-                <div className="h-3 w-1/2 bg-amber-500/10 rounded" />
-                <div className="h-3 w-1/4 bg-amber-500/10 rounded" />
+                <div className={`aspect-video w-full rounded-xl ${isLight ? 'bg-stone-300' : 'bg-orange-950/60'}`} />
+                <div className={`h-4 w-3/4 rounded ${isLight ? 'bg-[#CC5500]/20' : 'bg-amber-500/20'}`} />
+                <div className={`h-3 w-1/2 rounded ${isLight ? 'bg-[#CC5500]/10' : 'bg-amber-500/10'}`} />
+                <div className={`h-3 w-1/4 rounded ${isLight ? 'bg-[#CC5500]/10' : 'bg-amber-500/10'}`} />
               </div>
             ))}
           </div>
         ) : filteredSongs.length === 0 ? (
-          <div className="rounded-3xl border border-amber-500/20 bg-orange-950/20 p-12 text-center backdrop-blur-xl">
-            <Music className="mx-auto h-12 w-12 text-orange-400/40 mb-3" />
-            <p className="font-bold text-orange-200">{t('noSongsFound')}</p>
-            <p className="text-xs text-orange-200/60 mt-1">
+          <div className={`rounded-3xl border p-12 text-center backdrop-blur-xl ${
+            isLight
+              ? 'border-[#CC5500]/20 bg-[#F5F5DC]/90 text-stone-700'
+              : 'border-amber-500/20 bg-orange-950/20 text-orange-200'
+          }`}>
+            <Music className={`mx-auto h-12 w-12 mb-3 ${isLight ? 'text-[#CC5500]/40' : 'text-orange-400/40'}`} />
+            <p className={`font-bold ${isLight ? 'text-stone-800' : 'text-orange-200'}`}>{t('noSongsFound')}</p>
+            <p className={`text-xs mt-1 ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
               आपले आवडते गाणे मंडळाला सुचवण्यासाठी खालील बटणावर क्लिक करा:
             </p>
             <button
               onClick={() => setIsSuggestModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-red-600 px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer"
+              className={`mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer ${
+                isLight
+                  ? 'bg-[#CC5500] hover:bg-[#B7410E]'
+                  : 'bg-gradient-to-r from-amber-500 to-red-600'
+              }`}
             >
               <PlusCircle className="h-4 w-4" />
               <span>{t('suggestSongBtn')}</span>
@@ -883,8 +996,12 @@ export default function MusicPage() {
                   onClick={() => handleSelectSong(song)}
                   className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all cursor-pointer backdrop-blur-xl ${
                     isSelected
-                      ? 'border-amber-400 bg-gradient-to-b from-orange-950/90 via-red-950/80 to-black/95 shadow-[0_8px_30px_rgba(245,158,11,0.35)] ring-2 ring-amber-400/50'
-                      : 'border-amber-500/25 bg-orange-950/30 hover:border-amber-400/50 hover:bg-orange-950/50'
+                      ? isLight
+                        ? 'border-[#CC5500] bg-[#FFFDD0] shadow-[0_8px_30px_rgba(204,85,0,0.25)] ring-2 ring-[#CC5500]/50'
+                        : 'border-amber-400 bg-gradient-to-b from-orange-950/90 via-red-950/80 to-black/95 shadow-[0_8px_30px_rgba(245,158,11,0.35)] ring-2 ring-amber-400/50'
+                      : isLight
+                        ? 'border-[#CC5500]/20 bg-[#F5F5DC] hover:border-[#CC5500]/50 hover:bg-[#FFFDD0] shadow-sm'
+                        : 'border-amber-500/25 bg-orange-950/30 hover:border-amber-400/50 hover:bg-orange-950/50'
                   }`}
                 >
                   {/* Thumbnail Banner with YouTube HQ preview image */}
@@ -906,7 +1023,7 @@ export default function MusicPage() {
                         className={`flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-transform ${
                           isSelected
                             ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black scale-110'
-                            : 'bg-black/60 text-white group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-black'
+                            : 'bg-black/60 text-white group-hover:scale-110 group-hover:bg-[#CC5500] group-hover:text-white'
                         }`}
                       >
                         <Play className="h-5 w-5 fill-current ml-0.5" />
@@ -938,37 +1055,53 @@ export default function MusicPage() {
                   <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex items-start justify-between gap-1">
-                        <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-2">
+                        <h3 className={`text-sm font-bold transition-colors line-clamp-2 ${
+                          isLight ? 'text-stone-900 group-hover:text-[#CC5500]' : 'text-white group-hover:text-amber-300'
+                        }`}>
                           {song.title}
                         </h3>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs text-orange-200/80 font-medium mt-1 line-clamp-1 flex-wrap">
-                        <span className="text-amber-400 font-semibold">{song.artist || song.singer || 'श्री गणेश भक्ती'}</span>
+                      <div className={`flex items-center gap-1.5 text-xs font-medium mt-1 line-clamp-1 flex-wrap ${
+                        isLight ? 'text-stone-600' : 'text-orange-200/80'
+                      }`}>
+                        <span className={`font-semibold ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>
+                          {song.artist || song.singer || 'श्री गणेश भक्ती'}
+                        </span>
                         {song.movieOrAlbum && (
                           <>
-                            <span className="text-orange-500/50">•</span>
-                            <span className="text-orange-200/70 text-[11px]">🎬 {song.movieOrAlbum}</span>
+                            <span className={isLight ? 'text-stone-400' : 'text-orange-500/50'}>•</span>
+                            <span className={`text-[11px] ${isLight ? 'text-stone-500' : 'text-orange-200/70'}`}>🎬 {song.movieOrAlbum}</span>
                           </>
                         )}
                       </div>
 
                       {song.vibe && (
-                        <p className="text-[11px] text-amber-200/80 line-clamp-2 mt-1.5 italic bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/15">
+                        <p className={`text-[11px] line-clamp-2 mt-1.5 italic p-1.5 rounded-lg border ${
+                          isLight
+                            ? 'text-stone-600 bg-stone-100/80 border-stone-200'
+                            : 'text-amber-200/80 bg-amber-500/10 border-amber-500/15'
+                        }`}>
                           "{song.vibe}"
                         </p>
                       )}
 
                       {song.message && (
-                        <p className="text-[11px] text-rose-300/90 italic line-clamp-1 mt-1">
+                        <p className={`text-[11px] italic line-clamp-1 mt-1 ${isLight ? 'text-rose-700' : 'text-rose-300/90'}`}>
                           "{song.message}"
                         </p>
                       )}
                     </div>
 
                     {/* Bottom Metadata & Like Button */}
-                    <div className="pt-2 border-t border-amber-500/15 flex items-center justify-between text-xs">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-400/20">
+                    <div className={`pt-2 border-t flex items-center justify-between text-xs ${
+                      isLight ? 'border-[#CC5500]/15' : 'border-amber-500/15'
+                    }`}>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                        isLight
+                          ? 'text-[#CC5500] bg-[#CC5500]/10 border-[#CC5500]/25'
+                          : 'text-amber-400/90 bg-amber-500/15 border-amber-400/20'
+                      }`}>
                         {song.category}
                       </span>
 
@@ -976,8 +1109,12 @@ export default function MusicPage() {
                         onClick={(e) => handleLike(e, song)}
                         className={`flex items-center gap-1 rounded-lg px-2 py-1 transition-all cursor-pointer ${
                           isLiked
-                            ? 'text-red-400 font-bold bg-red-500/15'
-                            : 'text-orange-200/60 hover:text-white hover:bg-orange-950/40'
+                            ? isLight
+                              ? 'text-red-600 font-bold bg-red-100'
+                              : 'text-red-400 font-bold bg-red-500/15'
+                            : isLight
+                              ? 'text-stone-500 hover:text-[#CC5500] hover:bg-[#F5F5DC]'
+                              : 'text-orange-200/60 hover:text-white hover:bg-orange-950/40'
                         }`}
                       >
                         <Heart className={`h-3.5 w-3.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
@@ -1002,33 +1139,51 @@ export default function MusicPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg rounded-3xl border border-amber-500/40 bg-gradient-to-b from-orange-950 via-stone-950 to-black p-5 sm:p-7 shadow-[0_20px_60px_rgba(234,88,12,0.4)] space-y-4 my-8"
+              className={`relative w-full max-w-lg rounded-3xl border p-5 sm:p-7 space-y-4 my-8 shadow-2xl ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#FFFDD0] text-stone-800 shadow-2xl'
+                  : 'border-amber-500/40 bg-gradient-to-b from-orange-950 via-stone-950 to-black text-white shadow-[0_20px_60px_rgba(234,88,12,0.4)]'
+              }`}
             >
               {/* Close Button */}
               <button
                 onClick={() => setIsSuggestModalOpen(false)}
-                className="absolute top-4 right-4 rounded-full border border-amber-500/30 bg-orange-950/60 p-1.5 text-orange-200 hover:text-white hover:bg-orange-900/60 transition-all cursor-pointer"
+                className={`absolute top-4 right-4 rounded-full border p-1.5 transition-all cursor-pointer ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-700 hover:text-[#CC5500] hover:bg-[#FFFDD0]'
+                    : 'border-amber-500/30 bg-orange-950/60 text-orange-200 hover:text-white hover:bg-orange-900/60'
+                }`}
               >
                 <X className="h-5 w-5" />
               </button>
 
               {/* Modal Header */}
               <div className="space-y-1 pr-6">
-                <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                <div className={`flex items-center gap-2 text-xs font-bold ${
+                  isLight ? 'text-[#CC5500]' : 'text-amber-400'
+                }`}>
                   <Music className="h-4 w-4" />
                   <span>{t('mandalName')}</span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black text-white">
+                <h3 className={`text-xl sm:text-2xl font-black ${
+                  isLight ? 'text-stone-900' : 'text-white'
+                }`}>
                   {t('suggestSongTitle')}
                 </h3>
-                <p className="text-xs text-orange-200/70">
+                <p className={`text-xs ${
+                  isLight ? 'text-stone-600' : 'text-orange-200/70'
+                }`}>
                   {t('suggestSongSubtitle')}
                 </p>
               </div>
 
               {submitError && (
-                <div className="rounded-xl border border-red-500/50 bg-red-950/40 p-3 text-xs text-red-200 flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                <div className={`rounded-xl border p-3 text-xs flex items-center gap-2 ${
+                  isLight
+                    ? 'border-red-400/50 bg-red-50 text-red-800'
+                    : 'border-red-500/50 bg-red-950/40 text-red-200'
+                }`}>
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
                   <span>{submitError}</span>
                 </div>
               )}
@@ -1037,7 +1192,9 @@ export default function MusicPage() {
               <form onSubmit={handleSuggestSubmit} className="space-y-3.5">
                 {/* Song Title */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-amber-200">
+                  <label className={`text-xs font-bold ${
+                    isLight ? 'text-stone-800' : 'text-amber-200'
+                  }`}>
                     {t('songTitleLabel')}
                   </label>
                   <input
@@ -1048,14 +1205,20 @@ export default function MusicPage() {
                       setSuggestForm((prev) => ({ ...prev, title: e.target.value }))
                     }
                     placeholder={t('songTitlePlaceholder')}
-                    className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                        : 'border-amber-500/30 bg-orange-950/50 text-white placeholder-orange-300/35 focus:border-amber-400'
+                    }`}
                   />
                 </div>
 
                 {/* Singer & Category Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-amber-200">
+                    <label className={`text-xs font-bold ${
+                      isLight ? 'text-stone-800' : 'text-amber-200'
+                    }`}>
                       {t('singerLabel')}
                     </label>
                     <input
@@ -1065,12 +1228,18 @@ export default function MusicPage() {
                         setSuggestForm((prev) => ({ ...prev, singer: e.target.value }))
                       }
                       placeholder={t('singerPlaceholder')}
-                      className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
+                      className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                          : 'border-amber-500/30 bg-orange-950/50 text-white placeholder-orange-300/35 focus:border-amber-400'
+                      }`}
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-amber-200">
+                    <label className={`text-xs font-bold ${
+                      isLight ? 'text-stone-800' : 'text-amber-200'
+                    }`}>
                       {t('songCategoryLabel')}
                     </label>
                     <select
@@ -1078,7 +1247,11 @@ export default function MusicPage() {
                       onChange={(e) =>
                         setSuggestForm((prev) => ({ ...prev, category: e.target.value }))
                       }
-                      className="w-full rounded-xl border border-amber-500/30 bg-orange-950 px-3.5 py-2 text-xs sm:text-sm text-white focus:border-amber-400 focus:outline-none"
+                      className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 focus:border-[#CC5500]'
+                          : 'border-amber-500/30 bg-orange-950 text-white focus:border-amber-400'
+                      }`}
                     >
                       <option value="aagman">आगमन, ढोल-ताशा व जल्लोष (Aagman & Dhol Tasha)</option>
                       <option value="bhajan">अमर मराठी क्लासिक्स व लोकगीते (Classics & Folk)</option>
@@ -1089,7 +1262,9 @@ export default function MusicPage() {
 
                 {/* YouTube Link / ID */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-amber-200">
+                  <label className={`text-xs font-bold ${
+                    isLight ? 'text-stone-800' : 'text-amber-200'
+                  }`}>
                     {t('youtubeUrlLabel')}
                   </label>
                   <input
@@ -1100,17 +1275,27 @@ export default function MusicPage() {
                       setSuggestForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))
                     }
                     placeholder={t('youtubeUrlPlaceholder')}
-                    className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                        : 'border-amber-500/30 bg-orange-950/50 text-white placeholder-orange-300/35 focus:border-amber-400'
+                    }`}
                   />
-                  <p className="text-[10px] text-orange-200/60">
+                  <p className={`text-[10px] ${
+                    isLight ? 'text-stone-500' : 'text-orange-200/60'
+                  }`}>
                     उदा. https://youtu.be/o-0ygW-B_gI किंवा https://www.youtube.com/watch?v=o-0ygW-B_gI
                   </p>
                 </div>
 
                 {/* Live YouTube Preview Box */}
                 {previewModalYoutubeId && (
-                  <div className="rounded-2xl border border-amber-500/30 bg-black/60 p-2.5 space-y-2">
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+                  <div className={`rounded-2xl border p-2.5 space-y-2 ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC]'
+                      : 'border-amber-500/30 bg-black/60'
+                  }`}>
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       <span>YouTube व्हिडिओ सापडला (Live Preview):</span>
                     </div>
@@ -1128,7 +1313,9 @@ export default function MusicPage() {
                 {/* Suggested By & Note */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-amber-200">
+                    <label className={`text-xs font-bold ${
+                      isLight ? 'text-stone-800' : 'text-amber-200'
+                    }`}>
                       {t('suggestedByLabel')}
                     </label>
                     <input
@@ -1138,12 +1325,18 @@ export default function MusicPage() {
                         setSuggestForm((prev) => ({ ...prev, suggestedBy: e.target.value }))
                       }
                       placeholder={t('suggestedByPlaceholder')}
-                      className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
+                      className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                          : 'border-amber-500/30 bg-orange-950/50 text-white placeholder-orange-300/35 focus:border-amber-400'
+                      }`}
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-amber-200">
+                    <label className={`text-xs font-bold ${
+                      isLight ? 'text-stone-800' : 'text-amber-200'
+                    }`}>
                       {t('phone')} (ऐच्छिक / Optional)
                     </label>
                     <input
@@ -1153,13 +1346,19 @@ export default function MusicPage() {
                         setSuggestForm((prev) => ({ ...prev, phone: e.target.value }))
                       }
                       placeholder="उदा. 9822******"
-                      className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
+                      className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                          : 'border-amber-500/30 bg-orange-950/50 text-white placeholder-orange-300/35 focus:border-amber-400'
+                      }`}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-amber-200">
+                  <label className={`text-xs font-bold ${
+                    isLight ? 'text-stone-800' : 'text-amber-200'
+                  }`}>
                     {t('messageLabel')}
                   </label>
                   <textarea
@@ -1169,12 +1368,20 @@ export default function MusicPage() {
                       setSuggestForm((prev) => ({ ...prev, message: e.target.value }))
                     }
                     placeholder={t('messagePlaceholder')}
-                    className="w-full rounded-xl border border-amber-500/30 bg-orange-950/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/35 focus:border-amber-400 focus:outline-none"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm focus:outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                        : 'border-amber-500/30 bg-orange-950/50 text-white placeholder-orange-300/35 focus:border-amber-400'
+                    }`}
                   />
                 </div>
 
                 {/* Approval Notice Banner */}
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-200/90 flex items-start gap-2">
+                <div className={`rounded-xl border p-2.5 text-xs flex items-start gap-2 ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-stone-800'
+                    : 'border-amber-500/30 bg-amber-500/10 text-amber-200/90'
+                }`}>
                   <span className="text-sm">ℹ️</span>
                   <p>
                     {isMarathi
@@ -1188,7 +1395,11 @@ export default function MusicPage() {
                   <button
                     type="button"
                     onClick={() => setIsSuggestModalOpen(false)}
-                    className="rounded-xl border border-amber-500/30 bg-orange-950/40 px-4 py-2 text-xs font-bold text-orange-200 hover:text-white transition-all cursor-pointer"
+                    className={`rounded-xl border px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] hover:text-[#CC5500]'
+                        : 'border-amber-500/30 bg-orange-950/40 text-orange-200 hover:text-white'
+                    }`}
                   >
                     {t('cancel')}
                   </button>
@@ -1196,7 +1407,11 @@ export default function MusicPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 px-5 py-2.5 text-xs sm:text-sm font-black text-white shadow-lg shadow-orange-600/40 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                    className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-black text-white shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer ${
+                      isLight
+                        ? 'bg-[#CC5500] hover:bg-[#B7410E] shadow-[#CC5500]/30'
+                        : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 shadow-orange-600/40'
+                    }`}
                   >
                     <PlusCircle className="h-4 w-4" />
                     <span>{isSubmitting ? t('submittingSong') : t('submitSongBtn')}</span>

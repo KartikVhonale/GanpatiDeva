@@ -9,9 +9,11 @@ import {
   Share2,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ReceiptModal({ isOpen, onClose, donation }) {
   const { isMarathi } = useLanguage();
+  const { isLight } = useTheme();
   const [copied, setCopied] = useState(false);
   const printRef = useRef(null);
 
@@ -88,12 +90,20 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn">
       {/* Modal Card */}
-      <div className="relative w-full max-w-lg rounded-3xl border border-amber-500/40 bg-gradient-to-b from-orange-950/95 via-red-950/90 to-black/95 p-4 sm:p-6 shadow-2xl text-white my-auto">
+      <div className={`relative w-full max-w-lg rounded-3xl border p-4 sm:p-6 shadow-2xl my-auto ${
+        isLight
+          ? 'border-[#CC5500]/30 bg-[#FFFDD0] text-stone-900 shadow-2xl'
+          : 'border-amber-500/40 bg-gradient-to-b from-orange-950/95 via-red-950/90 to-black/95 text-white'
+      }`}>
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-orange-200 hover:text-white flex items-center justify-center transition cursor-pointer z-10"
+          className={`absolute top-4 right-4 h-8 w-8 rounded-full flex items-center justify-center transition cursor-pointer z-10 ${
+            isLight
+              ? 'bg-stone-200/80 hover:bg-stone-300 text-stone-700'
+              : 'bg-white/10 hover:bg-white/20 text-orange-200 hover:text-white'
+          }`}
           title={isMarathi ? 'बंद करा' : 'Close'}
         >
           <X className="h-4 w-4" />
@@ -229,7 +239,9 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
         </div>
 
         {/* Action Buttons (Screen Only, Hidden on Print) */}
-        <div className="mt-4 pt-3 border-t border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-2.5 print:hidden">
+        <div className={`mt-4 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-2.5 print:hidden ${
+          isLight ? 'border-[#CC5500]/20' : 'border-amber-500/20'
+        }`}>
           {/* WhatsApp Share Button */}
           <a
             href={getWhatsAppShareUrl()}
@@ -245,7 +257,11 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
           <button
             type="button"
             onClick={handlePrint}
-            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-black font-black text-xs shadow-md shadow-orange-600/30 active:scale-95 transition-all cursor-pointer"
+            className={`w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all cursor-pointer ${
+              isLight
+                ? 'bg-[#CC5500] hover:bg-[#B7410E] text-white shadow-[#CC5500]/30'
+                : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-black font-black shadow-orange-600/30'
+            }`}
           >
             <Printer className="h-3.5 w-3.5" />
             <span>{isMarathi ? 'प्रिंट / PDF' : 'Print / PDF'}</span>
@@ -255,7 +271,11 @@ export default function ReceiptModal({ isOpen, onClose, donation }) {
           <button
             type="button"
             onClick={handleCopyReceipt}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-amber-500/30 bg-black/40 hover:bg-black/60 text-orange-200 text-xs font-bold active:scale-95 transition-all cursor-pointer"
+            className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-xs font-bold active:scale-95 transition-all cursor-pointer ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#F5F5DC] hover:bg-[#FFFDD0] text-stone-700'
+                : 'border-amber-500/30 bg-black/40 hover:bg-black/60 text-orange-200'
+            }`}
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
             <span>{copied ? (isMarathi ? 'प्रत झाली!' : 'Copied!') : (isMarathi ? 'प्रत करा' : 'Copy')}</span>

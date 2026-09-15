@@ -16,6 +16,7 @@ import RecentDonorsList from '../components/RecentDonorsList';
 import ScrollingTicker from '../components/ScrollingTicker';
 import useDonations from '../hooks/useDonations';
 import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
 import { io } from 'socket.io-client';
 
@@ -24,6 +25,7 @@ const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100];
 
 export default function DakshinaBoard() {
   const { t, pick, lang } = useLanguage();
+  const { isLight } = useTheme();
   const {
     totalAmount,
     targetAmount,
@@ -209,22 +211,30 @@ export default function DakshinaBoard() {
       <ScrollingTicker latestDonation={latestDonation} />
 
       {/* Screen Control Header for Pandal TV */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-red-950/50 to-black/80 px-5 py-3 backdrop-blur-xl shadow-lg">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border px-5 py-3 backdrop-blur-xl shadow-lg ${
+        isLight
+          ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900'
+          : 'border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-red-950/50 to-black/80 text-white'
+      }`}>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/20 border border-red-400/40 text-rose-300">
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
+            isLight
+              ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+              : 'bg-red-500/20 border-red-400/40 text-rose-300'
+          }`}>
             <Tv className="h-4 w-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-black text-white">
+              <h2 className={`text-sm sm:text-base font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 {t('dakshinaTitle')}
               </h2>
-              <span className="flex items-center gap-1 rounded-full bg-red-500/20 border border-red-500/40 px-2 py-0.2 text-[10px] font-bold text-red-300 animate-pulse">
+              <span className="flex items-center gap-1 rounded-full bg-red-500/20 border border-red-500/40 px-2 py-0.2 text-[10px] font-bold text-red-500 animate-pulse">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                 LIVE TV
               </span>
             </div>
-            <p className="text-[11px] text-orange-200/70">
+            <p className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
               {t('dakshinaSubtitle')}
             </p>
           </div>
@@ -232,7 +242,11 @@ export default function DakshinaBoard() {
 
         <div className="flex items-center gap-3 self-end sm:self-center">
           {/* Real-time Clock */}
-          <div className="font-mono text-xs font-bold text-amber-300 bg-black/40 border border-amber-500/20 px-3 py-1.5 rounded-xl">
+          <div className={`font-mono text-xs font-bold px-3 py-1.5 rounded-xl border ${
+            isLight
+              ? 'text-[#CC5500] bg-[#F5F5DC] border-[#CC5500]/30'
+              : 'text-amber-300 bg-black/40 border-amber-500/20'
+          }`}>
             {currentTime}
           </div>
 
@@ -240,7 +254,11 @@ export default function DakshinaBoard() {
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="flex items-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-1.5 text-xs font-bold text-amber-200 hover:text-white transition-all shadow cursor-pointer"
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all shadow cursor-pointer ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#FFFDD0]'
+                : 'border-amber-400/40 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 hover:text-white'
+            }`}
             title="Toggle Fullscreen for Pandal TV"
           >
             {isFullscreen ? (
@@ -260,18 +278,28 @@ export default function DakshinaBoard() {
 
       {/* Real-time Notice Board Ticker for Live Pandal TV Display */}
       {liveNotices.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/35 bg-gradient-to-r from-orange-950/80 via-red-950/60 to-black/80 py-2.5 px-3.5 backdrop-blur-xl shadow-md flex items-center gap-3">
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black shadow-inner">
+        <div className={`relative overflow-hidden rounded-2xl border py-2.5 px-3.5 backdrop-blur-xl shadow-md flex items-center gap-3 ${
+          isLight
+            ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-800'
+            : 'border-amber-500/35 bg-gradient-to-r from-orange-950/80 via-red-950/60 to-black/80 text-white'
+        }`}>
+          <div className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-xl text-xs font-black shadow-inner ${
+            isLight
+              ? 'bg-[#CC5500]/10 border border-[#CC5500]/30 text-[#CC5500]'
+              : 'bg-amber-500/20 border border-amber-400/40 text-amber-300'
+          }`}>
             <span className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
             <span>📢 {lang === 'mr' ? 'मंडळ सूचना' : 'Mandal Notice'}:</span>
           </div>
           <div className="overflow-hidden whitespace-nowrap w-full">
-            <div className="inline-flex animate-marquee gap-8 text-xs sm:text-sm font-bold text-amber-200">
+            <div className={`inline-flex animate-marquee gap-8 text-xs sm:text-sm font-bold ${
+              isLight ? 'text-stone-700' : 'text-amber-200'
+            }`}>
               {liveNotices.map((n, i) => (
                 <span key={n._id || i} className="inline-flex items-center gap-2">
-                  <span className="text-amber-400 font-black">[{n.title}]</span>
+                  <span className={`font-black ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>[{n.title}]</span>
                   <span>{n.content}</span>
-                  <span className="text-amber-500/60">✦</span>
+                  <span className={isLight ? 'text-stone-400' : 'text-amber-500/60'}>✦</span>
                 </span>
               ))}
             </div>
@@ -293,19 +321,29 @@ export default function DakshinaBoard() {
         </div>
 
         {/* Dedicated UPI QR Code Card (Configured by Admin) */}
-        <div className="relative overflow-hidden rounded-3xl border border-amber-500/35 bg-gradient-to-br from-orange-950/50 via-red-950/40 to-black/75 p-5 sm:p-6 backdrop-blur-2xl shadow-[0_12px_40px_rgba(234,88,12,0.22)] text-center flex flex-col items-center justify-between">
-          <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-amber-500/15 blur-2xl" />
+        <div className={`relative overflow-hidden rounded-3xl border p-5 sm:p-6 backdrop-blur-2xl text-center flex flex-col items-center justify-between ${
+          isLight
+            ? 'border-[#CC5500]/25 bg-[#FFFDD0] shadow-[0_12px_40px_rgba(204,85,0,0.15)] text-stone-900'
+            : 'border-amber-500/35 bg-gradient-to-br from-orange-950/50 via-red-950/40 to-black/75 shadow-[0_12px_40px_rgba(234,88,12,0.22)] text-white'
+        }`}>
+          <div className={`pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full blur-2xl ${
+            isLight ? 'bg-[#CC5500]/10' : 'bg-amber-500/15'
+          }`} />
 
           {/* Header */}
           <div className="space-y-1 mb-2.5">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
+            <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-[11px] font-bold ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+            }`}>
               <QrCode className="h-3 w-3" />
               <span>{t('digitalSevaBadge')}</span>
             </div>
-            <h3 className="text-lg font-extrabold text-white">
+            <h3 className={`text-lg font-extrabold ${isLight ? 'text-stone-900' : 'text-white'}`}>
               {t('scanPayTitle')}
             </h3>
-            <p className="text-[11px] text-orange-200/75 max-w-xs">
+            <p className={`text-[11px] max-w-xs ${isLight ? 'text-stone-600' : 'text-orange-200/75'}`}>
               {qrCodeNote}
             </p>
           </div>
@@ -329,9 +367,11 @@ export default function DakshinaBoard() {
 
           {/* Quick Amount Selector (Defaults to ₹501 matching user verified UPI link) */}
           <div className="w-full mt-2">
-            <div className="flex items-center justify-between text-[11px] text-orange-200/80 mb-1 px-1">
+            <div className={`flex items-center justify-between text-[11px] mb-1 px-1 ${
+              isLight ? 'text-stone-600' : 'text-orange-200/80'
+            }`}>
               <span>{lang === 'mr' ? 'रक्कम निवडा (Select Amount):' : 'Select Amount:'}</span>
-              <span className="font-mono font-bold text-amber-300">
+              <span className={`font-mono font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                 {selectedAmount ? `₹${selectedAmount}` : (lang === 'mr' ? 'कोणतीही रक्कम' : 'Any Amount')}
               </span>
             </div>
@@ -343,8 +383,12 @@ export default function DakshinaBoard() {
                   onClick={() => setSelectedAmount(amt)}
                   className={`py-1.5 px-0.5 rounded-xl text-xs font-black transition-all cursor-pointer text-center ${
                     selectedAmount === amt
-                      ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-md shadow-orange-500/30 scale-105 ring-1 ring-amber-300'
-                      : 'bg-black/50 text-orange-200 hover:bg-black/70 border border-amber-500/25'
+                      ? isLight
+                        ? 'bg-[#CC5500] text-white shadow-md shadow-[#CC5500]/30 scale-105 ring-1 ring-[#B7410E]'
+                        : 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-md shadow-orange-500/30 scale-105 ring-1 ring-amber-300'
+                      : isLight
+                        ? 'bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] border border-[#CC5500]/25'
+                        : 'bg-black/50 text-orange-200 hover:bg-black/70 border border-amber-500/25'
                   }`}
                 >
                   ₹{amt}
@@ -355,8 +399,12 @@ export default function DakshinaBoard() {
                 onClick={() => setSelectedAmount(null)}
                 className={`py-1.5 px-0.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
                   !selectedAmount
-                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-md scale-105 ring-1 ring-amber-300'
-                    : 'bg-black/50 text-orange-200/70 hover:bg-black/70 border border-amber-500/25'
+                    ? isLight
+                      ? 'bg-[#CC5500] text-white shadow-md scale-105 ring-1 ring-[#B7410E]'
+                      : 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-md scale-105 ring-1 ring-amber-300'
+                    : isLight
+                      ? 'bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] border border-[#CC5500]/25'
+                      : 'bg-black/50 text-orange-200/70 hover:bg-black/70 border border-amber-500/25'
                 }`}
               >
                 {lang === 'mr' ? 'इतर' : 'Any'}
@@ -366,17 +414,23 @@ export default function DakshinaBoard() {
 
           {/* UPI ID Copy Box & Direct Mobile App Pay */}
           <div className="w-full mt-3 space-y-2.5">
-            <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-black/60 px-3.5 py-2 text-xs">
-              <span className="font-mono font-bold text-amber-300 truncate">
+            <div className={`flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-xs ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#F5F5DC]'
+                : 'border-amber-500/30 bg-black/60'
+            }`}>
+              <span className={`font-mono font-bold truncate ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                 {upiId}
               </span>
               <button
                 type="button"
                 onClick={handleCopyUPI}
-                className="flex items-center gap-1 text-[11px] text-orange-200 hover:text-white cursor-pointer shrink-0"
+                className={`flex items-center gap-1 text-[11px] cursor-pointer shrink-0 ${
+                  isLight ? 'text-stone-600 hover:text-[#CC5500]' : 'text-orange-200 hover:text-white'
+                }`}
                 title="Copy UPI ID"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copied ? t('copiedUpi') : t('copyUpi')}</span>
               </button>
             </div>
@@ -390,7 +444,11 @@ export default function DakshinaBoard() {
             </a>
 
             {/* Tip regarding Bank Limit issues */}
-            <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-[10px] text-orange-200/90 leading-relaxed text-center">
+            <div className={`rounded-xl border px-2.5 py-1.5 text-[10px] leading-relaxed text-center ${
+              isLight
+                ? 'border-[#CC5500]/25 bg-[#CC5500]/10 text-stone-700'
+                : 'border-amber-500/25 bg-amber-500/10 text-orange-200/90'
+            }`}>
               {t('upiLimitNote')}
             </div>
 
@@ -402,13 +460,19 @@ export default function DakshinaBoard() {
                 setVerifyError('');
                 setIsVerifyModalOpen(true);
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-2.5 px-3 text-xs font-black text-white shadow-lg shadow-orange-600/30 ring-1 ring-amber-300/50 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-black shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer ${
+                isLight
+                  ? 'bg-[#CC5500] hover:bg-[#B7410E] text-white shadow-[#CC5500]/30 ring-1 ring-[#CC5500]/40'
+                  : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 text-white shadow-orange-600/30 ring-1 ring-amber-300/50'
+              }`}
             >
               <span>{t('verifyPaymentBtn')}</span>
             </button>
 
-            <p className="text-[11px] text-orange-200/60 flex items-center justify-center gap-1">
-              <ShieldCheck className="h-3 w-3 text-emerald-400" />
+            <p className={`text-[11px] flex items-center justify-center gap-1 ${
+              isLight ? 'text-stone-500' : 'text-orange-200/60'
+            }`}>
+              <ShieldCheck className="h-3 w-3 text-emerald-500" />
               <span>{t('safeAccountNotice')}</span>
             </p>
           </div>
@@ -421,26 +485,38 @@ export default function DakshinaBoard() {
       {/* Devotee Payment Verification Modal */}
       {isVerifyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-lg rounded-3xl border border-amber-500/40 bg-gradient-to-b from-orange-950/90 via-red-950/80 to-black/95 p-6 shadow-2xl text-white">
+          <div className={`relative w-full max-w-lg rounded-3xl border p-6 shadow-2xl ${
+            isLight
+              ? 'border-[#CC5500]/30 bg-[#FFFDD0] text-stone-900 shadow-2xl'
+              : 'border-amber-500/40 bg-gradient-to-b from-orange-950/90 via-red-950/80 to-black/95 text-white'
+          }`}>
             {/* Close Button */}
             <button
               type="button"
               onClick={() => setIsVerifyModalOpen(false)}
-              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-orange-200 flex items-center justify-center text-sm cursor-pointer"
+              className={`absolute top-4 right-4 h-8 w-8 rounded-full flex items-center justify-center text-sm cursor-pointer ${
+                isLight
+                  ? 'bg-stone-200/80 hover:bg-stone-300 text-stone-700'
+                  : 'bg-white/10 hover:bg-white/20 text-orange-200'
+              }`}
             >
               <X className="h-4 w-4" />
             </button>
 
             {/* Modal Header */}
             <div className="text-center space-y-1 mb-4">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/20 px-3 py-0.5 text-xs font-bold text-amber-300">
+              <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-bold ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                  : 'border-amber-400/40 bg-amber-500/20 text-amber-300'
+              }`}>
                 <span>🪔</span>
                 <span>{t('verifyModalBadge')}</span>
               </div>
-              <h3 className="text-xl font-black text-white">
+              <h3 className={`text-xl font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 {t('verifyModalTitle')}
               </h3>
-              <p className="text-xs text-orange-200/75">
+              <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/75'}`}>
                 {t('verifyModalSub')}
               </p>
             </div>
@@ -448,19 +524,21 @@ export default function DakshinaBoard() {
             {/* Success Alert */}
             {verifySuccess ? (
               <div className="space-y-4 py-4 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 text-3xl">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-500 border border-emerald-400/40 text-3xl">
                   ✓
                 </div>
-                <div className="text-emerald-300 font-bold text-sm">
+                <div className="text-emerald-600 font-bold text-sm">
                   {verifySuccess}
                 </div>
-                <p className="text-xs text-orange-200/70">
+                <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('verifySuccessSub')}
                 </p>
                 <button
                   type="button"
                   onClick={() => setIsVerifyModalOpen(false)}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-xs font-bold text-white shadow cursor-pointer"
+                  className={`rounded-xl px-6 py-2.5 text-xs font-bold text-white shadow cursor-pointer ${
+                    isLight ? 'bg-[#CC5500] hover:bg-[#B7410E]' : 'bg-gradient-to-r from-amber-500 to-orange-600'
+                  }`}
                 >
                   {t('verifyDoneBtn')}
                 </button>
@@ -469,15 +547,19 @@ export default function DakshinaBoard() {
               <form onSubmit={handleSubmitVerification} className="space-y-3.5">
                 {/* Error Banner */}
                 {verifyError && (
-                  <div className="rounded-xl border border-red-500/40 bg-red-950/60 p-2.5 text-xs text-red-200 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                  <div className={`rounded-xl border p-2.5 text-xs flex items-center gap-2 ${
+                    isLight ? 'border-red-400/50 bg-red-50 text-red-800' : 'border-red-500/40 bg-red-950/60 text-red-200'
+                  }`}>
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
                     <span>{verifyError}</span>
                   </div>
                 )}
 
                 {/* Donor Name */}
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                    isLight ? 'text-stone-700' : 'text-orange-200/80'
+                  }`}>
                     {t('verifyNameLabel')}
                   </label>
                   <input
@@ -486,13 +568,19 @@ export default function DakshinaBoard() {
                     placeholder={t('verifyNamePlaceholder')}
                     value={verifyForm.name}
                     onChange={(e) => setVerifyForm({ ...verifyForm, name: e.target.value })}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs sm:text-sm outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400'
+                    }`}
                   />
                 </div>
 
                 {/* Amount & Quick Chips */}
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                    isLight ? 'text-stone-700' : 'text-orange-200/80'
+                  }`}>
                     {t('verifyAmountLabel')}
                   </label>
                   <input
@@ -502,7 +590,11 @@ export default function DakshinaBoard() {
                     placeholder={t('verifyAmountPlaceholder')}
                     value={verifyForm.amount}
                     onChange={(e) => setVerifyForm({ ...verifyForm, amount: e.target.value })}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-sm font-bold text-amber-300 placeholder-orange-300/40 outline-none focus:border-amber-400 mb-1.5"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-sm font-bold outline-none mb-1.5 ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] placeholder-stone-400 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/50 text-amber-300 placeholder-orange-300/40 focus:border-amber-400'
+                    }`}
                   />
                   <div className="grid grid-cols-6 gap-1">
                     {QUICK_AMOUNTS.map((amt) => (
@@ -512,8 +604,12 @@ export default function DakshinaBoard() {
                         onClick={() => setVerifyForm({ ...verifyForm, amount: amt.toString() })}
                         className={`text-[10px] py-1 rounded-lg border font-bold transition cursor-pointer ${
                           verifyForm.amount === amt.toString()
-                            ? 'bg-amber-400 text-black border-amber-300'
-                            : 'border-amber-500/20 bg-orange-950/40 text-orange-200 hover:bg-orange-900/40'
+                            ? isLight
+                              ? 'bg-[#CC5500] text-white border-[#B7410E]'
+                              : 'bg-amber-400 text-black border-amber-300'
+                            : isLight
+                              ? 'border-[#CC5500]/20 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0]'
+                              : 'border-amber-500/20 bg-orange-950/40 text-orange-200 hover:bg-orange-900/40'
                         }`}
                       >
                         ₹{amt}
@@ -524,7 +620,9 @@ export default function DakshinaBoard() {
 
                 {/* UTR / Transaction ID */}
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                    isLight ? 'text-stone-700' : 'text-orange-200/80'
+                  }`}>
                     {t('verifyUtrLabel')}
                   </label>
                   <input
@@ -533,9 +631,13 @@ export default function DakshinaBoard() {
                     placeholder={t('verifyUtrPlaceholder')}
                     value={verifyForm.utrNumber}
                     onChange={(e) => setVerifyForm({ ...verifyForm, utrNumber: e.target.value })}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2 text-xs font-mono text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400'
+                    }`}
                   />
-                  <span className="text-[10px] text-orange-200/60 mt-0.5 block">
+                  <span className={`text-[10px] mt-0.5 block ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                     {t('verifyUtrHint')}
                   </span>
                 </div>
@@ -543,7 +645,9 @@ export default function DakshinaBoard() {
                 {/* Phone & City */}
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                    <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                      isLight ? 'text-stone-700' : 'text-orange-200/80'
+                    }`}>
                       {t('verifyPhoneLabel')}
                     </label>
                     <input
@@ -551,11 +655,17 @@ export default function DakshinaBoard() {
                       placeholder={t('verifyPhonePlaceholder')}
                       value={verifyForm.phone}
                       onChange={(e) => setVerifyForm({ ...verifyForm, phone: e.target.value })}
-                      className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                      className={`w-full rounded-xl border px-3 py-2 text-xs outline-none ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                          : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400'
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                    <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                      isLight ? 'text-stone-700' : 'text-orange-200/80'
+                    }`}>
                       {t('verifyCityLabel')}
                     </label>
                     <input
@@ -563,25 +673,35 @@ export default function DakshinaBoard() {
                       placeholder={t('verifyCityPlaceholder')}
                       value={verifyForm.city}
                       onChange={(e) => setVerifyForm({ ...verifyForm, city: e.target.value })}
-                      className="w-full rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs text-white placeholder-orange-300/40 outline-none focus:border-amber-400"
+                      className={`w-full rounded-xl border px-3 py-2 text-xs outline-none ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                          : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400'
+                      }`}
                     />
                   </div>
                 </div>
 
                 {/* Seva Category */}
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                    isLight ? 'text-stone-700' : 'text-orange-200/80'
+                  }`}>
                     {t('verifyCategoryLabel')}
                   </label>
                   <select
                     value={verifyForm.category}
                     onChange={(e) => setVerifyForm({ ...verifyForm, category: e.target.value })}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/70 px-3 py-2 text-xs text-orange-100 outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border px-3 py-2 text-xs outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/70 text-orange-100 focus:border-amber-400'
+                    }`}
                   >
                     {SEVA_CATEGORIES.map((cat) => {
                       const label = pick(cat);
                       return (
-                        <option key={cat.id} value={label} className="bg-orange-950 text-white">
+                        <option key={cat.id} value={label} className={isLight ? 'bg-white text-stone-900' : 'bg-orange-950 text-white'}>
                           {cat.icon} {label}
                         </option>
                       );
@@ -593,7 +713,11 @@ export default function DakshinaBoard() {
                 <button
                   type="submit"
                   disabled={submittingVerify}
-                  className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-orange-600/40 hover:brightness-110 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
+                  className={`w-full mt-2 flex items-center justify-center gap-2 rounded-xl py-3 text-xs sm:text-sm font-black text-white shadow-lg active:scale-95 disabled:opacity-60 transition-all cursor-pointer ${
+                    isLight
+                      ? 'bg-[#CC5500] hover:bg-[#B7410E] shadow-[#CC5500]/30'
+                      : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 shadow-orange-600/40 hover:brightness-110'
+                  }`}
                 >
                   {submittingVerify ? (
                     <span>{t('verifySubmittingBtn')}</span>

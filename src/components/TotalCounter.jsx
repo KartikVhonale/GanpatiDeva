@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import CountUpRaw from 'react-countup';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 const CountUp = CountUpRaw?.default || CountUpRaw;
 
@@ -13,6 +14,7 @@ export default function TotalCounter({
   aartiSponsors = 0,
 }) {
   const { t } = useLanguage();
+  const { isLight } = useTheme();
   const percentage = Math.min(Math.round((totalAmount / targetAmount) * 100), 100);
 
   const stats = [
@@ -52,28 +54,49 @@ export default function TotalCounter({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/40 via-red-950/30 to-black/60 p-6 md:p-10 backdrop-blur-2xl shadow-[0_12px_40px_0_rgba(234,88,12,0.22)]"
+        className={`relative overflow-hidden rounded-3xl border p-6 md:p-10 backdrop-blur-2xl transition-colors ${
+          isLight
+            ? 'border-[#CC5500]/25 bg-[#FFFDD0] shadow-[0_12px_40px_0_rgba(204,85,0,0.15)] text-stone-900'
+            : 'border-amber-500/30 bg-gradient-to-br from-orange-950/40 via-red-950/30 to-black/60 shadow-[0_12px_40px_0_rgba(234,88,12,0.22)]'
+        }`}
       >
         {/* Soft background glow orbs */}
-        <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-amber-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-red-600/15 blur-3xl" />
+        {isLight ? (
+          <>
+            <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#CC5500]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
+          </>
+        ) : (
+          <>
+            <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-amber-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-red-600/15 blur-3xl" />
+          </>
+        )}
 
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Amount Display */}
           <div className="text-center md:text-left space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3.5 py-1 text-xs font-semibold text-amber-300">
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-xs font-semibold ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                : 'border-amber-400/30 bg-amber-500/10 text-amber-300'
+            }`}>
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{t('totalCollectionBadge')}</span>
             </div>
 
             <div className="flex items-baseline justify-center md:justify-start gap-1 font-extrabold tracking-tight">
-              <span className="text-3xl md:text-5xl text-amber-400">₹</span>
+              <span className={`text-3xl md:text-5xl ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>₹</span>
               <motion.span
                 key={totalAmount}
-                initial={{ scale: 1.04, color: "#fef08a" }}
-                animate={{ scale: 1, color: "#ffffff" }}
+                initial={{ scale: 1.04, color: isLight ? "#CC5500" : "#fef08a" }}
+                animate={{ scale: 1, color: isLight ? "#1c1917" : "#ffffff" }}
                 transition={{ duration: 0.7 }}
-                className="text-4xl md:text-6xl text-white font-black drop-shadow-[0_4px_12px_rgba(245,158,11,0.4)] inline-block"
+                className={`text-4xl md:text-6xl font-black inline-block ${
+                  isLight
+                    ? 'text-stone-900 drop-shadow-none'
+                    : 'text-white drop-shadow-[0_4px_12px_rgba(245,158,11,0.4)]'
+                }`}
               >
                 <CountUp
                   end={totalAmount}
@@ -84,14 +107,18 @@ export default function TotalCounter({
               </motion.span>
             </div>
 
-            <p className="text-xs md:text-sm text-orange-200/75">
-              {t('targetGoal')} <span className="font-semibold text-amber-300">₹{targetAmount.toLocaleString()}</span> • {t('targetGoalPurpose')}
+            <p className={`text-xs md:text-sm ${isLight ? 'text-stone-600' : 'text-orange-200/75'}`}>
+              {t('targetGoal')} <span className={`font-semibold ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>₹{targetAmount.toLocaleString()}</span> • {t('targetGoalPurpose')}
             </p>
           </div>
 
           {/* Target Progress Radial Metric */}
           <div className="flex flex-col items-center md:items-end justify-center w-full md:w-auto">
-            <div className="flex items-center gap-4 bg-orange-950/40 rounded-2xl border border-orange-500/20 p-4 backdrop-blur-md shadow-inner">
+            <div className={`flex items-center gap-4 rounded-2xl border p-4 backdrop-blur-md shadow-inner ${
+              isLight
+                ? 'border-[#CC5500]/20 bg-[#F5F5DC]'
+                : 'border-orange-500/20 bg-orange-950/40'
+            }`}>
               <div className="relative flex items-center justify-center">
                 {/* SVG Radial Progress */}
                 <svg className="w-20 h-20 transform -rotate-90">
@@ -99,7 +126,7 @@ export default function TotalCounter({
                     cx="40"
                     cy="40"
                     r="32"
-                    stroke="rgba(245, 158, 11, 0.15)"
+                    stroke={isLight ? "rgba(204, 85, 0, 0.15)" : "rgba(245, 158, 11, 0.15)"}
                     strokeWidth="6"
                     fill="transparent"
                   />
@@ -117,25 +144,25 @@ export default function TotalCounter({
                   />
                   <defs>
                     <linearGradient id="festiveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#f59e0b" />
-                      <stop offset="50%" stopColor="#ea580c" />
-                      <stop offset="100%" stopColor="#dc2626" />
+                      <stop offset="0%" stopColor={isLight ? "#CC5500" : "#f59e0b"} />
+                      <stop offset="50%" stopColor={isLight ? "#B7410E" : "#ea580c"} />
+                      <stop offset="100%" stopColor={isLight ? "#9A3412" : "#dc2626"} />
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="absolute text-base font-bold text-amber-200">
+                <span className={`absolute text-base font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-200'}`}>
                   {percentage}%
                 </span>
               </div>
 
               <div className="space-y-1 text-left">
-                <div className="text-xs font-semibold text-orange-300 uppercase tracking-wide">
+                <div className={`text-xs font-semibold uppercase tracking-wide ${isLight ? 'text-stone-600' : 'text-orange-300'}`}>
                   {t('campaignProgress')}
                 </div>
-                <div className="text-sm text-white font-medium">
+                <div className={`text-sm font-medium ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   ₹{Math.max(0, targetAmount - totalAmount).toLocaleString()} {t('remaining')}
                 </div>
-                <div className="text-[11px] text-orange-300/70">
+                <div className={`text-[11px] ${isLight ? 'text-stone-500' : 'text-orange-300/70'}`}>
                   {t('nearingGoal')}
                 </div>
               </div>
@@ -145,16 +172,24 @@ export default function TotalCounter({
 
         {/* Linear progress bar */}
         <div className="relative mt-8">
-          <div className="flex justify-between text-xs font-medium text-orange-200/80 mb-2">
+          <div className={`flex justify-between text-xs font-medium mb-2 ${isLight ? 'text-stone-600' : 'text-orange-200/80'}`}>
             <span>{t('statusLabel')} {percentage}% {t('achievedLabel')}</span>
             <span>{t('finalGoalLabel')} ₹{targetAmount.toLocaleString()}</span>
           </div>
-          <div className="relative h-3 w-full overflow-hidden rounded-full bg-black/50 border border-amber-500/20 p-0.5">
+          <div className={`relative h-3 w-full overflow-hidden rounded-full p-0.5 border ${
+            isLight
+              ? 'bg-[#F5F5DC] border-[#CC5500]/25'
+              : 'bg-black/50 border-amber-500/20'
+          }`}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${percentage}%` }}
               transition={{ duration: 1.2, ease: "easeOut" }}
-              className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 shadow-[0_0_12px_rgba(249,115,22,0.8)]"
+              className={`h-full rounded-full ${
+                isLight
+                  ? 'bg-[#CC5500] shadow-[0_0_12px_rgba(204,85,0,0.5)]'
+                  : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 shadow-[0_0_12px_rgba(249,115,22,0.8)]'
+              }`}
             />
           </div>
         </div>
@@ -169,18 +204,32 @@ export default function TotalCounter({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 * (idx + 1) }}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className={`relative overflow-hidden rounded-2xl border ${stat.border} bg-gradient-to-br from-orange-950/30 via-red-950/20 to-black/50 p-5 backdrop-blur-xl shadow-lg hover:shadow-orange-600/20 transition-all`}
+            className={`relative overflow-hidden rounded-2xl border p-5 backdrop-blur-xl shadow-lg transition-all ${
+              isLight
+                ? 'border-[#CC5500]/25 bg-[#FFFDD0] hover:shadow-[#CC5500]/15'
+                : `${stat.border} bg-gradient-to-br from-orange-950/30 via-red-950/20 to-black/50 hover:shadow-orange-600/20`
+            }`}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-2xl p-2 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <span className={`text-2xl p-2 rounded-xl border ${
+                isLight
+                  ? 'bg-[#CC5500]/10 border-[#CC5500]/20'
+                  : 'bg-orange-500/10 border-orange-500/20'
+              }`}>
                 {stat.icon}
               </span>
-              <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-300">
+              <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                  : 'border-amber-400/30 bg-amber-500/10 text-amber-300'
+              }`}>
                 {stat.badge}
               </span>
             </div>
 
-            <div className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+            <div className={`text-2xl md:text-3xl font-bold tracking-tight ${
+              isLight ? 'text-stone-900' : 'text-white'
+            }`}>
               <CountUp
                 end={stat.value}
                 duration={1.5}
@@ -191,7 +240,9 @@ export default function TotalCounter({
               />
             </div>
 
-            <p className="text-xs text-orange-200/80 mt-1 font-medium">
+            <p className={`text-xs mt-1 font-medium ${
+              isLight ? 'text-stone-600' : 'text-orange-200/80'
+            }`}>
               {stat.title}
             </p>
           </motion.div>

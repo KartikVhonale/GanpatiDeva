@@ -32,12 +32,14 @@ import {
 } from 'lucide-react';
 import { buildOfficialUpiUrl, generateUpiQrDataUrl } from '../utils/upiHelper';
 import ReceiptModal from '../components/ReceiptModal';
+import { useTheme } from '../context/ThemeContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default function AdminManagement() {
   const { user, token } = useAuth();
   const { t, isMarathi } = useLanguage();
+  const { isLight } = useTheme();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'verification';
@@ -744,44 +746,83 @@ export default function AdminManagement() {
 
   const previewQrImage = settings.qrCodeUrl || previewLocalQr || fallbackPreviewQr;
 
+  const getTabClass = (tabKey, isSecurity = false) => {
+    const isActive = activeTab === tabKey;
+    if (isActive) {
+      if (isSecurity) {
+        return 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 border border-amber-300/60';
+      }
+      return isLight
+        ? 'bg-[#CC5500] text-white shadow-lg shadow-[#CC5500]/30 border border-[#B7410E]'
+        : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60';
+    }
+    return isLight
+      ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] hover:text-[#CC5500]'
+      : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white';
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 pb-12">
       {/* Top Banner Header */}
-      <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-orange-950/85 via-red-950/70 to-black/90 p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-500/20 pb-4">
+      <div className={`rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-4 ${
+        isLight
+          ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900'
+          : 'border-amber-500/30 bg-gradient-to-r from-orange-950/85 via-red-950/70 to-black/90 text-white'
+      }`}>
+        <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 ${
+          isLight ? 'border-[#CC5500]/20' : 'border-amber-500/20'
+        }`}>
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-red-600 p-0.5 shadow-lg shadow-orange-600/40">
-              <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-orange-950 text-amber-300">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl p-0.5 shadow-lg ${
+              isLight
+                ? 'bg-[#CC5500] shadow-[#CC5500]/30'
+                : 'bg-gradient-to-br from-amber-400 to-red-600 shadow-orange-600/40'
+            }`}>
+              <div className={`flex h-full w-full items-center justify-center rounded-[14px] ${
+                isLight ? 'bg-[#FFFDD0] text-[#CC5500]' : 'bg-orange-950 text-amber-300'
+              }`}>
                 <ShieldCheck className="h-6 w-6" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-white">
+                <h1 className={`text-xl sm:text-2xl font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   {t('adminTitle')}
                 </h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                  isLight
+                    ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                    : 'bg-amber-500/20 border-amber-400/40 text-amber-300'
+                }`}>
                   <Database className="h-3 w-3" />
                   MongoDB Atlas
                 </span>
               </div>
-              <p className="text-xs text-orange-200/75 mt-0.5">
+              <p className={`text-xs mt-0.5 ${isLight ? 'text-stone-600' : 'text-orange-200/75'}`}>
                 {t('adminSub')}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-black/40 px-3 py-2 text-xs text-orange-200">
+            <div className={`hidden sm:inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs ${
+              isLight
+                ? 'border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700'
+                : 'border-amber-500/30 bg-black/40 text-orange-200'
+            }`}>
               <span>👑</span>
               <span>
-                {isMarathi ? 'व्यवस्थापक:' : 'Admin:'} <strong className="text-amber-300">{user?.name}</strong>
+                {isMarathi ? 'व्यवस्थापक:' : 'Admin:'} <strong className={isLight ? 'text-[#CC5500]' : 'text-amber-300'}>{user?.name}</strong>
               </span>
             </div>
 
             <Link
               to="/dakshina"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-orange-950/50 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-orange-900/50 transition-all"
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#FFFDD0]'
+                  : 'border-amber-500/30 bg-orange-950/50 text-amber-200 hover:bg-orange-900/50'
+              }`}
             >
               <span>{t('liveTvScreenBtn')}</span>
               <ExternalLink className="h-3 w-3" />
@@ -790,7 +831,11 @@ export default function AdminManagement() {
             <button
               type="button"
               onClick={refreshAll}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-orange-950/50 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-orange-900/50 transition-all cursor-pointer"
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#FFFDD0]'
+                  : 'border-amber-500/30 bg-orange-950/50 text-amber-200 hover:bg-orange-900/50'
+              }`}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loadingUsers || loadingRequests || loadingSettings ? 'animate-spin' : ''}`} />
               <span>{t('refreshBtn')}</span>
@@ -804,11 +849,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={() => handleTabChange('verification')}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'verification'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('verification')}`}
           >
             <Bell className="h-4 w-4" />
             <span>{t('tabVerification')}</span>
@@ -827,11 +868,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={() => handleTabChange('settings')}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'settings'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('settings')}`}
           >
             <QrCode className="h-4 w-4" />
             <span>{t('tabSettings')}</span>
@@ -841,11 +878,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={() => handleTabChange('notices')}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'notices'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('notices')}`}
           >
             <Megaphone className="h-4 w-4" />
             <span>{t('tabNotices')}</span>
@@ -860,11 +893,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={() => handleTabChange('users')}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'users'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('users')}`}
           >
             <Users className="h-4 w-4" />
             <span>
@@ -876,11 +905,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={() => handleTabChange('donations')}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'donations'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('donations')}`}
           >
             <Trash2 className="h-4 w-4 text-red-400" />
             <span>
@@ -895,11 +920,7 @@ export default function AdminManagement() {
               handleTabChange('security');
               fetchBlockedIps();
             }}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'security'
-                ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('security', true)}`}
           >
             <ShieldAlert className="h-4 w-4 text-red-400" />
             <span>{t('tabSecurity')}</span>
@@ -914,11 +935,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={() => handleTabChange('music')}
-            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'music'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 border border-amber-300/60'
-                : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
-            }`}
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${getTabClass('music')}`}
           >
             <Music className="h-4 w-4 text-amber-400" />
             <span>{t('tabMusic')}</span>
@@ -969,33 +986,47 @@ export default function AdminManagement() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+              <h2 className={`text-lg sm:text-xl font-black flex items-center gap-2 ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 <span>🔔</span>
                 <span>{t('verificationSectionTitle')}</span>
               </h2>
-              <p className="text-xs text-orange-200/75">
+              <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/75'}`}>
                 {t('verificationSectionSub')}
               </p>
             </div>
-            <span className="text-xs font-bold text-amber-300 bg-black/40 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+            <span className={`text-xs font-bold px-3 py-1.5 rounded-xl border ${
+              isLight
+                ? 'text-[#CC5500] bg-[#F5F5DC] border-[#CC5500]/30 shadow-sm'
+                : 'text-amber-300 bg-black/40 border-amber-500/30'
+            }`}>
               {paymentRequests.length} {t('pendingRequestsTitle')}
             </span>
           </div>
 
           {loadingRequests ? (
-            <div className="p-12 text-center text-orange-200/60 rounded-3xl border border-amber-500/20 bg-black/40">
-              <span className="inline-block h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mb-2" />
+            <div className={`p-12 text-center rounded-3xl border ${
+              isLight
+                ? 'text-stone-600 border-[#CC5500]/20 bg-[#FFFDD0] shadow-sm'
+                : 'text-orange-200/60 border-amber-500/20 bg-black/40'
+            }`}>
+              <span className={`inline-block h-6 w-6 border-2 border-t-transparent rounded-full animate-spin mb-2 ${
+                isLight ? 'border-[#CC5500]' : 'border-amber-400'
+              }`} />
               <p className="text-xs">{t('loading')}</p>
             </div>
           ) : paymentRequests.length === 0 ? (
-            <div className="p-10 text-center rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-black/60 backdrop-blur-xl">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-2xl mb-3">
+            <div className={`p-10 text-center rounded-3xl border backdrop-blur-xl ${
+              isLight
+                ? 'border-emerald-600/30 bg-emerald-50/90 text-stone-800 shadow-md'
+                : 'border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-black/60 text-white'
+            }`}>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 text-2xl mb-3">
                 ✓
               </div>
-              <h3 className="text-base font-bold text-white mb-1">
+              <h3 className={`text-base font-bold mb-1 ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 {t('allCheckedMsg')}
               </h3>
-              <p className="text-xs text-emerald-200/70 max-w-md mx-auto">
+              <p className={`text-xs max-w-md mx-auto ${isLight ? 'text-emerald-800' : 'text-emerald-200/70'}`}>
                 {t('noPendingMsg')}
               </p>
             </div>
@@ -1004,66 +1035,82 @@ export default function AdminManagement() {
               {paymentRequests.map((req) => (
                 <div
                   key={req._id}
-                  className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/70 via-red-950/50 to-black/85 p-5 backdrop-blur-xl shadow-xl space-y-3.5 relative overflow-hidden"
+                  className={`rounded-3xl border p-5 backdrop-blur-xl space-y-3.5 relative overflow-hidden ${
+                    isLight
+                      ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+                      : 'border-amber-500/30 bg-gradient-to-br from-orange-950/70 via-red-950/50 to-black/85 text-white shadow-xl'
+                  }`}
                 >
-                  <div className="flex items-start justify-between gap-2 border-b border-amber-500/20 pb-2.5">
+                  <div className={`flex items-start justify-between gap-2 border-b pb-2.5 ${
+                    isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'
+                  }`}>
                     <div>
-                      <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 mb-1">
+                      <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1 border ${
+                        isLight
+                          ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                          : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
+                      }`}>
                         <span>{isMarathi ? '📱 UPI ऑनलाइन' : '📱 UPI Online'}</span>
                         <span>•</span>
                         <span>{req.category}</span>
                       </div>
-                      <h3 className="text-base sm:text-lg font-black text-white">
+                      <h3 className={`text-base sm:text-lg font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                         {req.name}
                       </h3>
-                      <span className="text-[11px] text-orange-200/70">
+                      <span className={`text-[11px] ${isLight ? 'text-stone-500' : 'text-orange-200/70'}`}>
                         {req.city || (isMarathi ? 'ऑनलाइन भाविक' : 'Online Devotee')}
                       </span>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-[10px] uppercase text-orange-300/70 block">
+                      <span className={`text-[10px] uppercase block ${isLight ? 'text-stone-500' : 'text-orange-300/70'}`}>
                         {t('amount')}
                       </span>
-                      <span className="text-xl sm:text-2xl font-black text-amber-300">
+                      <span className={`text-xl sm:text-2xl font-black ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                         ₹{Number(req.amount).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
                       </span>
                     </div>
                   </div>
 
                   {/* UTR & Transaction Details */}
-                  <div className="rounded-2xl border border-amber-500/20 bg-black/50 p-3 space-y-2 text-xs">
+                  <div className={`rounded-2xl border p-3 space-y-2 text-xs ${
+                    isLight ? 'border-[#CC5500]/20 bg-[#F5F5DC]' : 'border-amber-500/20 bg-black/50'
+                  }`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-orange-200/70 text-[11px]">
+                      <span className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                         UTR / Ref. {isMarathi ? 'नंबर:' : 'No:'}
                       </span>
-                      <div className="flex items-center gap-1 font-mono font-bold text-amber-200 bg-amber-950/60 px-2 py-0.5 rounded-lg border border-amber-500/30">
+                      <div className={`flex items-center gap-1 font-mono font-bold px-2 py-0.5 rounded-lg border ${
+                        isLight
+                          ? 'text-[#CC5500] bg-[#FFFDD0] border-[#CC5500]/30'
+                          : 'text-amber-200 bg-amber-950/60 border-amber-500/30'
+                      }`}>
                         <span>{req.utrNumber || (isMarathi ? 'उपलब्ध नाही' : 'N/A')}</span>
                         {req.utrNumber && (
                           <button
                             type="button"
                             onClick={() => copyUtr(req.utrNumber, req._id)}
-                            className="text-orange-300 hover:text-white p-0.5 cursor-pointer"
+                            className={`p-0.5 cursor-pointer ${isLight ? 'text-stone-600 hover:text-stone-900' : 'text-orange-300 hover:text-white'}`}
                             title="Copy UTR"
                           >
-                            {copiedUtr === req._id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                            {copiedUtr === req._id ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                           </button>
                         )}
                       </div>
                     </div>
 
                     {req.phone && (
-                      <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                        <span className="text-orange-200/70 text-[11px]">
+                      <div className={`flex items-center justify-between pt-1 border-t ${isLight ? 'border-stone-200' : 'border-white/5'}`}>
+                        <span className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                           {t('phone')}:
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-white">{req.phone}</span>
+                          <span className={`font-mono ${isLight ? 'text-stone-900 font-bold' : 'text-white'}`}>{req.phone}</span>
                           <a
                             href={getWhatsAppContactUrl(req)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] text-emerald-400 hover:underline font-bold"
+                            className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline font-bold"
                           >
                             <MessageCircle className="h-3 w-3" />
                             <span>WhatsApp</span>
@@ -1072,7 +1119,9 @@ export default function AdminManagement() {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-[11px] text-orange-200/60 pt-1 border-t border-white/5">
+                    <div className={`flex items-center justify-between text-[11px] pt-1 border-t ${
+                      isLight ? 'border-stone-200 text-stone-500' : 'border-white/5 text-orange-200/60'
+                    }`}>
                       <span>{t('time')}:</span>
                       <span>
                         {req.timestamp
@@ -1107,7 +1156,11 @@ export default function AdminManagement() {
                       type="button"
                       disabled={processingId === req._id}
                       onClick={() => handleRejectPayment(req._id, req.name)}
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-red-500/40 bg-red-950/40 py-2.5 px-3 text-xs font-bold text-red-200 hover:bg-red-900/40 active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 text-xs font-bold active:scale-95 disabled:opacity-50 cursor-pointer border ${
+                        isLight
+                          ? 'border-red-400/40 bg-red-50 text-red-700 hover:bg-red-100'
+                          : 'border-red-500/40 bg-red-950/40 text-red-200 hover:bg-red-900/40'
+                      }`}
                     >
                       <X className="h-4 w-4" />
                       <span>{t('rejectBtn')}</span>
@@ -1126,16 +1179,26 @@ export default function AdminManagement() {
       {activeTab === 'settings' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Settings Edit Form (7 cols) */}
-          <div className="lg:col-span-7 rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/80 via-red-950/60 to-black/90 p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-4">
-            <div className="flex items-center gap-2.5 border-b border-amber-500/20 pb-3.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300">
+          <div className={`lg:col-span-7 rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-4 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-b from-orange-950/80 via-red-950/60 to-black/90 text-white shadow-xl'
+          }`}>
+            <div className={`flex items-center gap-2.5 border-b pb-3.5 ${
+              isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'
+            }`}>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${
+                isLight
+                  ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                  : 'bg-amber-500/20 border-amber-400/40 text-amber-300'
+              }`}>
                 <Target className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-white">
+                <h2 className={`text-base font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   {t('targetSettingsTitle')}
                 </h2>
-                <p className="text-[11px] text-orange-200/70">
+                <p className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('targetSettingsSub')}
                 </p>
               </div>
@@ -1144,11 +1207,13 @@ export default function AdminManagement() {
             <form onSubmit={handleSaveSettings} className="space-y-4">
               {/* 1. Target Collection Limit (Edit Amount Limit) */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-orange-200/90 mb-1">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1 ${
+                  isLight ? 'text-stone-800' : 'text-orange-200/90'
+                }`}>
                   {t('targetLimitLabel')}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-base font-black text-amber-400">₹</span>
+                  <span className={`absolute left-3.5 top-2.5 text-base font-black ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>₹</span>
                   <input
                     type="number"
                     min="1000"
@@ -1157,17 +1222,21 @@ export default function AdminManagement() {
                     value={settings.targetAmount}
                     onChange={(e) => setSettings({ ...settings, targetAmount: e.target.value })}
                     placeholder="500000"
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 pl-8 pr-3.5 text-sm font-black text-amber-300 placeholder-orange-200/30 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30"
+                    className={`w-full rounded-xl border py-2.5 pl-8 pr-3.5 text-sm font-black outline-none ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] placeholder-stone-400 focus:border-[#CC5500] focus:ring-2 focus:ring-[#CC5500]/20'
+                        : 'border-amber-500/30 bg-black/50 text-amber-300 placeholder-orange-200/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30'
+                    }`}
                   />
                 </div>
-                <span className="text-[11px] text-orange-200/60 mt-0.5 block">
+                <span className={`text-[11px] mt-0.5 block ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                   {t('targetLimitHint')}
                 </span>
               </div>
 
               {/* 2. Mandal UPI ID */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('upiIdLabel')}
                 </label>
                 <input
@@ -1176,13 +1245,17 @@ export default function AdminManagement() {
                   value={settings.upiId}
                   onChange={(e) => setSettings({ ...settings, upiId: e.target.value })}
                   placeholder="8484844728@slc"
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm font-mono text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm font-mono outline-none ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
               {/* 3. Mandal / Account Name */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('mandalNameLabel')}
                 </label>
                 <input
@@ -1190,13 +1263,17 @@ export default function AdminManagement() {
                   value={settings.upiName}
                   onChange={(e) => setSettings({ ...settings, upiName: e.target.value })}
                   placeholder={isMarathi ? 'श्री बाल गणेश मंडळ धानोरा बु.' : 'Shri Baal Ganesh Mandal Dhanora Bk.'}
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
               {/* 4. Custom QR Code Image URL */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('customQrLabel')}
                 </label>
                 <input
@@ -1204,16 +1281,20 @@ export default function AdminManagement() {
                   value={settings.qrCodeUrl}
                   onChange={(e) => setSettings({ ...settings, qrCodeUrl: e.target.value })}
                   placeholder="https://..."
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
-                <span className="text-[11px] text-orange-200/60 mt-0.5 block">
+                <span className={`text-[11px] mt-0.5 block ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                   {t('customQrHint')}
                 </span>
               </div>
 
               {/* 5. QR Note / Banner Subtitle */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('qrNoteLabel')}
                 </label>
                 <input
@@ -1221,13 +1302,17 @@ export default function AdminManagement() {
                   value={settings.qrCodeNote}
                   onChange={(e) => setSettings({ ...settings, qrCodeNote: e.target.value })}
                   placeholder={isMarathi ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan to offer devotion'}
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
               {/* 6. Cloudinary Ganesha Photos Slider (Every 5s on Home) */}
-              <div className="pt-2 border-t border-amber-500/20 space-y-2">
-                <label className="block text-xs font-semibold text-orange-200/90">
+              <div className={`pt-2 border-t space-y-2 ${isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'}`}>
+                <label className={`block text-xs font-semibold ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('ganeshaPhotosLabel')}
                 </label>
                 <textarea
@@ -1238,9 +1323,13 @@ export default function AdminManagement() {
                     setSettings({ ...settings, ganeshaImages: lines });
                   }}
                   placeholder="https://res.cloudinary.com/.../ganpati1.jpg&#10;https://res.cloudinary.com/.../ganpati2.jpg"
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2 px-3 text-xs font-mono text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2 px-3 text-xs font-mono outline-none ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
-                <span className="text-[11px] text-orange-200/70 block">
+                <span className={`text-[11px] block ${isLight ? 'text-stone-500' : 'text-orange-200/70'}`}>
                   {t('ganeshaPhotosHint')}
                 </span>
 
@@ -1248,7 +1337,9 @@ export default function AdminManagement() {
                 {Array.isArray(settings.ganeshaImages) && settings.ganeshaImages.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {settings.ganeshaImages.map((imgUrl, i) => (
-                      <div key={i} className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-amber-400/60 bg-black/60 shadow-md group">
+                      <div key={i} className={`relative h-14 w-14 rounded-full overflow-hidden border-2 shadow-md group ${
+                        isLight ? 'border-[#CC5500]/50 bg-stone-200' : 'border-amber-400/60 bg-black/60'
+                      }`}>
                         <img src={imgUrl} alt={`Ganesha ${i + 1}`} className="h-full w-full object-cover rounded-full" />
                         <button
                           type="button"
@@ -1286,22 +1377,32 @@ export default function AdminManagement() {
           </div>
 
           {/* Live Preview Card (5 cols) */}
-          <div className="lg:col-span-5 rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/70 via-red-950/50 to-black/90 p-5 sm:p-6 backdrop-blur-xl shadow-xl text-center flex flex-col items-center justify-between">
+          <div className={`lg:col-span-5 rounded-3xl border p-5 sm:p-6 backdrop-blur-xl shadow-xl text-center flex flex-col items-center justify-between ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-b from-orange-950/70 via-red-950/50 to-black/90 text-white shadow-xl'
+          }`}>
             <div className="space-y-1 mb-3">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
+              <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-[11px] font-bold ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                  : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+              }`}>
                 <span>👁️</span>
                 <span>{isMarathi ? 'थेट स्क्रीन प्रिव्ह्यू (Live Preview)' : 'Live Screen Preview'}</span>
               </div>
-              <h3 className="text-base font-bold text-white">
+              <h3 className={`text-base font-bold ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 {t('previewTitle')}
               </h3>
-              <p className="text-[11px] text-orange-200/70">
+              <p className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                 {settings.qrCodeNote || (isMarathi ? 'स्कॅन करा आणि बाप्पाच्या चरणी सेवा अर्पण करा' : 'Scan to offer devotion')}
               </p>
             </div>
 
             {/* Rendered QR Preview */}
-            <div className="relative my-2 p-3 bg-white rounded-2xl shadow-xl ring-2 ring-amber-400/50">
+            <div className={`relative my-2 p-3 bg-white rounded-2xl shadow-xl ring-2 ${
+              isLight ? 'ring-[#CC5500]/40' : 'ring-amber-400/50'
+            }`}>
               <img
                 src={previewQrImage}
                 alt="QR Preview"
@@ -1312,48 +1413,62 @@ export default function AdminManagement() {
                   }
                 }}
               />
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
+              <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap ${
+                isLight ? 'bg-[#CC5500] text-white' : 'bg-amber-500 text-black'
+              }`}>
                 {settings.upiName || (isMarathi ? 'श्री बाल गणेश मंडळ धानोरा बु.' : 'Shri Baal Ganesh Mandal Dhanora Bk.')}
               </div>
             </div>
 
-            <div className="w-full mt-3 rounded-xl border border-amber-500/30 bg-black/60 p-3 text-xs space-y-1.5 text-left">
+            <div className={`w-full mt-3 rounded-xl border p-3 text-xs space-y-1.5 text-left ${
+              isLight ? 'border-[#CC5500]/20 bg-[#F5F5DC]' : 'border-amber-500/30 bg-black/60'
+            }`}>
               <div className="flex justify-between">
-                <span className="text-orange-200/70">
+                <span className={isLight ? 'text-stone-600' : 'text-orange-200/70'}>
                   {isMarathi ? 'लक्ष्य देणगी मर्यादा:' : 'Target Donation Limit:'}
                 </span>
-                <span className="font-bold text-amber-300">
+                <span className={`font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                   ₹{Number(settings.targetAmount || 0).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-orange-200/70">UPI ID:</span>
-                <span className="font-mono font-bold text-amber-200">{settings.upiId}</span>
+                <span className={isLight ? 'text-stone-600' : 'text-orange-200/70'}>UPI ID:</span>
+                <span className={`font-mono font-bold ${isLight ? 'text-stone-800' : 'text-amber-200'}`}>{settings.upiId}</span>
               </div>
             </div>
 
             {/* Quick Links to Home Editable Sections */}
-            <div className="w-full mt-3 rounded-2xl border border-amber-500/25 bg-black/60 p-4 text-xs space-y-2.5 text-left">
-              <span className="font-bold text-amber-300 block text-xs">
+            <div className={`w-full mt-3 rounded-2xl border p-4 text-xs space-y-2.5 text-left ${
+              isLight ? 'border-[#CC5500]/20 bg-[#F5F5DC]' : 'border-amber-500/25 bg-black/60'
+            }`}>
+              <span className={`font-bold block text-xs ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                 {t('shortcutsTitle')}
               </span>
-              <p className="text-[11px] text-orange-200/70">
+              <p className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                 {t('shortcutsSub')}
               </p>
               <div className="flex flex-col gap-2 pt-1">
                 <a
                   href="/#schedule"
-                  className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-orange-950/40 border border-amber-500/20 hover:border-amber-400 text-amber-200 text-xs font-medium transition"
+                  className={`inline-flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition ${
+                    isLight
+                      ? 'bg-[#FFFDD0] border-[#CC5500]/20 hover:border-[#CC5500] text-stone-900'
+                      : 'bg-orange-950/40 border-amber-500/20 hover:border-amber-400 text-amber-200'
+                  }`}
                 >
                   <span>⏰ {t('dailyScheduleTitle')}</span>
-                  <span className="text-[10px] text-amber-400 font-bold">{t('goToHome')}</span>
+                  <span className={`text-[10px] font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>{t('goToHome')}</span>
                 </a>
                 <a
                   href="/#initiatives"
-                  className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-orange-950/40 border border-amber-500/20 hover:border-amber-400 text-amber-200 text-xs font-medium transition"
+                  className={`inline-flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition ${
+                    isLight
+                      ? 'bg-[#FFFDD0] border-[#CC5500]/20 hover:border-[#CC5500] text-stone-900'
+                      : 'bg-orange-950/40 border-amber-500/20 hover:border-amber-400 text-amber-200'
+                  }`}
                 >
                   <span>🤝 {t('initiativesTitle')}</span>
-                  <span className="text-[10px] text-amber-400 font-bold">{t('goToHome')}</span>
+                  <span className={`text-[10px] font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>{t('goToHome')}</span>
                 </a>
               </div>
             </div>
@@ -1367,16 +1482,26 @@ export default function AdminManagement() {
       {activeTab === 'users' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Form: Add New Volunteer / Admin (5 cols) */}
-          <div className="lg:col-span-5 rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/80 via-red-950/60 to-black/90 p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-5">
-            <div className="flex items-center gap-2.5 border-b border-amber-500/20 pb-3.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300">
+          <div className={`lg:col-span-5 rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-5 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-b from-orange-950/80 via-red-950/60 to-black/90 text-white shadow-xl'
+          }`}>
+            <div className={`flex items-center gap-2.5 border-b pb-3.5 ${
+              isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'
+            }`}>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${
+                isLight
+                  ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                  : 'bg-amber-500/20 border-amber-400/40 text-amber-300'
+              }`}>
                 <UserPlus className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-white">
+                <h2 className={`text-base font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   {t('addUserTitle')}
                 </h2>
-                <p className="text-[11px] text-orange-200/70">
+                <p className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('addUserSub')}
                 </p>
               </div>
@@ -1385,7 +1510,7 @@ export default function AdminManagement() {
             <form onSubmit={handleCreateUser} className="space-y-4">
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('fullNameLabel')}
                 </label>
                 <input
@@ -1394,13 +1519,17 @@ export default function AdminManagement() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder={t('fullNamePlaceholder')}
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none transition ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
               {/* Username */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('usernameLabel')}
                 </label>
                 <input
@@ -1409,13 +1538,17 @@ export default function AdminManagement() {
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   placeholder={t('usernamePlaceholder')}
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none transition ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
               {/* Password with View / Hide Option */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('passwordLabel')}
                 </label>
                 <div className="relative">
@@ -1426,12 +1559,18 @@ export default function AdminManagement() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder={t('passwordPlaceholder')}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 pl-3.5 pr-10 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border py-2.5 pl-3.5 pr-10 text-xs sm:text-sm outline-none transition ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-orange-300/60 hover:text-orange-200 transition-colors cursor-pointer"
+                    className={`absolute inset-y-0 right-0 flex items-center pr-3.5 transition-colors cursor-pointer ${
+                      isLight ? 'text-stone-500 hover:text-stone-800' : 'text-orange-300/60 hover:text-orange-200'
+                    }`}
                     title={showPassword ? (isMarathi ? 'पासवर्ड लपवा' : 'Hide password') : (isMarathi ? 'पासवर्ड पहा' : 'View password')}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -1441,7 +1580,7 @@ export default function AdminManagement() {
 
               {/* Phone */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('phone')}
                 </label>
                 <input
@@ -1449,13 +1588,17 @@ export default function AdminManagement() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder={t('phonePlaceholder')}
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none transition ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
               {/* Role */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('roleLabel')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1464,7 +1607,11 @@ export default function AdminManagement() {
                     onClick={() => setFormData({ ...formData, role: 'volunteer' })}
                     className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       formData.role === 'volunteer'
-                        ? 'bg-amber-500 text-black border border-amber-300'
+                        ? isLight
+                          ? 'bg-[#CC5500] text-white border border-[#CC5500] shadow-sm'
+                          : 'bg-amber-500 text-black border border-amber-300'
+                        : isLight
+                        ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0]'
                         : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40'
                     }`}
                   >
@@ -1475,7 +1622,11 @@ export default function AdminManagement() {
                     onClick={() => setFormData({ ...formData, role: 'admin' })}
                     className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       formData.role === 'admin'
-                        ? 'bg-amber-500 text-black border border-amber-300'
+                        ? isLight
+                          ? 'bg-[#CC5500] text-white border border-[#CC5500] shadow-sm'
+                          : 'bg-amber-500 text-black border border-amber-300'
+                        : isLight
+                        ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0]'
                         : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40'
                     }`}
                   >
@@ -1502,37 +1653,49 @@ export default function AdminManagement() {
           </div>
 
           {/* Right Directory: Users List (7 cols) */}
-          <div className="lg:col-span-7 rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/80 via-red-950/60 to-black/90 p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-3.5">
+          <div className={`lg:col-span-7 rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-xl space-y-4 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-b from-orange-950/80 via-red-950/60 to-black/90 text-white shadow-xl'
+          }`}>
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3.5 ${
+              isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'
+            }`}>
               <div>
-                <h2 className="text-base font-black text-white">
+                <h2 className={`text-base font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   {t('teamDirectoryTitle')}
                 </h2>
-                <p className="text-[11px] text-orange-200/70">
+                <p className={`text-[11px] ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('teamDirectorySub')}
                 </p>
               </div>
 
               {/* Search Bar */}
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-orange-300/50" />
+                <Search className={`absolute left-3 top-2.5 h-3.5 w-3.5 ${isLight ? 'text-stone-400' : 'text-orange-300/50'}`} />
                 <input
                   type="text"
                   placeholder={t('searchUsersPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-48 rounded-xl border border-amber-500/30 bg-black/50 py-1.5 pl-8 pr-3 text-xs text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                  className={`w-full sm:w-48 rounded-xl border py-1.5 pl-8 pr-3 text-xs outline-none transition ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
             </div>
 
             {loadingUsers ? (
-              <div className="p-8 text-center text-orange-200/60">
-                <span className="inline-block h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mb-2" />
+              <div className={`p-8 text-center ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
+                <span className={`inline-block h-6 w-6 border-2 border-t-transparent rounded-full animate-spin mb-2 ${
+                  isLight ? 'border-[#CC5500]' : 'border-amber-400'
+                }`} />
                 <p className="text-xs">{t('loading')}</p>
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="p-8 text-center text-orange-200/60 text-xs">
+              <div className={`p-8 text-center text-xs ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                 {t('noUsersFound')}
               </div>
             ) : (
@@ -1544,30 +1707,36 @@ export default function AdminManagement() {
                       key={u._id}
                       className={`rounded-2xl border p-3.5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                         u.isActive
-                          ? 'border-amber-500/25 bg-black/40 hover:bg-orange-950/30'
+                          ? isLight
+                            ? 'border-[#CC5500]/20 bg-[#F5F5DC] hover:bg-[#FFFDD0]'
+                            : 'border-amber-500/25 bg-black/40 hover:bg-orange-950/30'
+                          : isLight
+                          ? 'border-red-300 bg-red-50/70 opacity-70'
                           : 'border-red-500/20 bg-red-950/20 opacity-60'
                       }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm">{u.name}</span>
+                          <span className={`font-bold text-sm ${isLight ? 'text-stone-900' : 'text-white'}`}>{u.name}</span>
                           <span
                             className={`rounded-full px-2 py-0.2 text-[10px] font-bold ${
                               u.role === 'admin'
-                                ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30'
+                                ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-400/30'
+                                : isLight
+                                ? 'bg-[#CC5500]/15 text-[#CC5500] border border-[#CC5500]/30'
                                 : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
                             }`}
                           >
                             {u.role === 'admin' ? '👑 Admin' : '🚩 Volunteer'}
                           </span>
                           {!u.isActive && (
-                            <span className="rounded-full bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-0.2 text-[10px] font-bold">
+                            <span className="rounded-full bg-red-500/20 text-red-600 dark:text-red-300 border border-red-500/30 px-2 py-0.2 text-[10px] font-bold">
                               {t('inactive')}
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-orange-200/60 font-mono">
-                          ID: <span className="text-amber-200/90">{u.username}</span>
+                        <div className={`text-[11px] font-mono ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
+                          ID: <span className={`font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-200/90'}`}>{u.username}</span>
                           {u.phone && <span className="ml-3">📞 {u.phone}</span>}
                         </div>
                       </div>
@@ -1580,7 +1749,11 @@ export default function AdminManagement() {
                               onClick={() => handleToggleStatus(u._id, u.name, u.isActive)}
                               className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                                 u.isActive
-                                  ? 'border-amber-500/30 bg-orange-950/40 text-amber-300 hover:bg-orange-900/50'
+                                  ? isLight
+                                    ? 'border-amber-500/40 bg-amber-100 text-amber-900 hover:bg-amber-200'
+                                    : 'border-amber-500/30 bg-orange-950/40 text-amber-300 hover:bg-orange-900/50'
+                                  : isLight
+                                  ? 'border-emerald-500/40 bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
                                   : 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50'
                               }`}
                               title={u.isActive ? t('statusInactiveBtn') : t('statusActiveBtn')}
@@ -1594,7 +1767,11 @@ export default function AdminManagement() {
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(u._id, u.name)}
-                              className="p-2 rounded-xl border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60 transition-all cursor-pointer"
+                              className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                                isLight
+                                  ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+                                  : 'border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60'
+                              }`}
                               title={t('delete')}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -1602,7 +1779,7 @@ export default function AdminManagement() {
                           </>
                         )}
                         {isMainAdmin && (
-                          <span className="text-[11px] text-amber-400/80 italic">
+                          <span className={`text-[11px] italic ${isLight ? 'text-[#CC5500]' : 'text-amber-400/80'}`}>
                             {t('mainAdminNotice')}
                           </span>
                         )}
@@ -1623,38 +1800,62 @@ export default function AdminManagement() {
         <div className="space-y-6">
           {/* Summary Stats Overview */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-4 text-center">
-              <span className="text-[11px] font-semibold text-orange-200/70 block uppercase tracking-wider">
+            <div className={`rounded-2xl border p-4 text-center ${
+              isLight ? 'border-[#CC5500]/20 bg-[#FFFDD0] shadow-sm' : 'border-amber-500/20 bg-black/40'
+            }`}>
+              <span className={`text-[11px] font-semibold block uppercase tracking-wider ${
+                isLight ? 'text-stone-600' : 'text-orange-200/70'
+              }`}>
                 {t('totalDonationsStat')}
               </span>
-              <span className="text-xl sm:text-2xl font-black text-amber-300 mt-1 block">
+              <span className={`text-xl sm:text-2xl font-black mt-1 block ${
+                isLight ? 'text-stone-900' : 'text-amber-300'
+              }`}>
                 {adminDonations.length}
               </span>
             </div>
-            <div className="rounded-2xl border border-amber-500/20 bg-black/40 p-4 text-center">
-              <span className="text-[11px] font-semibold text-orange-200/70 block uppercase tracking-wider">
+            <div className={`rounded-2xl border p-4 text-center ${
+              isLight ? 'border-[#CC5500]/20 bg-[#FFFDD0] shadow-sm' : 'border-amber-500/20 bg-black/40'
+            }`}>
+              <span className={`text-[11px] font-semibold block uppercase tracking-wider ${
+                isLight ? 'text-stone-600' : 'text-orange-200/70'
+              }`}>
                 {t('totalCollectionStat')}
               </span>
-              <span className="text-xl sm:text-2xl font-black text-amber-400 mt-1 block">
+              <span className={`text-xl sm:text-2xl font-black mt-1 block ${
+                isLight ? 'text-[#CC5500]' : 'text-amber-400'
+              }`}>
                 ₹{adminDonations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
               </span>
             </div>
-            <div className="rounded-2xl border border-emerald-500/20 bg-black/40 p-4 text-center">
-              <span className="text-[11px] font-semibold text-emerald-200/70 block uppercase tracking-wider">
+            <div className={`rounded-2xl border p-4 text-center ${
+              isLight ? 'border-emerald-600/30 bg-emerald-50/70 shadow-sm' : 'border-emerald-500/20 bg-black/40'
+            }`}>
+              <span className={`text-[11px] font-semibold block uppercase tracking-wider ${
+                isLight ? 'text-emerald-800' : 'text-emerald-200/70'
+              }`}>
                 {t('cashStat')}
               </span>
-              <span className="text-xl sm:text-2xl font-black text-emerald-400 mt-1 block">
+              <span className={`text-xl sm:text-2xl font-black mt-1 block ${
+                isLight ? 'text-emerald-700' : 'text-emerald-400'
+              }`}>
                 ₹{adminDonations
                   .filter((d) => d.paymentMethod !== 'online')
                   .reduce((sum, d) => sum + (Number(d.amount) || 0), 0)
                   .toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
               </span>
             </div>
-            <div className="rounded-2xl border border-blue-500/20 bg-black/40 p-4 text-center">
-              <span className="text-[11px] font-semibold text-blue-200/70 block uppercase tracking-wider">
+            <div className={`rounded-2xl border p-4 text-center ${
+              isLight ? 'border-blue-600/30 bg-blue-50/70 shadow-sm' : 'border-blue-500/20 bg-black/40'
+            }`}>
+              <span className={`text-[11px] font-semibold block uppercase tracking-wider ${
+                isLight ? 'text-blue-800' : 'text-blue-200/70'
+              }`}>
                 {t('onlineStat')}
               </span>
-              <span className="text-xl sm:text-2xl font-black text-blue-400 mt-1 block">
+              <span className={`text-xl sm:text-2xl font-black mt-1 block ${
+                isLight ? 'text-blue-700' : 'text-blue-400'
+              }`}>
                 ₹{adminDonations
                   .filter((d) => d.paymentMethod === 'online')
                   .reduce((sum, d) => sum + (Number(d.amount) || 0), 0)
@@ -1664,14 +1865,20 @@ export default function AdminManagement() {
           </div>
 
           {/* Search & Filter Controls */}
-          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/60 via-red-950/40 to-black/80 p-5 sm:p-6 backdrop-blur-xl shadow-xl space-y-4">
+          <div className={`rounded-3xl border p-5 sm:p-6 backdrop-blur-xl shadow-xl space-y-4 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-b from-orange-950/60 via-red-950/40 to-black/80 text-white shadow-xl'
+          }`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <h2 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${
+                  isLight ? 'text-stone-900' : 'text-white'
+                }`}>
                   <span>💰</span>
                   <span>{t('donationsListTitle')}</span>
                 </h2>
-                <p className="text-xs text-orange-200/70">
+                <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('donationsListSub')}
                 </p>
               </div>
@@ -1683,14 +1890,20 @@ export default function AdminManagement() {
                   placeholder={t('searchDonationsPlaceholder')}
                   value={donationSearch}
                   onChange={(e) => setDonationSearch(e.target.value)}
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/50 py-2 pl-9 pr-3 text-xs sm:text-sm text-white placeholder-orange-200/40 outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl border py-2 pl-9 pr-3 text-xs sm:text-sm outline-none transition ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-200/40 focus:border-amber-400'
+                  }`}
                 />
-                <Search className="h-4 w-4 text-orange-300/60 absolute left-3 top-2.5" />
+                <Search className={`h-4 w-4 absolute left-3 top-2.5 ${isLight ? 'text-stone-400' : 'text-orange-300/60'}`} />
               </div>
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-500/15">
+            <div className={`flex flex-wrap items-center gap-2 pt-1 border-t ${
+              isLight ? 'border-[#CC5500]/15' : 'border-amber-500/15'
+            }`}>
               {[
                 { id: 'all', label: t('filterAll') },
                 { id: 'cash', label: t('filterCash') },
@@ -1703,7 +1916,11 @@ export default function AdminManagement() {
                   onClick={() => setDonationFilter(f.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     donationFilter === f.id
-                      ? 'bg-amber-500 text-black shadow-md'
+                      ? isLight
+                        ? 'bg-[#CC5500] text-white shadow-md'
+                        : 'bg-amber-500 text-black shadow-md'
+                      : isLight
+                      ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] hover:text-stone-900'
                       : 'border border-amber-500/20 bg-black/40 text-orange-200/70 hover:bg-orange-950/40 hover:text-white'
                   }`}
                 >
@@ -1714,7 +1931,7 @@ export default function AdminManagement() {
 
             {/* Donations Table */}
             {loadingDonations ? (
-              <div className="py-12 text-center text-orange-200/60 text-sm">
+              <div className={`py-12 text-center text-sm ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                 {t('loading')}
               </div>
             ) : (() => {
@@ -1743,16 +1960,24 @@ export default function AdminManagement() {
 
                 if (filtered.length === 0) {
                   return (
-                    <div className="py-12 text-center rounded-2xl border border-dashed border-amber-500/20 bg-black/30">
-                      <p className="text-orange-200/60 text-sm">{t('noDonationsFound')}</p>
+                    <div className={`py-12 text-center rounded-2xl border border-dashed ${
+                      isLight ? 'border-[#CC5500]/30 bg-[#F5F5DC]' : 'border-amber-500/20 bg-black/30'
+                    }`}>
+                      <p className={`text-sm ${isLight ? 'text-stone-600' : 'text-orange-200/60'}`}>{t('noDonationsFound')}</p>
                     </div>
                   );
                 }
 
                 return (
-                  <div className="overflow-x-auto rounded-2xl border border-amber-500/20">
+                  <div className={`overflow-x-auto rounded-2xl border ${
+                    isLight ? 'border-[#CC5500]/25 shadow-sm' : 'border-amber-500/20'
+                  }`}>
                     <table className="w-full text-left text-xs sm:text-sm">
-                      <thead className="bg-black/70 text-orange-200/80 uppercase text-[11px] font-bold tracking-wider border-b border-amber-500/20">
+                      <thead className={`uppercase text-[11px] font-bold tracking-wider border-b ${
+                        isLight
+                          ? 'bg-[#F5F5DC] text-stone-700 border-[#CC5500]/20'
+                          : 'bg-black/70 text-orange-200/80 border-amber-500/20'
+                      }`}>
                         <tr>
                           <th className="py-3 px-3.5">{t('colDonor')}</th>
                           <th className="py-3 px-3.5">{t('colAmount')}</th>
@@ -1763,41 +1988,51 @@ export default function AdminManagement() {
                           <th className="py-3 px-3.5 text-center">{t('colAction')}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-amber-500/10 bg-black/40">
+                      <tbody className={`divide-y ${
+                        isLight ? 'divide-[#CC5500]/10 bg-[#FFFDD0]' : 'divide-amber-500/10 bg-black/40'
+                      }`}>
                         {filtered.map((d) => {
                           const donId = d._id || d.id;
                           const isDeleting = deletingDonationId === donId;
                           return (
-                            <tr key={donId} className="hover:bg-orange-950/30 transition-colors">
+                            <tr key={donId} className={`transition-colors ${
+                              isLight ? 'hover:bg-[#F5F5DC]' : 'hover:bg-orange-950/30'
+                            }`}>
                               <td className="py-3 px-3.5">
-                                <span className="font-bold text-white block">{d.name}</span>
-                                <span className="text-[11px] text-orange-200/60">
+                                <span className={`font-bold block ${isLight ? 'text-stone-900' : 'text-white'}`}>{d.name}</span>
+                                <span className={`text-[11px] ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                                   📍 {d.city || (isMarathi ? 'स्थानिक भाविक' : 'Local Devotee')} {d.phone ? `• 📞 ${d.phone}` : ''}
                                 </span>
                               </td>
-                              <td className="py-3 px-3.5 font-black text-amber-300 text-sm sm:text-base">
+                              <td className={`py-3 px-3.5 font-black text-sm sm:text-base ${
+                                isLight ? 'text-[#CC5500]' : 'text-amber-300'
+                              }`}>
                                 ₹{Number(d.amount || 0).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN')}
                               </td>
                               <td className="py-3 px-3.5">
-                                <span className="inline-block rounded-full bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 text-[11px] font-semibold text-amber-200">
+                                <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold border ${
+                                  isLight
+                                    ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                                    : 'bg-amber-500/15 border border-amber-400/30 text-amber-200'
+                                }`}>
                                   {d.category || (isMarathi ? 'महाप्रसाद सेवा' : 'Maha-Prasad Seva')}
                                 </span>
                               </td>
                               <td className="py-3 px-3.5">
                                 {d.paymentMethod === 'online' ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 text-[10px] font-bold">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-400/30 px-2 py-0.5 text-[10px] font-bold">
                                     📱 {isMarathi ? 'ऑनलाइन' : 'Online'} {d.utrNumber ? `(${d.utrNumber})` : ''}
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold">
                                     💵 {isMarathi ? 'रोख (Cash)' : 'Cash'}
                                   </span>
                                 )}
                               </td>
-                              <td className="py-3 px-3.5 text-xs text-orange-200/70">
+                              <td className={`py-3 px-3.5 text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                                 {d.recordedBy || (isMarathi ? 'स्वयंसेवक' : 'Volunteer')}
                               </td>
-                              <td className="py-3 px-3.5 text-xs text-orange-200/60 font-mono">
+                              <td className={`py-3 px-3.5 text-xs font-mono ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
                                 {d.timestamp
                                   ? new Date(d.timestamp).toLocaleString(isMarathi ? 'mr-IN' : 'en-IN', {
                                       day: '2-digit',
@@ -1826,10 +2061,14 @@ export default function AdminManagement() {
                                     type="button"
                                     disabled={isDeleting}
                                     onClick={() => handleDeleteDonation(donId, d.name, d.amount)}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50 ${
+                                      isLight
+                                        ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+                                        : 'border-red-500/40 bg-red-950/50 hover:bg-red-900/80 text-red-200'
+                                    }`}
                                     title={isMarathi ? 'ही देणगी कायमस्वरूपी हटवा' : 'Permanently delete this donation'}
                                   >
-                                    <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
                                     <span>{isDeleting ? t('deleting') : t('delete')}</span>
                                   </button>
                                 </div>
@@ -1851,14 +2090,20 @@ export default function AdminManagement() {
       {/* =================================================================== */}
       {activeTab === 'security' && (
         <div className="space-y-6 animate-fadeIn">
-          <div className="rounded-3xl border border-red-500/30 bg-black/60 p-6 sm:p-8 backdrop-blur-xl shadow-[0_15px_35px_rgba(239,68,68,0.15)]">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-red-500/20 pb-5 mb-6">
+          <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl ${
+            isLight
+              ? 'border-red-300 bg-[#FFFDD0] shadow-md'
+              : 'border-red-500/30 bg-black/60 shadow-[0_15px_35px_rgba(239,68,68,0.15)]'
+          }`}>
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5 mb-6 ${
+              isLight ? 'border-red-200' : 'border-red-500/20'
+            }`}>
               <div>
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-6 w-6 text-red-400" />
-                  <h2 className="text-xl font-black text-white">{t('blockedIpsTitle')}</h2>
+                  <ShieldAlert className="h-6 w-6 text-red-500" />
+                  <h2 className={`text-xl font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>{t('blockedIpsTitle')}</h2>
                 </div>
-                <p className="text-xs text-orange-200/70 mt-1">
+                <p className={`text-xs mt-1 ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('blockedIpsSub')} ({isMarathi ? 'सुरक्षा नियम: १० वेळा चुकीचा पासवर्ड टाकल्यास IP ३० मिनिटांसाठी आपोआप ब्लॉक होतो' : 'Rule: 10 failed password attempts = 30-minute IP block'})
                 </p>
               </div>
@@ -1867,7 +2112,11 @@ export default function AdminManagement() {
                 type="button"
                 onClick={fetchBlockedIps}
                 disabled={loadingBlockedIps}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/60 text-red-200 text-xs font-bold transition cursor-pointer self-start sm:self-auto"
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold transition cursor-pointer self-start sm:self-auto ${
+                  isLight
+                    ? 'border-red-300 bg-red-50 hover:bg-red-100 text-red-700'
+                    : 'border-red-500/40 bg-red-950/40 hover:bg-red-900/60 text-red-200'
+                }`}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loadingBlockedIps ? 'animate-spin' : ''}`} />
                 <span>{t('refresh')}</span>
@@ -1875,29 +2124,41 @@ export default function AdminManagement() {
             </div>
 
             {loadingBlockedIps ? (
-              <div className="py-12 text-center text-orange-200/60 text-sm">
-                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-amber-400" />
+              <div className={`py-12 text-center text-sm ${isLight ? 'text-stone-500' : 'text-orange-200/60'}`}>
+                <RefreshCw className={`h-6 w-6 animate-spin mx-auto mb-2 ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`} />
                 <span>{t('loading')}</span>
               </div>
             ) : blockedIps.length === 0 ? (
               <div className="py-12 text-center space-y-3">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-400">
+                <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border ${
+                  isLight
+                    ? 'bg-emerald-100 border-emerald-300 text-emerald-600'
+                    : 'bg-emerald-950/50 border border-emerald-500/40 text-emerald-400'
+                }`}>
                   <ShieldCheck className="h-8 w-8" />
                 </div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className={`text-base font-bold ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   {isMarathi ? 'सर्व सुरक्षित आहे!' : 'System is Fully Secure!'}
                 </h3>
-                <p className="text-xs text-orange-200/70 max-w-md mx-auto">
+                <p className={`text-xs max-w-md mx-auto ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                   {t('noBlockedIps')}
                 </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold border ${
+                  isLight
+                    ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                }`}>
                   <span>● {isMarathi ? 'सक्रिय ब्रूट-फोर्स संरक्षण चालू आहे (१० प्रयत्न / ३० मि. ब्लॉक)' : 'Active Brute-Force Protection Enabled (10 Attempts / 30-min Block)'}</span>
                 </div>
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-2xl border border-red-500/30">
+              <div className={`overflow-x-auto rounded-2xl border ${isLight ? 'border-red-200 shadow-sm' : 'border-red-500/30'}`}>
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-black/80 text-red-200/80 uppercase text-[11px] font-bold tracking-wider border-b border-red-500/30">
+                  <thead className={`uppercase text-[11px] font-bold tracking-wider border-b ${
+                    isLight
+                      ? 'bg-red-50/70 text-red-900 border-red-200'
+                      : 'bg-black/80 text-red-200/80 border-red-500/30'
+                  }`}>
                     <tr>
                       <th className="py-3 px-3.5">{t('ipAddress')}</th>
                       <th className="py-3 px-3.5">{t('failedCountLabel')}</th>
@@ -1907,26 +2168,26 @@ export default function AdminManagement() {
                       <th className="py-3 px-3.5 text-center">{t('actions')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-red-500/15 bg-black/50">
+                  <tbody className={`divide-y ${isLight ? 'divide-red-100 bg-[#F5F5DC]' : 'divide-red-500/15 bg-black/50'}`}>
                     {blockedIps.map((b) => {
                       const isUnblocking = unblockingIp === b.ip;
                       return (
-                        <tr key={b.ip} className="hover:bg-red-950/30 transition-colors">
+                        <tr key={b.ip} className={`transition-colors ${isLight ? 'hover:bg-red-50/50' : 'hover:bg-red-950/30'}`}>
                           <td className="py-3.5 px-3.5">
-                            <span className="font-mono font-bold text-white block text-sm">{b.ip}</span>
-                            <span className="text-[10px] text-red-300/60">
+                            <span className={`font-mono font-bold block text-sm ${isLight ? 'text-stone-900' : 'text-white'}`}>{b.ip}</span>
+                            <span className={`text-[10px] ${isLight ? 'text-red-700/60' : 'text-red-300/60'}`}>
                               {b.source || 'MongoDB Atlas'}
                             </span>
                           </td>
                           <td className="py-3.5 px-3.5">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600/30 border border-red-500/60 text-red-200 text-xs font-black">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600/30 border border-red-500/60 text-red-800 dark:text-red-200 text-xs font-black">
                               ⚠️ {b.failedAttempts} / 10
                             </span>
                           </td>
-                          <td className="py-3.5 px-3.5 font-mono text-orange-200">
+                          <td className={`py-3.5 px-3.5 font-mono ${isLight ? 'text-stone-800' : 'text-orange-200'}`}>
                             {b.lastAttemptedUsername ? `"${b.lastAttemptedUsername}"` : '—'}
                           </td>
-                          <td className="py-3.5 px-3.5 text-xs text-orange-200/80 font-mono">
+                          <td className={`py-3.5 px-3.5 text-xs font-mono ${isLight ? 'text-stone-600' : 'text-orange-200/80'}`}>
                             {b.blockedUntil
                               ? new Date(b.blockedUntil).toLocaleTimeString(isMarathi ? 'mr-IN' : 'en-IN', {
                                   hour: '2-digit',
@@ -1936,7 +2197,11 @@ export default function AdminManagement() {
                               : '30 min'}
                           </td>
                           <td className="py-3.5 px-3.5">
-                            <span className="inline-flex items-center gap-1 text-amber-400 font-bold text-xs bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30">
+                            <span className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-lg border ${
+                              isLight
+                                ? 'text-amber-800 bg-amber-100 border-amber-300'
+                                : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                            }`}>
                               <Clock className="h-3 w-3 animate-spin" style={{ animationDuration: '4s' }} />
                               <span>{b.minutesLeft} {t('minutesSuffix')}</span>
                             </span>
@@ -1946,10 +2211,14 @@ export default function AdminManagement() {
                               type="button"
                               disabled={isUnblocking}
                               onClick={() => handleUnblockIp(b.ip)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-500/50 bg-emerald-950/60 hover:bg-emerald-800/80 text-emerald-200 text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
+                              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 ${
+                                isLight
+                                  ? 'border-emerald-300 bg-emerald-100 hover:bg-emerald-200 text-emerald-800'
+                                  : 'border-emerald-500/50 bg-emerald-950/60 hover:bg-emerald-800/80 text-emerald-200'
+                              }`}
                               title={isMarathi ? 'हा IP त्वरित अनब्लॉक करा' : 'Instantly unblock this IP address'}
                             >
-                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                               <span>{isUnblocking ? t('unblocking') : t('unblockBtn')}</span>
                             </button>
                           </td>
@@ -1970,16 +2239,24 @@ export default function AdminManagement() {
       {activeTab === 'notices' && (
         <div className="space-y-6">
           {/* Top Banner Header */}
-          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-red-950/40 to-black/80 p-5 sm:p-7 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className={`rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-red-950/40 to-black/80 text-white shadow-lg'
+          }`}>
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-0.5 text-xs font-bold text-amber-300">
+              <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-bold ${
+                isLight
+                  ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                  : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+              }`}>
                 <Megaphone className="h-3.5 w-3.5" />
                 <span>{t('noticeBoardBadge')}</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-white">
+              <h3 className={`text-xl sm:text-2xl font-black ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 {isMarathi ? 'श्री बाल गणेश मंडळ - सूचना व्यवस्थापन' : 'Shri Baal Ganesh Mandal - Notice Management'}
               </h3>
-              <p className="text-xs text-orange-200/75">
+              <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/75'}`}>
                 {isMarathi
                   ? 'येथे प्रकाशित केलेल्या सूचना थेट मुख्य पृष्ठावरील अधिकृत सूचना फलकावर व Live TV स्क्रीनवर झळकतील.'
                   : 'Announcements published here broadcast live to the main notice board and pandal TV screens.'}
@@ -1989,7 +2266,11 @@ export default function AdminManagement() {
             <div className="flex items-center gap-2">
               <Link
                 to="/#notice-board"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-400/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 text-xs font-bold transition shadow-sm"
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition shadow-sm ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#FFFDD0]'
+                    : 'border-amber-400/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25'
+                }`}
               >
                 <span>{isMarathi ? 'थेट फलक पहा' : 'View Public Board'}</span>
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -1998,9 +2279,15 @@ export default function AdminManagement() {
           </div>
 
           {/* Notice Publish / Edit Form */}
-          <div className="rounded-3xl border border-amber-500/30 bg-black/40 p-5 sm:p-7 backdrop-blur-xl shadow-lg space-y-5">
-            <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
-              <h4 className="font-bold text-white text-base sm:text-lg flex items-center gap-2">
+          <div className={`rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-lg space-y-5 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-black/40 text-white shadow-lg'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'
+            }`}>
+              <h4 className={`font-bold text-base sm:text-lg flex items-center gap-2 ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 <span>{editingNoticeId ? '✏️' : '📢'}</span>
                 <span>
                   {editingNoticeId
@@ -2022,7 +2309,9 @@ export default function AdminManagement() {
                       isActive: true,
                     });
                   }}
-                  className="text-xs text-orange-300 hover:text-white underline cursor-pointer"
+                  className={`text-xs underline cursor-pointer ${
+                    isLight ? 'text-[#CC5500] hover:text-[#B7410E]' : 'text-orange-300 hover:text-white'
+                  }`}
                 >
                   {isMarathi ? 'रद्द करा (नवीन तयार करा)' : 'Cancel Edit'}
                 </button>
@@ -2033,7 +2322,7 @@ export default function AdminManagement() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Notice Title */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                     {t('noticeTitleLabel')}
                   </label>
                   <input
@@ -2046,19 +2335,27 @@ export default function AdminManagement() {
                         ? 'उदा. आज संध्याकाळी ७:३० वाजता महाआरती व महाप्रसाद वाटप'
                         : 'e.g. Grand Maha Aarti & Maha Prasad at 7:30 PM'
                     }
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none transition ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/60 text-white placeholder-orange-200/30 focus:border-amber-400'
+                    }`}
                   />
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                     {t('noticeCategoryLabel')}
                   </label>
                   <select
                     value={noticeForm.category}
                     onChange={(e) => setNoticeForm({ ...noticeForm, category: e.target.value })}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/80 py-2.5 px-3 text-xs sm:text-sm text-white outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border py-2.5 px-3 text-xs sm:text-sm outline-none transition ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/80 text-white focus:border-amber-400'
+                    }`}
                   >
                     <option value="urgent">{t('catUrgent')}</option>
                     <option value="event">{t('catEvent')}</option>
@@ -2072,13 +2369,17 @@ export default function AdminManagement() {
               {/* Priority & Status Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                     {t('noticePriorityLabel')}
                   </label>
                   <select
                     value={noticeForm.priority}
                     onChange={(e) => setNoticeForm({ ...noticeForm, priority: e.target.value })}
-                    className="w-full rounded-xl border border-amber-500/30 bg-black/80 py-2.5 px-3 text-xs sm:text-sm text-white outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl border py-2.5 px-3 text-xs sm:text-sm outline-none transition ${
+                      isLight
+                        ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 focus:border-[#CC5500]'
+                        : 'border-amber-500/30 bg-black/80 text-white focus:border-amber-400'
+                    }`}
                   >
                     <option value="normal">{t('priorityNormal')}</option>
                     <option value="medium">{t('priorityMedium')}</option>
@@ -2092,9 +2393,9 @@ export default function AdminManagement() {
                       type="checkbox"
                       checked={noticeForm.isActive}
                       onChange={(e) => setNoticeForm({ ...noticeForm, isActive: e.target.checked })}
-                      className="h-4 w-4 rounded border-amber-400 text-amber-500 focus:ring-amber-400 accent-amber-500"
+                      className="h-4 w-4 rounded border-amber-400 text-[#CC5500] focus:ring-[#CC5500] accent-[#CC5500]"
                     />
-                    <span className="text-xs sm:text-sm font-bold text-amber-200">
+                    <span className={`text-xs sm:text-sm font-bold ${isLight ? 'text-stone-800' : 'text-amber-200'}`}>
                       {isMarathi ? 'तात्काळ Live फलकावर प्रकाशित करा' : 'Publish Live Immediately'}
                     </span>
                   </label>
@@ -2103,7 +2404,7 @@ export default function AdminManagement() {
 
               {/* Detailed Content */}
               <div>
-                <label className="block text-xs font-semibold text-orange-200/90 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-stone-800' : 'text-orange-200/90'}`}>
                   {t('noticeContentLabel')}
                 </label>
                 <textarea
@@ -2116,7 +2417,11 @@ export default function AdminManagement() {
                       ? 'सूचनेचा संपूर्ण मजकूर येथे लिहा... सर्व भाविकांनी वेळेवर उपस्थित राहावे.'
                       : 'Enter complete announcement details here...'
                   }
-                  className="w-full rounded-xl border border-amber-500/30 bg-black/60 py-2.5 px-3.5 text-xs sm:text-sm text-white placeholder-orange-200/30 outline-none focus:border-amber-400 leading-relaxed"
+                  className={`w-full rounded-xl border py-2.5 px-3.5 text-xs sm:text-sm outline-none leading-relaxed transition ${
+                    isLight
+                      ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500]'
+                      : 'border-amber-500/30 bg-black/60 text-white placeholder-orange-200/30 focus:border-amber-400'
+                  }`}
                 />
               </div>
 
@@ -2141,9 +2446,15 @@ export default function AdminManagement() {
           </div>
 
           {/* List of Published Notices */}
-          <div className="rounded-3xl border border-amber-500/30 bg-black/40 p-5 sm:p-7 backdrop-blur-xl shadow-lg space-y-4">
-            <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
-              <h4 className="font-bold text-white text-base sm:text-lg flex items-center gap-2">
+          <div className={`rounded-3xl border p-5 sm:p-7 backdrop-blur-xl shadow-lg space-y-4 ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-black/40 text-white shadow-lg'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isLight ? 'border-[#CC5500]/15' : 'border-amber-500/20'
+            }`}>
+              <h4 className={`font-bold text-base sm:text-lg flex items-center gap-2 ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 <span>📋</span>
                 <span>{isMarathi ? 'सर्व प्रकाशित सूचना यादी' : 'All Notices List'} ({adminNotices.length})</span>
               </h4>
@@ -2152,7 +2463,11 @@ export default function AdminManagement() {
                 type="button"
                 onClick={fetchAdminNotices}
                 disabled={loadingNotices}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#CC5500]/10 hover:bg-[#CC5500]/20 text-[#CC5500]'
+                    : 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300'
+                }`}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loadingNotices ? 'animate-spin' : ''}`} />
                 <span>{t('refresh')}</span>
@@ -2160,7 +2475,9 @@ export default function AdminManagement() {
             </div>
 
             {loadingNotices ? (
-              <div className="py-12 text-center text-xs sm:text-sm text-orange-200/60 font-semibold animate-pulse">
+              <div className={`py-12 text-center text-xs sm:text-sm font-semibold animate-pulse ${
+                isLight ? 'text-stone-500' : 'text-orange-200/60'
+              }`}>
                 🪔 {t('loading')}
               </div>
             ) : adminNotices.length > 0 ? (
@@ -2180,22 +2497,34 @@ export default function AdminManagement() {
                     <div
                       key={n._id}
                       className={`rounded-2xl border ${
-                        n.isActive ? 'border-amber-500/30 bg-black/60' : 'border-zinc-800 bg-zinc-950/40 opacity-70'
+                        n.isActive
+                          ? isLight
+                            ? 'border-[#CC5500]/25 bg-[#F5F5DC]'
+                            : 'border-amber-500/30 bg-black/60'
+                          : isLight
+                          ? 'border-stone-300 bg-stone-100 opacity-70'
+                          : 'border-zinc-800 bg-zinc-950/40 opacity-70'
                       } p-4 space-y-2.5 transition-all`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/10 pb-2">
+                      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2 ${
+                        isLight ? 'border-stone-200' : 'border-amber-500/10'
+                      }`}>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
                             className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                               n.isActive
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
-                                : 'bg-zinc-700/40 text-zinc-400 border border-zinc-600/40'
+                                ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/40'
+                                : 'bg-zinc-700/40 text-zinc-500 dark:text-zinc-400 border border-zinc-600/40'
                             }`}
                           >
                             {n.isActive ? (isMarathi ? '● Live सक्रिय' : '● Live Active') : (isMarathi ? '○ अप्रकाशित' : '○ Hidden')}
                           </span>
 
-                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-200 text-[10px] font-bold uppercase">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase ${
+                            isLight
+                              ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                              : 'bg-amber-500/15 border border-amber-400/30 text-amber-200'
+                          }`}>
                             {n.category}
                           </span>
 
@@ -2205,7 +2534,7 @@ export default function AdminManagement() {
                             </span>
                           )}
 
-                          <span className="text-[11px] text-orange-200/50">
+                          <span className={`text-[11px] ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
                             🕒 {dateStr}
                           </span>
                         </div>
@@ -2218,7 +2547,11 @@ export default function AdminManagement() {
                             onClick={() => handleToggleNotice(n._id)}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer ${
                               n.isActive
-                                ? 'border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300'
+                                ? isLight
+                                  ? 'border-emerald-500/40 bg-emerald-100 hover:bg-emerald-200 text-emerald-900'
+                                  : 'border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300'
+                                : isLight
+                                ? 'border-stone-300 bg-stone-200 hover:bg-stone-300 text-stone-700'
                                 : 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 text-zinc-300'
                             }`}
                             title={isMarathi ? 'स्थिती बदला (चालू/बंद)' : 'Toggle Status'}
@@ -2240,7 +2573,11 @@ export default function AdminManagement() {
                               });
                               window.scrollTo({ top: 300, behavior: 'smooth' });
                             }}
-                            className="p-1.5 rounded-xl border border-amber-500/30 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 transition cursor-pointer"
+                            className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                              isLight
+                                ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500] hover:bg-[#CC5500]/20'
+                                : 'border-amber-500/30 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60'
+                            }`}
                             title={t('edit')}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
@@ -2250,7 +2587,11 @@ export default function AdminManagement() {
                           <button
                             type="button"
                             onClick={() => handleDeleteNotice(n._id, n.title)}
-                            className="p-1.5 rounded-xl border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60 transition cursor-pointer"
+                            className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                              isLight
+                                ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+                                : 'border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60'
+                            }`}
                             title={t('delete')}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -2259,15 +2600,17 @@ export default function AdminManagement() {
                       </div>
 
                       <div>
-                        <h5 className="font-bold text-white text-sm sm:text-base">
+                        <h5 className={`font-bold text-sm sm:text-base ${isLight ? 'text-stone-900' : 'text-white'}`}>
                           {n.title}
                         </h5>
-                        <p className="text-xs text-orange-200/80 leading-relaxed mt-1 whitespace-pre-line">
+                        <p className={`text-xs leading-relaxed mt-1 whitespace-pre-line ${isLight ? 'text-stone-700' : 'text-orange-200/80'}`}>
                           {n.content}
                         </p>
                       </div>
 
-                      <div className="text-[11px] text-amber-300/60 pt-1 flex items-center justify-between">
+                      <div className={`text-[11px] pt-1 flex items-center justify-between ${
+                        isLight ? 'text-[#CC5500]' : 'text-amber-300/60'
+                      }`}>
                         <span>✍️ {n.postedBy || 'श्री बाल गणेश मंडळ व्यवस्थापक'}</span>
                       </div>
                     </div>
@@ -2275,9 +2618,11 @@ export default function AdminManagement() {
                 })}
               </div>
             ) : (
-              <div className="py-12 text-center rounded-2xl border border-dashed border-amber-500/20 bg-black/30">
-                <Megaphone className="h-8 w-8 text-amber-400/40 mx-auto mb-2" />
-                <p className="text-xs sm:text-sm text-orange-200/60 font-semibold">
+              <div className={`py-12 text-center rounded-2xl border border-dashed ${
+                isLight ? 'border-[#CC5500]/30 bg-[#F5F5DC]' : 'border-amber-500/20 bg-black/30'
+              }`}>
+                <Megaphone className={`h-8 w-8 mx-auto mb-2 ${isLight ? 'text-[#CC5500]/50' : 'text-amber-400/40'}`} />
+                <p className={`text-xs sm:text-sm font-semibold ${isLight ? 'text-stone-600' : 'text-orange-200/60'}`}>
                   {isMarathi ? 'अद्याप कोणतीही सूचना तयार केलेली नाही. वरील फॉर्म वापरून पहिली सूचना प्रकाशित करा.' : 'No announcements created yet. Use the form above to publish the first one.'}
                 </p>
               </div>
@@ -2292,16 +2637,20 @@ export default function AdminManagement() {
       {activeTab === 'music' && (
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-stone-950/80 to-black/90 backdrop-blur-xl">
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl border backdrop-blur-xl ${
+            isLight
+              ? 'border-[#CC5500]/25 bg-[#FFFDD0] text-stone-900 shadow-md'
+              : 'border-amber-500/30 bg-gradient-to-r from-orange-950/70 via-stone-950/80 to-black/90 text-white shadow-xl'
+          }`}>
             <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+              <div className={`flex items-center gap-2 text-xs font-bold ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>
                 <Music className="h-4 w-4" />
                 <span>{t('mandalName')}</span>
               </div>
-              <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+              <h3 className={`text-lg sm:text-xl font-black mt-1 ${isLight ? 'text-stone-900' : 'text-white'}`}>
                 {t('adminMusicTitle')}
               </h3>
-              <p className="text-xs text-orange-200/70">
+              <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                 {t('adminMusicSub')}
               </p>
             </div>
@@ -2309,7 +2658,11 @@ export default function AdminManagement() {
             <div className="flex items-center gap-2">
               <Link
                 to="/music"
-                className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:scale-105 transition-all"
+                className={`flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold shadow-md hover:scale-105 transition-all text-white ${
+                  isLight
+                    ? 'border-[#CC5500]/40 bg-gradient-to-r from-[#CC5500] to-[#B7410E]'
+                    : 'border-amber-500/40 bg-gradient-to-r from-amber-500 to-orange-600'
+                }`}
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 <span>{isMarathi ? 'संगीत प्लेअर उघडा ↗' : 'Open Music Player ↗'}</span>
@@ -2320,8 +2673,12 @@ export default function AdminManagement() {
           {/* Suggestions List */}
           <div className="space-y-3">
             {loadingMusicSuggestions ? (
-              <div className="p-12 text-center text-orange-200/60 rounded-3xl border border-amber-500/20 bg-black/40">
-                <span className="inline-block h-6 w-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mb-2" />
+              <div className={`p-12 text-center rounded-3xl border ${
+                isLight ? 'border-[#CC5500]/20 bg-[#FFFDD0] text-stone-600 shadow-sm' : 'border-amber-500/20 bg-black/40 text-orange-200/60'
+              }`}>
+                <span className={`inline-block h-6 w-6 border-2 border-t-transparent rounded-full animate-spin mb-2 ${
+                  isLight ? 'border-[#CC5500]' : 'border-amber-400'
+                }`} />
                 <p className="text-xs">{t('loading')}</p>
               </div>
             ) : musicSuggestions.length > 0 ? (
@@ -2331,17 +2688,25 @@ export default function AdminManagement() {
                   return (
                     <div
                       key={item._id || item.id}
-                      className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-4 backdrop-blur-xl space-y-3 flex flex-col justify-between"
+                      className={`rounded-2xl border p-4 backdrop-blur-xl space-y-3 flex flex-col justify-between ${
+                        isLight
+                          ? 'border-[#CC5500]/20 bg-[#FFFDD0] text-stone-900 shadow-sm'
+                          : 'border-amber-500/25 bg-orange-950/30 text-white'
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1 min-w-0">
-                          <span className="rounded-full bg-amber-500/20 border border-amber-400/30 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border ${
+                            isLight
+                              ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                              : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
+                          }`}>
                             {item.category}
                           </span>
-                          <h4 className="font-bold text-white text-base tracking-tight truncate">
+                          <h4 className={`font-bold text-base tracking-tight truncate ${isLight ? 'text-stone-900' : 'text-white'}`}>
                             {item.title}
                           </h4>
-                          <p className="text-xs text-orange-200/70">
+                          <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/70'}`}>
                             {item.singer || 'सुचवलेले गाणे'}
                           </p>
                         </div>
@@ -2352,7 +2717,9 @@ export default function AdminManagement() {
                             href={`https://www.youtube.com/watch?v=${item.youtubeId}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="relative h-16 w-24 rounded-xl overflow-hidden shrink-0 border border-amber-500/30 group"
+                            className={`relative h-16 w-24 rounded-xl overflow-hidden shrink-0 border group ${
+                              isLight ? 'border-[#CC5500]/30' : 'border-amber-500/30'
+                            }`}
                             title="Watch on YouTube"
                           >
                             <img
@@ -2368,31 +2735,41 @@ export default function AdminManagement() {
                       </div>
 
                       {/* Devotee Info & Message */}
-                      <div className="text-xs space-y-1 pt-2 border-t border-amber-500/15">
-                        <div className="flex items-center justify-between text-orange-200/80">
-                          <span className="font-semibold text-amber-300">
+                      <div className={`text-xs space-y-1 pt-2 border-t ${
+                        isLight ? 'border-[#CC5500]/15 text-stone-700' : 'border-amber-500/15 text-orange-200/80'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <span className={`font-semibold ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                             👤 {item.suggestedBy || 'अनामिक भाविक'} {item.phone ? `(${item.phone})` : ''}
                           </span>
-                          <span className="text-[10px] text-orange-200/50">
-                            {new Date(item.createdAt).toLocaleDateString('mr-IN')}
+                          <span className={`text-[10px] ${isLight ? 'text-stone-500' : 'text-orange-200/50'}`}>
+                            {new Date(item.createdAt).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN')}
                           </span>
                         </div>
                         {item.message && (
-                          <p className="italic text-orange-200/70 text-[11px] bg-black/30 p-2 rounded-lg border border-amber-500/10">
+                          <p className={`italic text-[11px] p-2 rounded-lg border ${
+                            isLight
+                              ? 'bg-[#F5F5DC] border-[#CC5500]/15 text-stone-700'
+                              : 'bg-black/30 border-amber-500/10 text-orange-200/70'
+                          }`}>
                             "{item.message}"
                           </p>
                         )}
                       </div>
 
                       {/* Status & Actions */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-500/15">
+                      <div className={`flex flex-wrap items-center justify-between gap-2 pt-2 border-t ${
+                        isLight ? 'border-[#CC5500]/15' : 'border-amber-500/15'
+                      }`}>
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
                             item.status === 'approved'
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40'
                               : item.status === 'pending'
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                              : 'bg-red-500/20 text-red-300 border-red-500/40'
+                              ? isLight
+                                ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              : 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40'
                           }`}
                         >
                           {item.status === 'approved'
@@ -2407,7 +2784,11 @@ export default function AdminManagement() {
                             <button
                               type="button"
                               onClick={() => handleSetMusicStatus(item._id || item.id, 'approved')}
-                              className="rounded-xl px-2.5 py-1 text-xs font-bold border border-emerald-500/50 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60 transition cursor-pointer"
+                              className={`rounded-xl px-2.5 py-1 text-xs font-bold border transition cursor-pointer ${
+                                isLight
+                                  ? 'border-emerald-500/40 bg-emerald-100 hover:bg-emerald-200 text-emerald-900'
+                                  : 'border-emerald-500/50 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60'
+                              }`}
                               title="मंजूर करून थेट Live करा"
                             >
                               ✓ मंजूर करा
@@ -2418,7 +2799,11 @@ export default function AdminManagement() {
                             <button
                               type="button"
                               onClick={() => handleSetMusicStatus(item._id || item.id, 'rejected')}
-                              className="rounded-xl px-2.5 py-1 text-xs font-bold border border-red-500/40 bg-red-950/50 text-red-300 hover:bg-red-900/60 transition cursor-pointer"
+                              className={`rounded-xl px-2.5 py-1 text-xs font-bold border transition cursor-pointer ${
+                                isLight
+                                  ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+                                  : 'border-red-500/40 bg-red-950/50 text-red-300 hover:bg-red-900/60'
+                              }`}
                               title="अस्वीकृत करा"
                             >
                               ✕ अस्वीकृत
@@ -2428,7 +2813,11 @@ export default function AdminManagement() {
                           <button
                             type="button"
                             onClick={() => handleDeleteMusicSuggestion(item._id || item.id, item.title)}
-                            className="p-1.5 rounded-xl border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60 transition cursor-pointer"
+                            className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                              isLight
+                                ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+                                : 'border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900/60'
+                            }`}
                             title={t('delete')}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -2440,12 +2829,14 @@ export default function AdminManagement() {
                 })}
               </div>
             ) : (
-              <div className="py-14 text-center rounded-3xl border border-dashed border-amber-500/25 bg-black/40 p-8 space-y-2">
-                <Music className="h-10 w-10 text-amber-400/40 mx-auto" />
-                <p className="text-sm font-bold text-white">
+              <div className={`py-14 text-center rounded-3xl border border-dashed p-8 space-y-2 ${
+                isLight ? 'border-[#CC5500]/30 bg-[#F5F5DC]' : 'border-amber-500/25 bg-black/40'
+              }`}>
+                <Music className={`h-10 w-10 mx-auto ${isLight ? 'text-[#CC5500]/50' : 'text-amber-400/40'}`} />
+                <p className={`text-sm font-bold ${isLight ? 'text-stone-900' : 'text-white'}`}>
                   {isMarathi ? 'अद्याप कोणत्याही भाविकाने गाणे सुचवलेले नाही.' : 'No music suggestions submitted yet.'}
                 </p>
-                <p className="text-xs text-orange-200/60">
+                <p className={`text-xs ${isLight ? 'text-stone-600' : 'text-orange-200/60'}`}>
                   {isMarathi
                     ? 'भाविक संगीत पृष्ठावरून बाप्पाची आवडती गाणी सुचवू शकतात.'
                     : 'Devotees can suggest their favorite Ganpati songs from the music page.'}

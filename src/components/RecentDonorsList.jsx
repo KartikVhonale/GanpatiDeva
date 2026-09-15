@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import useDonations from '../hooks/useDonations';
 
 export default function RecentDonorsList({ donors = [] }) {
   const { t, lang } = useLanguage();
+  const { isLight } = useTheme();
   const { isAdmin, token } = useAuth();
   const { deleteDonation } = useDonations();
   const [deletingId, setDeletingId] = useState(null);
@@ -46,14 +48,22 @@ export default function RecentDonorsList({ donors = [] }) {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xl">🌸</span>
-            <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+            <h2 className={`text-xl md:text-2xl font-bold tracking-tight ${
+              isLight ? 'text-stone-900' : 'text-white'
+            }`}>
               {t('recentDonorsTitle')}
             </h2>
-            <span className="rounded-full bg-amber-500/20 border border-amber-400/40 px-2.5 py-0.5 text-xs font-bold text-amber-300">
+            <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+              isLight
+                ? 'bg-[#CC5500]/10 border-[#CC5500]/30 text-[#CC5500]'
+                : 'bg-amber-500/20 border-amber-400/40 text-amber-300'
+            }`}>
               {donors.length} {t('devoteesCountSuffix')}
             </span>
           </div>
-          <p className="text-xs md:text-sm text-orange-200/70 mt-1">
+          <p className={`text-xs md:text-sm mt-1 ${
+            isLight ? 'text-stone-600' : 'text-orange-200/70'
+          }`}>
             {t('recentDonorsSub')}
           </p>
         </div>
@@ -65,7 +75,11 @@ export default function RecentDonorsList({ donors = [] }) {
             placeholder={t('searchDonorsPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-full border border-amber-500/30 bg-orange-950/40 px-4 py-2 text-xs md:text-sm text-white placeholder-orange-300/40 backdrop-blur-md outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30"
+            className={`w-full rounded-full border px-4 py-2 text-xs md:text-sm backdrop-blur-md outline-none transition-all ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-2 focus:ring-[#CC5500]/20'
+                : 'border-amber-500/30 bg-orange-950/40 text-white placeholder-orange-300/40 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30'
+            }`}
           />
           <span className="absolute right-3.5 top-2.5 text-xs text-orange-300/60">
             🔍
@@ -74,15 +88,21 @@ export default function RecentDonorsList({ donors = [] }) {
       </div>
 
       {/* Category Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-orange-500/20 pb-3">
+      <div className={`flex flex-wrap items-center gap-2 border-b pb-3 ${
+        isLight ? 'border-[#CC5500]/20' : 'border-orange-500/20'
+      }`}>
         {categories.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeTab === tab.id
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-orange-600/30 ring-1 ring-amber-300/50"
-                : "border border-amber-500/20 bg-orange-950/20 text-orange-200/70 hover:bg-orange-900/30 hover:text-white"
+                ? isLight
+                  ? "bg-[#CC5500] text-white shadow-md shadow-[#CC5500]/30 ring-1 ring-[#B7410E]"
+                  : "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-orange-600/30 ring-1 ring-amber-300/50"
+                : isLight
+                  ? "border border-[#CC5500]/20 bg-[#F5F5DC] text-stone-700 hover:bg-[#FFFDD0] hover:text-[#CC5500]"
+                  : "border border-amber-500/20 bg-orange-950/20 text-orange-200/70 hover:bg-orange-900/30 hover:text-white"
             }`}
           >
             {tab.label}
@@ -110,10 +130,14 @@ export default function RecentDonorsList({ donors = [] }) {
                   }}
                   whileHover={{ y: -3, transition: { duration: 0.2 } }}
                   className={`group relative overflow-hidden rounded-2xl border ${
-                    isJustNow 
-                      ? "border-amber-400 bg-gradient-to-br from-amber-950/50 via-orange-950/40 to-black/70 ring-1 ring-amber-400/50" 
-                      : "border-amber-500/25 bg-gradient-to-br from-orange-950/35 via-red-950/25 to-black/60"
-                  } p-4 md:p-5 backdrop-blur-xl shadow-lg transition-all hover:border-amber-400/50 hover:shadow-orange-600/20`}
+                    isLight
+                      ? isJustNow 
+                        ? "border-[#CC5500] bg-[#FFFDD0] ring-1 ring-[#CC5500]/50 shadow-md" 
+                        : "border-[#CC5500]/20 bg-[#F5F5DC] shadow-sm hover:border-[#CC5500]/40 hover:bg-[#FFFDD0]"
+                      : isJustNow 
+                        ? "border-amber-400 bg-gradient-to-br from-amber-950/50 via-orange-950/40 to-black/70 ring-1 ring-amber-400/50" 
+                        : "border-amber-500/25 bg-gradient-to-br from-orange-950/35 via-red-950/25 to-black/60"
+                  } p-4 md:p-5 backdrop-blur-xl shadow-lg transition-all`}
                 >
                   {/* Subtle sheen highlight on hover */}
                   <div className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-r from-transparent via-amber-400/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
@@ -121,7 +145,11 @@ export default function RecentDonorsList({ donors = [] }) {
                   <div className="relative z-10 flex items-start justify-between gap-3">
                     {/* Avatar & Devotee Info */}
                     <div className="flex items-start gap-3">
-                      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/30 via-orange-600/20 to-red-600/30 border border-amber-400/30 text-xl shadow-inner">
+                      <div className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-xl shadow-inner ${
+                        isLight
+                          ? 'border-[#CC5500]/25 bg-[#CC5500]/10'
+                          : 'border-amber-400/30 bg-gradient-to-br from-amber-500/30 via-orange-600/20 to-red-600/30'
+                      }`}>
                         <span>{donor.icon || "🌺"}</span>
                         {isJustNow && (
                           <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -133,22 +161,30 @@ export default function RecentDonorsList({ donors = [] }) {
 
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-sm md:text-base text-white group-hover:text-amber-200 transition-colors">
+                          <h3 className={`font-bold text-sm md:text-base transition-colors ${
+                            isLight
+                              ? 'text-stone-900 group-hover:text-[#CC5500]'
+                              : 'text-white group-hover:text-amber-200'
+                          }`}>
                             {donor.name}
                           </h3>
                           {isJustNow && (
-                            <span className="rounded bg-emerald-500/20 border border-emerald-400/40 px-1.5 py-0.2 text-[9px] font-bold text-emerald-300 animate-pulse">
+                            <span className="rounded bg-emerald-500/20 border border-emerald-400/40 px-1.5 py-0.2 text-[9px] font-bold text-emerald-600 animate-pulse">
                               {t('newBadge')}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-orange-200/70 mt-0.5">
+                        <div className={`flex items-center gap-1.5 text-xs mt-0.5 ${
+                          isLight ? 'text-stone-600' : 'text-orange-200/70'
+                        }`}>
                           <span>📍 {donor.city}</span>
                           <span>•</span>
-                          <span className="text-[11px] text-orange-300/60">{donor.time}</span>
+                          <span className={`text-[11px] ${isLight ? 'text-stone-500' : 'text-orange-300/60'}`}>{donor.time}</span>
                         </div>
                         {donor.blessing && (
-                          <p className="text-[11px] text-amber-300/80 italic mt-1.5 flex items-center gap-1">
+                          <p className={`text-[11px] italic mt-1.5 flex items-center gap-1 ${
+                            isLight ? 'text-[#CC5500]' : 'text-amber-300/80'
+                          }`}>
                             <span>✨</span>
                             <span>{donor.blessing}</span>
                           </p>
@@ -158,10 +194,16 @@ export default function RecentDonorsList({ donors = [] }) {
 
                     {/* Amount & Badge */}
                     <div className="flex flex-col items-end gap-1.5 text-right">
-                      <div className="text-base md:text-lg font-black text-amber-300 drop-shadow-sm">
+                      <div className={`text-base md:text-lg font-black drop-shadow-sm ${
+                        isLight ? 'text-[#CC5500]' : 'text-amber-300'
+                      }`}>
                         ₹{donor.amount.toLocaleString()}
                       </div>
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide backdrop-blur-md ${donor.badgeColor || "border-amber-400/40 bg-amber-500/20 text-amber-200"}`}>
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide backdrop-blur-md ${
+                        isLight
+                          ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+                          : (donor.badgeColor || "border-amber-400/40 bg-amber-500/20 text-amber-200")
+                      }`}>
                         {donor.category}
                       </span>
                       {isAdmin && (
@@ -197,8 +239,12 @@ export default function RecentDonorsList({ donors = [] }) {
               );
             })
           ) : (
-            <div className="col-span-full py-12 text-center rounded-2xl border border-dashed border-orange-500/30 bg-orange-950/20">
-              <p className="text-orange-200/60 text-sm">{t('noDonorsFound')}</p>
+            <div className={`col-span-full py-12 text-center rounded-2xl border border-dashed ${
+              isLight
+                ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-600'
+                : 'border-orange-500/30 bg-orange-950/20 text-orange-200/60'
+            }`}>
+              <p className="text-sm">{t('noDonorsFound')}</p>
             </div>
           )}
         </AnimatePresence>

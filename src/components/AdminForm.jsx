@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Share2, Receipt, Printer } from 'lucide-react';
 import { useLanguage, SEVA_CATEGORIES } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import ReceiptModal from './ReceiptModal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -10,6 +11,7 @@ const QUICK_AMOUNTS = [101, 251, 501, 1100, 2100, 5100, 11000];
 
 export default function AdminForm({ onSubmitDonation }) {
   const { t, lang, isMarathi } = useLanguage();
+  const { isLight } = useTheme();
   const [donorName, setDonorName] = useState('');
   const [amount, setAmount] = useState('');
   const [city, setCity] = useState('');
@@ -147,23 +149,39 @@ export default function AdminForm({ onSubmitDonation }) {
         initial={{ opacity: 0, scale: 0.97, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-b from-orange-950/70 via-red-950/50 to-black/90 p-4 sm:p-7 backdrop-blur-2xl shadow-[0_16px_50px_0_rgba(234,88,12,0.25)]"
+        className={`relative overflow-hidden rounded-3xl border p-4 sm:p-7 backdrop-blur-2xl transition-colors ${
+          isLight
+            ? 'border-[#CC5500]/30 bg-[#FFFDD0] text-[#2B2B2B] shadow-[0_16px_50px_0_rgba(204,85,0,0.12)]'
+            : 'border-amber-500/30 bg-gradient-to-b from-orange-950/70 via-red-950/50 to-black/90 text-amber-50 shadow-[0_16px_50px_0_rgba(234,88,12,0.25)]'
+        }`}
       >
         {/* Ambient Glow */}
-        <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-amber-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full bg-red-600/20 blur-3xl" />
+        <div className={`pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full blur-3xl ${
+          isLight ? 'bg-[#CC5500]/10' : 'bg-amber-500/20'
+        }`} />
+        <div className={`pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full blur-3xl ${
+          isLight ? 'bg-[#B7410E]/10' : 'bg-red-600/20'
+        }`} />
 
         {/* Header Title */}
         <div className="relative z-10 mb-4 sm:mb-6 text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300 mb-2.5 shadow-inner">
+          <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold mb-2.5 shadow-inner ${
+            isLight
+              ? 'border-[#CC5500]/30 bg-[#CC5500]/10 text-[#CC5500]'
+              : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+          }`}>
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>{t('mobileCounterBadge')}</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow">
+          <h2 className={`text-xl sm:text-2xl md:text-3xl font-black tracking-tight ${
+            isLight ? 'text-stone-900' : 'text-white drop-shadow'
+          }`}>
             {t('formTitle')}
           </h2>
-          <p className="text-[11px] sm:text-xs text-orange-200/75 mt-0.5">
+          <p className={`text-[11px] sm:text-xs mt-0.5 ${
+            isLight ? 'text-stone-600' : 'text-orange-200/75'
+          }`}>
             {t('formSub')}
           </p>
         </div>
@@ -175,16 +193,20 @@ export default function AdminForm({ onSubmitDonation }) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-4 rounded-2xl border border-emerald-500/50 bg-emerald-950/70 p-3 backdrop-blur-md text-emerald-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-2 shadow-lg"
+              className={`mb-4 rounded-2xl border p-3 backdrop-blur-md text-xs sm:text-sm font-semibold flex items-center justify-between gap-2 shadow-lg ${
+                isLight
+                  ? 'border-emerald-500/40 bg-emerald-100 text-emerald-900'
+                  : 'border-emerald-500/50 bg-emerald-950/70 text-emerald-200'
+              }`}
             >
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{successBanner}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setSuccessBanner('')}
-                className="text-emerald-400 hover:text-white text-xs px-1 cursor-pointer"
+                className="text-emerald-700 dark:text-emerald-400 hover:opacity-75 text-xs px-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -199,36 +221,46 @@ export default function AdminForm({ onSubmitDonation }) {
               initial={{ opacity: 0, y: -10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="mb-5 overflow-hidden rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-950/70 via-emerald-900/40 to-black/80 p-4 backdrop-blur-xl text-emerald-100 shadow-xl ring-1 ring-emerald-400/30 space-y-2.5"
+              className={`mb-5 overflow-hidden rounded-2xl border p-4 backdrop-blur-xl shadow-xl space-y-2.5 ${
+                isLight
+                  ? 'border-emerald-500/40 bg-emerald-50 text-emerald-950 shadow-emerald-500/10 ring-1 ring-emerald-500/20'
+                  : 'border-emerald-500/40 bg-gradient-to-br from-emerald-950/70 via-emerald-900/40 to-black/80 text-emerald-100 ring-1 ring-emerald-400/30'
+              }`}
             >
               <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
-                <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-emerald-300">
+                <div className={`flex items-center gap-1.5 font-bold text-xs sm:text-sm ${
+                  isLight ? 'text-emerald-800' : 'text-emerald-300'
+                }`}>
                   <span className="text-base">🪔</span>
                   <span>{t('receiptGenerated')}</span>
                 </div>
-                <span className="text-[11px] font-mono bg-emerald-900/80 border border-emerald-400/30 px-2 py-0.5 rounded-lg text-emerald-200 font-bold">
+                <span className={`text-[11px] font-mono border px-2 py-0.5 rounded-lg font-bold ${
+                  isLight
+                    ? 'bg-emerald-200/70 border-emerald-400/50 text-emerald-900'
+                    : 'bg-emerald-900/80 border-emerald-400/30 text-emerald-200'
+                }`}>
                   {recentReceipt.receiptNo}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs py-1">
                 <div>
-                  <span className="text-emerald-300/70 text-[11px]">{t('donor')}:</span>
-                  <div className="font-bold text-white text-sm truncate">{recentReceipt.name}</div>
+                  <span className={`text-[11px] ${isLight ? 'text-emerald-700' : 'text-emerald-300/70'}`}>{t('donor')}:</span>
+                  <div className={`font-bold text-sm truncate ${isLight ? 'text-stone-900' : 'text-white'}`}>{recentReceipt.name}</div>
                 </div>
                 <div className="text-right">
-                  <span className="text-emerald-300/70 text-[11px]">{t('amount')}:</span>
-                  <div className="font-black text-amber-300 text-base">
+                  <span className={`text-[11px] ${isLight ? 'text-emerald-700' : 'text-emerald-300/70'}`}>{t('amount')}:</span>
+                  <div className={`font-black text-base ${isLight ? 'text-[#CC5500]' : 'text-amber-300'}`}>
                     ₹{recentReceipt.amount.toLocaleString(lang === 'mr' ? 'mr-IN' : 'en-IN')}
                   </div>
                 </div>
                 <div>
-                  <span className="text-emerald-300/70 text-[11px]">{t('category')}:</span>
-                  <div className="text-emerald-100">{recentReceipt.category}</div>
+                  <span className={`text-[11px] ${isLight ? 'text-emerald-700' : 'text-emerald-300/70'}`}>{t('category')}:</span>
+                  <div className={isLight ? 'text-stone-800' : 'text-emerald-100'}>{recentReceipt.category}</div>
                 </div>
                 <div className="text-right">
-                  <span className="text-emerald-300/70 text-[11px]">{t('paymentMethod').split('(')[0].trim()}:</span>
-                  <div className="text-emerald-100">{recentReceipt.paymentMode}</div>
+                  <span className={`text-[11px] ${isLight ? 'text-emerald-700' : 'text-emerald-300/70'}`}>{t('paymentMethod').split('(')[0].trim()}:</span>
+                  <div className={isLight ? 'text-stone-800' : 'text-emerald-100'}>{recentReceipt.paymentMode}</div>
                 </div>
               </div>
 
@@ -238,7 +270,11 @@ export default function AdminForm({ onSubmitDonation }) {
                   <button
                     type="button"
                     onClick={() => setShowFullReceipt(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 px-3 py-1.5 text-black font-black shadow-md transition-all active:scale-95 cursor-pointer"
+                    className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-black shadow-md transition-all active:scale-95 cursor-pointer ${
+                      isLight
+                        ? 'bg-[#CC5500] hover:bg-[#B7410E] text-[#FFFDD0]'
+                        : 'bg-amber-400 hover:bg-amber-300 text-black'
+                    }`}
                   >
                     <Receipt className="h-3.5 w-3.5" />
                     <span>{isMarathi ? 'पावती पहा व प्रिंट करा' : 'View / Print Receipt'}</span>
@@ -248,7 +284,7 @@ export default function AdminForm({ onSubmitDonation }) {
                     href={getWhatsAppShareUrl(recentReceipt)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-1.5 text-black font-black shadow-md transition-all active:scale-95 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-white font-black shadow-md transition-all active:scale-95 cursor-pointer"
                   >
                     <Share2 className="h-3.5 w-3.5" />
                     <span>{t('whatsappShareBtn')}</span>
@@ -258,7 +294,9 @@ export default function AdminForm({ onSubmitDonation }) {
                 <button
                   type="button"
                   onClick={() => setRecentReceipt(null)}
-                  className="text-emerald-300/80 hover:text-white underline text-[11px] cursor-pointer"
+                  className={`underline text-[11px] cursor-pointer ${
+                    isLight ? 'text-emerald-800 hover:text-stone-900' : 'text-emerald-300/80 hover:text-white'
+                  }`}
                 >
                   {t('newReceiptBtn')}
                 </button>
@@ -269,8 +307,12 @@ export default function AdminForm({ onSubmitDonation }) {
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mb-4 rounded-xl border border-red-500/50 bg-red-950/60 p-3 text-xs font-semibold text-red-200 backdrop-blur-md flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+          <div className={`mb-4 rounded-xl border p-3 text-xs font-semibold backdrop-blur-md flex items-center gap-2 ${
+            isLight
+              ? 'border-red-500/40 bg-red-100 text-red-900'
+              : 'border-red-500/50 bg-red-950/60 text-red-200'
+          }`}>
+            <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -279,7 +321,9 @@ export default function AdminForm({ onSubmitDonation }) {
         <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
           {/* Payment Mode Segment */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1.5">
+            <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1.5 ${
+              isLight ? 'text-stone-700' : 'text-orange-200/80'
+            }`}>
               {t('paymentMethod')}
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -294,7 +338,11 @@ export default function AdminForm({ onSubmitDonation }) {
                   onClick={() => setPaymentMode(mode.id)}
                   className={`min-h-[44px] py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-60 ${
                     paymentMode === mode.id
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md border border-amber-300/60 ring-1 ring-amber-400'
+                      ? isLight
+                        ? 'bg-[#CC5500] text-[#FFFDD0] shadow-md border border-[#B7410E]'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md border border-amber-300/60 ring-1 ring-amber-400'
+                      : isLight
+                      ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-stone-700 hover:text-[#CC5500]'
                       : 'border border-amber-500/20 bg-orange-950/40 text-orange-200/70 hover:bg-orange-900/30 hover:text-white'
                   }`}
                 >
@@ -307,7 +355,9 @@ export default function AdminForm({ onSubmitDonation }) {
 
           {/* Donor Name Input */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+            <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${
+              isLight ? 'text-stone-700' : 'text-orange-200/80'
+            }`}>
               {t('donorNameLabel')}
             </label>
             <div className="relative">
@@ -320,9 +370,13 @@ export default function AdminForm({ onSubmitDonation }) {
                 placeholder={t('donorNamePlaceholder')}
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-amber-500/30 bg-black/50 px-3.5 py-2.5 text-sm text-white placeholder-orange-300/40 outline-none backdrop-blur-md transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 disabled:opacity-50"
+                className={`w-full min-h-[44px] rounded-xl border px-3.5 py-2.5 text-sm outline-none backdrop-blur-md transition-all disabled:opacity-50 ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-2 focus:ring-[#CC5500]/20'
+                    : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30'
+                }`}
               />
-              <span className="absolute right-3 top-3 text-sm text-orange-300/60">
+              <span className={`absolute right-3 top-3 text-sm ${isLight ? 'text-[#CC5500]' : 'text-orange-300/60'}`}>
                 👤
               </span>
             </div>
@@ -330,11 +384,13 @@ export default function AdminForm({ onSubmitDonation }) {
 
           {/* Amount Input & Quick Chips */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+            <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${
+              isLight ? 'text-stone-700' : 'text-orange-200/80'
+            }`}>
               {t('amountLabel')}
             </label>
             <div className="relative mb-2">
-              <span className="absolute left-3.5 top-2.5 text-lg font-black text-amber-400">
+              <span className={`absolute left-3.5 top-2.5 text-lg font-black ${isLight ? 'text-[#CC5500]' : 'text-amber-400'}`}>
                 ₹
               </span>
               <input
@@ -347,7 +403,11 @@ export default function AdminForm({ onSubmitDonation }) {
                 placeholder={t('amountPlaceholder')}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full min-h-[48px] rounded-xl border border-amber-500/30 bg-black/50 pl-8 pr-3.5 py-2 text-lg sm:text-xl font-black text-amber-200 placeholder-orange-300/40 outline-none backdrop-blur-md transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 disabled:opacity-50"
+                className={`w-full min-h-[48px] rounded-xl border pl-8 pr-3.5 py-2 text-lg sm:text-xl font-black outline-none backdrop-blur-md transition-all disabled:opacity-50 ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-[#B7410E] placeholder-stone-400 focus:border-[#CC5500] focus:ring-2 focus:ring-[#CC5500]/20'
+                    : 'border-amber-500/30 bg-black/50 text-amber-200 placeholder-orange-300/40 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30'
+                }`}
               />
             </div>
 
@@ -361,7 +421,11 @@ export default function AdminForm({ onSubmitDonation }) {
                   onClick={() => handleQuickAmount(val)}
                   className={`min-h-[38px] rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center disabled:opacity-50 active:scale-95 ${
                     amount === val.toString()
-                      ? 'bg-amber-400 text-black shadow-md ring-2 ring-amber-300'
+                      ? isLight
+                        ? 'bg-[#CC5500] text-[#FFFDD0] shadow-md ring-2 ring-[#CC5500]/40'
+                        : 'bg-amber-400 text-black shadow-md ring-2 ring-amber-300'
+                      : isLight
+                      ? 'border border-[#CC5500]/25 bg-[#F5F5DC] text-[#CC5500] hover:bg-[#CC5500]/15'
                       : 'border border-amber-500/25 bg-orange-950/40 text-orange-200 hover:bg-orange-800/40 hover:text-white'
                   }`}
                 >
@@ -373,7 +437,9 @@ export default function AdminForm({ onSubmitDonation }) {
 
           {/* Seva Category Selector */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-orange-200/80 mb-1">
+            <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${
+              isLight ? 'text-stone-700' : 'text-orange-200/80'
+            }`}>
               {t('sevaTypeLabel')}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -385,7 +451,11 @@ export default function AdminForm({ onSubmitDonation }) {
                   onClick={() => setSelectedCategoryId(seva.id)}
                   className={`min-h-[42px] flex items-center gap-2 rounded-xl p-2 text-xs font-semibold transition cursor-pointer disabled:opacity-50 active:scale-95 ${
                     selectedCategoryId === seva.id
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border border-amber-300/60 shadow-md font-bold'
+                      ? isLight
+                        ? 'bg-[#CC5500] text-[#FFFDD0] border border-[#B7410E] shadow-md font-bold'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border border-amber-300/60 shadow-md font-bold'
+                      : isLight
+                      ? 'border border-[#CC5500]/20 bg-[#F5F5DC] text-stone-700 hover:border-[#CC5500]/40'
                       : 'border border-amber-500/20 bg-orange-950/30 text-orange-200/70 hover:bg-orange-900/30 hover:text-white'
                   }`}
                 >
@@ -399,7 +469,9 @@ export default function AdminForm({ onSubmitDonation }) {
           {/* City & WhatsApp Phone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/70 mb-1">
+              <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                isLight ? 'text-stone-700' : 'text-orange-200/70'
+              }`}>
                 {t('cityLabel')}
               </label>
               <input
@@ -408,12 +480,18 @@ export default function AdminForm({ onSubmitDonation }) {
                 placeholder={t('cityPlaceholder')}
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full min-h-[42px] rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none backdrop-blur-md focus:border-amber-400 focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
+                className={`w-full min-h-[42px] rounded-xl border px-3 py-2 text-xs sm:text-sm outline-none backdrop-blur-md disabled:opacity-50 ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                    : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400 focus:ring-1 focus:ring-amber-400'
+                }`}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-200/70 mb-1">
+              <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                isLight ? 'text-stone-700' : 'text-orange-200/70'
+              }`}>
                 {t('phoneLabel')}
               </label>
               <input
@@ -423,7 +501,11 @@ export default function AdminForm({ onSubmitDonation }) {
                 placeholder={t('phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full min-h-[42px] rounded-xl border border-amber-500/30 bg-black/50 px-3 py-2 text-xs sm:text-sm text-white placeholder-orange-300/40 outline-none backdrop-blur-md focus:border-amber-400 focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
+                className={`w-full min-h-[42px] rounded-xl border px-3 py-2 text-xs sm:text-sm outline-none backdrop-blur-md disabled:opacity-50 ${
+                  isLight
+                    ? 'border-[#CC5500]/30 bg-[#F5F5DC] text-stone-900 placeholder-stone-400 focus:border-[#CC5500] focus:ring-1 focus:ring-[#CC5500]'
+                    : 'border-amber-500/30 bg-black/50 text-white placeholder-orange-300/40 focus:border-amber-400 focus:ring-1 focus:ring-amber-400'
+                }`}
               />
             </div>
           </div>
@@ -434,7 +516,11 @@ export default function AdminForm({ onSubmitDonation }) {
               type="submit"
               disabled={isSubmitting}
               whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-              className={`w-full min-h-[50px] rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 py-3 px-6 text-base sm:text-lg font-black text-white shadow-xl shadow-orange-600/40 ring-2 ring-amber-300/60 transition-all active:brightness-95 flex items-center justify-center gap-2.5 cursor-pointer ${
+              className={`w-full min-h-[50px] rounded-2xl py-3 px-6 text-base sm:text-lg font-black shadow-xl transition-all active:brightness-95 flex items-center justify-center gap-2.5 cursor-pointer ${
+                isLight
+                  ? 'bg-[#CC5500] hover:bg-[#B7410E] text-[#FFFDD0] shadow-[#CC5500]/30 ring-2 ring-[#CC5500]/40'
+                  : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 text-white shadow-orange-600/40 ring-2 ring-amber-300/60'
+              } ${
                 isSubmitting ? 'opacity-70 cursor-wait' : ''
               }`}
             >
