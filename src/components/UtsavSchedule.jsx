@@ -8,6 +8,7 @@ import {
   DEFAULT_DAILY_SCHEDULE,
   SPECIAL_FESTIVAL_EVENTS,
 } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -15,6 +16,7 @@ const DEVOTIONAL_EMOJIS = ['🌅', '🪔', '🔔', '🍲', '🕯️', '🍛', '�
 
 export default function UtsavSchedule() {
   const { t, pick, lang } = useLanguage();
+  const { isLight, isRoyal, isGold, isMidnight } = useTheme();
   const { settings } = useDonations();
   const { isAdmin, token } = useAuth();
 
@@ -97,24 +99,68 @@ export default function UtsavSchedule() {
     <section id="schedule" className="relative w-full space-y-8">
       {/* Title */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-300">
+        <div
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${
+            isLight
+              ? 'border-[#CC5500]/40 bg-[#CC5500]/10 text-[#CC5500]'
+              : 'border-amber-400/40 bg-amber-500/10 text-amber-300'
+          }`}
+        >
           <span>🔔</span>
           <span>{t('scheduleBadge')}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        <h2
+          className={`text-2xl sm:text-3xl font-black tracking-tight ${
+            isLight ? 'text-stone-900' : 'text-white'
+          }`}
+        >
           {t('scheduleTitle')}
         </h2>
-        <p className="text-xs sm:text-sm text-orange-200/75 max-w-2xl mx-auto">
+        <p
+          className={`text-xs sm:text-sm max-w-2xl mx-auto ${
+            isLight ? 'text-stone-600' : 'text-orange-200/75'
+          }`}
+        >
           {t('scheduleSubtitle')}
         </p>
       </div>
 
       {/* Daily Aarti Grid */}
-      <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/60 via-red-950/40 to-black/80 p-6 md:p-8 backdrop-blur-2xl shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-3">
+      <div
+        className={`rounded-3xl p-6 md:p-8 backdrop-blur-2xl shadow-xl space-y-4 transition-colors ${
+          isLight
+            ? 'border border-[#CC5500]/30 bg-[#FFFDD0]/80 text-[#2B2B2B]'
+            : isRoyal
+            ? 'border border-rose-500/35 bg-gradient-to-br from-[#24070e]/85 via-[#180408]/85 to-black/85 text-rose-50 shadow-[0_12px_40px_rgba(225,29,72,0.2)]'
+            : isGold
+            ? 'border border-yellow-500/35 bg-gradient-to-br from-[#1c1304]/85 via-[#120b02]/85 to-black/85 text-amber-50 shadow-[0_12px_40px_rgba(234,179,8,0.2)]'
+            : 'border border-amber-500/30 bg-gradient-to-br from-orange-950/60 via-red-950/40 to-black/80 text-amber-50'
+        }`}
+      >
+        <div
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b ${
+            isLight
+              ? 'border-[#CC5500]/20'
+              : isRoyal
+              ? 'border-rose-500/20'
+              : isGold
+              ? 'border-yellow-500/20'
+              : 'border-amber-500/20'
+          }`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-2xl">⏰</span>
-            <h3 className="text-lg sm:text-xl font-bold text-amber-200">
+            <h3
+              className={`text-lg sm:text-xl font-bold ${
+                isLight
+                  ? 'text-stone-900'
+                  : isRoyal
+                  ? 'text-rose-100'
+                  : isGold
+                  ? 'text-yellow-100'
+                  : 'text-amber-200'
+              }`}
+            >
               {t('dailyScheduleTitle')}
             </h3>
           </div>
@@ -123,7 +169,15 @@ export default function UtsavSchedule() {
             <button
               type="button"
               onClick={handleOpenEditSchedule}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition shadow-sm cursor-pointer self-start sm:self-auto"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition shadow-sm cursor-pointer self-start sm:self-auto ${
+                isLight
+                  ? 'border-[#CC5500]/40 bg-[#CC5500]/15 text-[#CC5500] hover:bg-[#CC5500]/25'
+                  : isRoyal
+                  ? 'border-rose-400/50 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200'
+                  : isGold
+                  ? 'border-yellow-400/50 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300'
+                  : 'border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300'
+              }`}
             >
               <Edit3 className="h-3.5 w-3.5" />
               <span>{t('editScheduleBtn')}</span>
@@ -139,19 +193,67 @@ export default function UtsavSchedule() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
-              className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-orange-950/30 p-3.5 hover:border-amber-400/40 hover:bg-orange-900/40 transition-all"
+              className={`flex items-start gap-3 rounded-2xl border p-3.5 transition-all ${
+                isLight
+                  ? 'border-[#CC5500]/20 bg-[#F5F5DC]/80 hover:border-[#CC5500]/50 hover:bg-[#FFFDD0]'
+                  : isRoyal
+                  ? 'border-rose-500/25 bg-[#25070e]/50 hover:border-amber-400/50 hover:bg-[#300a12]/60'
+                  : isGold
+                  ? 'border-yellow-500/25 bg-[#1e1405]/50 hover:border-yellow-300/60 hover:bg-[#2a1b06]/60'
+                  : 'border-amber-500/20 bg-orange-950/30 hover:border-amber-400/40 hover:bg-orange-900/40'
+              }`}
             >
-              <div className="text-2xl p-2 rounded-xl bg-amber-500/10 border border-amber-400/20 shrink-0">
+              <div
+                className={`text-2xl p-2 rounded-xl border shrink-0 ${
+                  isLight
+                    ? 'bg-[#CC5500]/10 border-[#CC5500]/25 text-[#CC5500]'
+                    : isRoyal
+                    ? 'bg-rose-500/15 border-rose-400/30 text-rose-300'
+                    : isGold
+                    ? 'bg-yellow-500/15 border-yellow-400/30 text-yellow-300'
+                    : 'bg-amber-500/10 border-amber-400/20'
+                }`}
+              >
                 {item.icon || '🪔'}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="inline-block font-mono text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded">
+                <span
+                  className={`inline-block font-mono text-[11px] font-bold px-2 py-0.5 rounded ${
+                    isLight
+                      ? 'bg-[#CC5500]/15 text-[#CC5500]'
+                      : isRoyal
+                      ? 'bg-rose-500/25 text-rose-200 border border-rose-500/30'
+                      : isGold
+                      ? 'bg-yellow-500/25 text-yellow-300 border border-yellow-500/30'
+                      : 'bg-amber-500/20 text-amber-300'
+                  }`}
+                >
                   {pick(item.time)}
                 </span>
-                <h4 className="font-bold text-sm text-white mt-1">
+                <h4
+                  className={`font-bold text-sm mt-1 ${
+                    isLight
+                      ? 'text-stone-900'
+                      : isRoyal
+                      ? 'text-rose-100'
+                      : isGold
+                      ? 'text-yellow-100'
+                      : 'text-white'
+                  }`}
+                >
                   {pick(item.title)}
                 </h4>
-                <p className="text-xs text-orange-200/75 mt-0.5 leading-relaxed">
+                <p
+                  className={`text-xs mt-0.5 leading-relaxed ${
+                    isLight
+                      ? 'text-stone-700'
+                      : isRoyal
+                      ? 'text-rose-200/75'
+                      : isGold
+                      ? 'text-yellow-200/75'
+                      : 'text-orange-200/75'
+                  }`}
+                >
                   {pick(item.desc)}
                 </p>
               </div>
@@ -161,10 +263,40 @@ export default function UtsavSchedule() {
       </div>
 
       {/* 10-Day Festival Highlights */}
-      <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-orange-950/60 via-red-950/40 to-black/80 p-6 md:p-8 backdrop-blur-2xl shadow-xl space-y-4">
-        <div className="flex items-center gap-2 border-b border-amber-500/20 pb-3">
+      <div
+        className={`rounded-3xl p-6 md:p-8 backdrop-blur-2xl shadow-xl space-y-4 transition-colors ${
+          isLight
+            ? 'border border-[#CC5500]/30 bg-[#FFFDD0]/80 text-[#2B2B2B]'
+            : isRoyal
+            ? 'border border-rose-500/35 bg-gradient-to-br from-[#24070e]/85 via-[#180408]/85 to-black/85 text-rose-50 shadow-[0_12px_40px_rgba(225,29,72,0.2)]'
+            : isGold
+            ? 'border border-yellow-500/35 bg-gradient-to-br from-[#1c1304]/85 via-[#120b02]/85 to-black/85 text-amber-50 shadow-[0_12px_40px_rgba(234,179,8,0.2)]'
+            : 'border border-amber-500/30 bg-gradient-to-br from-orange-950/60 via-red-950/40 to-black/80 text-amber-50'
+        }`}
+      >
+        <div
+          className={`flex items-center gap-2 pb-3 border-b ${
+            isLight
+              ? 'border-[#CC5500]/20'
+              : isRoyal
+              ? 'border-rose-500/20'
+              : isGold
+              ? 'border-yellow-500/20'
+              : 'border-amber-500/20'
+          }`}
+        >
           <span className="text-2xl">🚩</span>
-          <h3 className="text-lg sm:text-xl font-bold text-amber-200">
+          <h3
+            className={`text-lg sm:text-xl font-bold ${
+              isLight
+                ? 'text-stone-900'
+                : isRoyal
+                ? 'text-rose-100'
+                : isGold
+                ? 'text-yellow-100'
+                : 'text-amber-200'
+            }`}
+          >
             {t('specialEventsTitle')}
           </h3>
         </div>
@@ -177,15 +309,53 @@ export default function UtsavSchedule() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.06 }}
-              className="rounded-2xl border border-orange-500/20 bg-black/40 p-4 space-y-1.5 hover:border-amber-400/50 transition-all"
+              className={`rounded-2xl border p-4 space-y-1.5 transition-all ${
+                isLight
+                  ? 'border-[#CC5500]/20 bg-[#F5F5DC]/80 hover:border-[#CC5500]/50 hover:bg-[#FFFDD0]'
+                  : isRoyal
+                  ? 'border-rose-500/25 bg-[#25070e]/50 hover:border-amber-400/50 hover:bg-[#300a12]/60'
+                  : isGold
+                  ? 'border-yellow-500/25 bg-[#1e1405]/50 hover:border-yellow-300/60 hover:bg-[#2a1b06]/60'
+                  : 'border-orange-500/20 bg-black/40 hover:border-amber-400/50'
+              }`}
             >
-              <span className="text-xs font-bold text-amber-400">
+              <span
+                className={`text-xs font-bold ${
+                  isLight
+                    ? 'text-[#CC5500]'
+                    : isRoyal
+                    ? 'text-rose-300'
+                    : isGold
+                    ? 'text-yellow-300'
+                    : 'text-amber-400'
+                }`}
+              >
                 {pick(event.day)}
               </span>
-              <h4 className="font-bold text-sm text-white">
+              <h4
+                className={`font-bold text-sm ${
+                  isLight
+                    ? 'text-stone-900'
+                    : isRoyal
+                    ? 'text-rose-100'
+                    : isGold
+                    ? 'text-yellow-100'
+                    : 'text-white'
+                }`}
+              >
                 {pick(event.title)}
               </h4>
-              <p className="text-xs text-orange-200/75 leading-relaxed">
+              <p
+                className={`text-xs leading-relaxed ${
+                  isLight
+                    ? 'text-stone-700'
+                    : isRoyal
+                    ? 'text-rose-200/75'
+                    : isGold
+                    ? 'text-yellow-200/75'
+                    : 'text-orange-200/75'
+                }`}
+              >
                 {pick(event.desc)}
               </p>
             </motion.div>
@@ -195,26 +365,62 @@ export default function UtsavSchedule() {
 
       {/* Guidelines & Offerings Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-5 backdrop-blur-xl space-y-2">
+        <div
+          className={`rounded-2xl border p-5 backdrop-blur-xl space-y-2 ${
+            isLight
+              ? 'border-[#CC5500]/20 bg-[#FFFDD0]/85 text-[#2B2B2B]'
+              : isRoyal
+              ? 'border-rose-500/25 bg-[#24070e]/60 text-rose-50'
+              : isGold
+              ? 'border-yellow-500/25 bg-[#1c1304]/60 text-amber-50'
+              : 'border-amber-500/25 bg-orange-950/30 text-amber-50'
+          }`}
+        >
           <span className="text-3xl">🍬</span>
-          <h4 className="font-bold text-sm text-white">{t('modakTitle')}</h4>
-          <p className="text-xs text-orange-200/75">
+          <h4 className={`font-bold text-sm ${isLight ? 'text-stone-900' : isRoyal ? 'text-rose-100' : isGold ? 'text-yellow-100' : 'text-white'}`}>
+            {t('modakTitle')}
+          </h4>
+          <p className={`text-xs ${isLight ? 'text-stone-700' : isRoyal ? 'text-rose-200/75' : isGold ? 'text-yellow-200/75' : 'text-orange-200/75'}`}>
             {t('modakDesc')}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-5 backdrop-blur-xl space-y-2">
+        <div
+          className={`rounded-2xl border p-5 backdrop-blur-xl space-y-2 ${
+            isLight
+              ? 'border-[#CC5500]/20 bg-[#FFFDD0]/85 text-[#2B2B2B]'
+              : isRoyal
+              ? 'border-rose-500/25 bg-[#24070e]/60 text-rose-50'
+              : isGold
+              ? 'border-yellow-500/25 bg-[#1c1304]/60 text-amber-50'
+              : 'border-amber-500/25 bg-orange-950/30 text-amber-50'
+          }`}
+        >
           <span className="text-3xl">🌿</span>
-          <h4 className="font-bold text-sm text-white">{t('durvaTitle')}</h4>
-          <p className="text-xs text-orange-200/75">
+          <h4 className={`font-bold text-sm ${isLight ? 'text-stone-900' : isRoyal ? 'text-rose-100' : isGold ? 'text-yellow-100' : 'text-white'}`}>
+            {t('durvaTitle')}
+          </h4>
+          <p className={`text-xs ${isLight ? 'text-stone-700' : isRoyal ? 'text-rose-200/75' : isGold ? 'text-yellow-200/75' : 'text-orange-200/75'}`}>
             {t('durvaDesc')}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-amber-500/25 bg-orange-950/30 p-5 backdrop-blur-xl space-y-2">
+        <div
+          className={`rounded-2xl border p-5 backdrop-blur-xl space-y-2 ${
+            isLight
+              ? 'border-[#CC5500]/20 bg-[#FFFDD0]/85 text-[#2B2B2B]'
+              : isRoyal
+              ? 'border-rose-500/25 bg-[#24070e]/60 text-rose-50'
+              : isGold
+              ? 'border-yellow-500/25 bg-[#1c1304]/60 text-amber-50'
+              : 'border-amber-500/25 bg-orange-950/30 text-amber-50'
+          }`}
+        >
           <span className="text-3xl">🌺</span>
-          <h4 className="font-bold text-sm text-white">{t('jaswandTitle')}</h4>
-          <p className="text-xs text-orange-200/75">
+          <h4 className={`font-bold text-sm ${isLight ? 'text-stone-900' : isRoyal ? 'text-rose-100' : isGold ? 'text-yellow-100' : 'text-white'}`}>
+            {t('jaswandTitle')}
+          </h4>
+          <p className={`text-xs ${isLight ? 'text-stone-700' : isRoyal ? 'text-rose-200/75' : isGold ? 'text-yellow-200/75' : 'text-orange-200/75'}`}>
             {t('jaswandDesc')}
           </p>
         </div>

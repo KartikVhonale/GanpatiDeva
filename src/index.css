@@ -9,10 +9,11 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background-color: #0d0705;
-    color: #fff7ed;
+    background-color: var(--theme-bg-main, #0d0705);
+    color: var(--theme-text-main, #fff7ed);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   #root {
@@ -105,3 +106,150 @@
     box-shadow: none !important;
   }
 }
+
+/* ========================================================================= */
+/* THEMES CSS DEFINITIONS                                                    */
+/* ========================================================================= */
+
+:root {
+  --theme-bg-main: #FFFDD0;
+  --theme-bg-surface: #F5F5DC;
+  --theme-accent: #CC5500;
+  --theme-accent-dark: #B7410E;
+  --theme-text-main: #2B2B2B;
+  --theme-text-muted: #4B5563;
+}
+
+/* 1. WHITE (TERRACOTTA & CREAM - चंदन व गेरू) - Default Theme */
+[data-theme="terracotta"] {
+  --theme-bg-main: #FFFDD0;
+  --theme-bg-surface: #F5F5DC;
+  --theme-accent: #CC5500;
+  --theme-accent-dark: #B7410E;
+  --theme-text-main: #2B2B2B;
+  --theme-text-muted: #57534E;
+}
+
+[data-theme="terracotta"] body,
+html[data-theme="terracotta"] body {
+  background-color: #F5F5DC !important;
+  color: #2B2B2B !important;
+}
+
+[data-theme="terracotta"] ::selection {
+  background-color: #CC5500 !important;
+  color: #FFFDD0 !important;
+}
+
+[data-theme="terracotta"] ::-webkit-scrollbar-track {
+  background: #F5F5DC !important;
+}
+
+[data-theme="terracotta"] ::-webkit-scrollbar-thumb {
+  background: rgba(204, 85, 0, 0.45) !important;
+}
+
+[data-theme="terracotta"] ::-webkit-scrollbar-thumb:hover {
+  background: #CC5500 !important;
+}
+
+/* 2. DARK (MIDNIGHT DARBAR - रात्री दरबार) */
+[data-theme="midnight"] {
+  --theme-bg-main: #0d0705;
+  --theme-bg-surface: #1a0b06;
+  --theme-accent: #ea580c;
+  --theme-accent-dark: #c2410c;
+  --theme-text-main: #fff7ed;
+  --theme-text-muted: #fed7aa;
+}
+
+[data-theme="midnight"] body,
+html[data-theme="midnight"] body {
+  background-color: #0d0705 !important;
+  color: #fff7ed !important;
+}
+
+[data-theme="midnight"] ::selection {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+[data-theme="midnight"] ::-webkit-scrollbar-track {
+  background: #0d0705 !important;
+}
+
+[data-theme="midnight"] ::-webkit-scrollbar-thumb {
+  background: rgba(234, 88, 12, 0.45) !important;
+}
+
+[data-theme="midnight"] ::-webkit-scrollbar-thumb:hover {
+  background: #ea580c !important;
+}
+
+/* 3. ROYAL (SHAHI MARATHA RAJWADA - शाही दरबार) */
+[data-theme="royal"] {
+  --theme-bg-main: #170408;
+  --theme-bg-surface: #26070e;
+  --theme-accent: #e11d48;
+  --theme-accent-dark: #be123c;
+  --theme-gold: #f59e0b;
+  --theme-text-main: #fff1f2;
+  --theme-text-muted: #fecdd3;
+}
+
+[data-theme="royal"] body,
+html[data-theme="royal"] body {
+  background-color: #170408 !important;
+  color: #fff1f2 !important;
+}
+
+[data-theme="royal"] ::selection {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="royal"] ::-webkit-scrollbar-track {
+  background: #170408 !important;
+}
+
+[data-theme="royal"] ::-webkit-scrollbar-thumb {
+  background: rgba(225, 29, 72, 0.5) !important;
+}
+
+[data-theme="royal"] ::-webkit-scrollbar-thumb:hover {
+  background: #e11d48 !important;
+}
+
+/* 4. GOLD (SWARNA MANDIR - स्वर्ण मंदिर) */
+[data-theme="gold"] {
+  --theme-bg-main: #0f0a02;
+  --theme-bg-surface: #1c1304;
+  --theme-accent: #eab308;
+  --theme-accent-dark: #ca8a04;
+  --theme-text-main: #fefce8;
+  --theme-text-muted: #fef08a;
+}
+
+[data-theme="gold"] body,
+html[data-theme="gold"] body {
+  background-color: #0f0a02 !important;
+  color: #fefce8 !important;
+}
+
+[data-theme="gold"] ::selection {
+  background-color: #eab308 !important;
+  color: #0f0a02 !important;
+}
+
+[data-theme="gold"] ::-webkit-scrollbar-track {
+  background: #0f0a02 !important;
+}
+
+[data-theme="gold"] ::-webkit-scrollbar-thumb {
+  background: rgba(234, 179, 8, 0.5) !important;
+}
+
+[data-theme="gold"] ::-webkit-scrollbar-thumb:hover {
+  background: #eab308 !important;
+}
+
